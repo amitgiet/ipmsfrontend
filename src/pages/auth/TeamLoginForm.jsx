@@ -1,0 +1,268 @@
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';  
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useDispatch } from 'react-redux';
+import { loginUser } from '@/features/auth/authSlice';
+import { useNavigate } from 'react-router-dom';
+import { AlertCircle, Users, Shield, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { apiCall } from '@/services/apiCall';
+import { allRoutes } from '@/services/routes';
+
+export const TeamLoginForm = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      setLoading(false);
+      return;
+    }
+    
+    const result = await apiCall(
+      allRoutes.auth.login,
+      'post',
+      {
+        email,
+        password
+      }
+    );
+
+    if (result.success) {
+      // Extract user data from response - handle nested data structure
+      const responseData = result.data.data || result.data;
+      const userData = responseData.user;
+      const token = responseData.token || responseData.access_token;
+      
+      // Store token in localStorage
+      if (token) {
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('isAuthenticated', 'true');
+      }
+
+      // Dispatch login action with actual API response
+      dispatch(loginUser.fulfilled({
+        user: userData,
+        teamUser: null,
+        token: token
+      }, 'loginUser', { email, password }));
+      
+      console.log('✅ Login successful, navigating to dashboard with user:', userData);
+      navigate('/dashboard');
+    } else {
+      console.error('❌ Admin login failed:', result.error);
+      setError(result.error?.message || 'Login failed. Please check your credentials.');
+    }
+    
+    setLoading(false);
+  };
+
+  const handleTeamLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      setLoading(false);
+      return;
+    }
+
+    console.log('🔄 Attempting team login...');
+    
+    const result = await apiCall(
+      allRoutes.auth.teamLogin,
+      'post',
+      {
+        email,
+        password
+      }
+    );
+
+    if (result.success) {
+      console.log('✅ Team login successful:', result.data);
+
+      // Extract user data from response - handle nested data structure
+      const responseData = result.data.data || result.data;
+      const userData = responseData.user;
+      const token = responseData.token || responseData.access_token;
+
+      // Store token in localStorage
+      if (token) {
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('teamUser', JSON.stringify(userData));
+        localStorage.setItem('isAuthenticated', 'true');
+      }
+
+      // Dispatch login action with actual API response
+      dispatch(loginUser.fulfilled({
+        user: null,
+        teamUser: userData,
+        token: token
+      }, 'loginUser', { email, password }));
+      
+      console.log('✅ Team login successful, navigating to dashboard with user:', userData);
+      navigate('/dashboard');
+    } else {
+      console.error('❌ Team login failed:', result.error);
+      setError(result.error?.message || 'Team login failed. Please check your credentials.');
+    }
+    
+    setLoading(false);
+  };
+
+  return (
+    <Card className="w-full max-w-lg mx-auto">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          Welcome Back
+        </CardTitle>
+        <CardDescription>
+          Sign in to access your ProjectHub dashboard
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="admin" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="admin" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Admin/Client
+            </TabsTrigger>
+            <TabsTrigger value="team" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Team
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="admin" className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-blue-800">
+                <strong>Admin:</strong> Use your admin credentials
+                <br />
+                <strong>Client:</strong> Use your client credentials
+              </p>
+            </div>
+
+            <form onSubmit={handleAdminLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="admin-email">Email</Label>
+                <Input
+                  id="admin-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="admin-password">Password</Label>
+                <Input
+                  id="admin-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
+              </Button>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="team" className="space-y-4">
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-purple-800">
+                <strong>Team Members:</strong> Use your team credentials provided by admin
+              </p>
+            </div>
+
+            <form onSubmit={handleTeamLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="team-email">Email</Label>
+                <Input
+                  id="team-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your team email"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="team-password">Password</Label>
+                <Input
+                  id="team-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your team password"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full"
+                variant="outline"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  'Sign In as Team Member'
+                )}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+};

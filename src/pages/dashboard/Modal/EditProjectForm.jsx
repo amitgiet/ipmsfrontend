@@ -56,6 +56,9 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
     if (project && open) {
       console.log('📝 Setting form data for project:', project.id);
       console.log('📝 Project data:', project);
+      console.log('🔍 Available project fields:', Object.keys(project));
+      console.log('🔍 Budget hours field:', project.budgeted_hours);
+      console.log('🔍 Budget hours field (alternative):', project.budgetedHours, project.budgeted_hours);
       
       // Map API response structure to form fields
       setFormData({
@@ -80,8 +83,9 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
         estimatedBudget: project.estimated_budget?.toString() || '',
         budgetCurrency: project.budget_currency || 'USD',
         priority: project.priority || '',
-        budgetedHours: project.budgeted_hours?.toString() || '',
-        loggedHours: project.logged_hours?.toString() || '',
+        
+        budgetedHours: project.budgeted_hours?.toString() || project.budgetedHours?.toString() || '',
+        loggedHours: project.logged_hours?.toString() || project.loggedHours?.toString() || '',
         tagsLabels: project.tags_labels || '',
       });
       setErrors({});

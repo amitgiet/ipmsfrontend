@@ -40,6 +40,7 @@ interface Project {
   estimated_budget: number | null;
   budget_currency: string | null;
   actual_budget_used: number | null;
+  budgeted_hours: number | null;
   logged_hours: number | null;
   start_date: string | null;
   end_date: string | null;
@@ -125,6 +126,7 @@ export const AdminProjectsSection = () => {
             estimated_budget: parseFloat(item.estimated_budget) || 0,
             budget_currency: 'USD',
             actual_budget_used: 0,
+            budgeted_hours: parseFloat(item.budgeted_hours) || 0,
             logged_hours: parseFloat(item.logged_hours) || 0,
             start_date: item.start_date || item.created_at,
             end_date: item.end_date || null,
@@ -300,6 +302,7 @@ export const AdminProjectsSection = () => {
             estimated_budget: parseFloat(item.estimated_budget) || 0,
             budget_currency: 'USD',
             actual_budget_used: 0,
+            budgeted_hours: parseFloat(item.budgeted_hours) || 0,
             logged_hours: parseFloat(item.logged_hours) || 0,
             start_date: item.start_date || item.created_at,
             end_date: item.end_date || null,
@@ -420,6 +423,7 @@ export const AdminProjectsSection = () => {
         estimated_budget: newProject.estimated_budget || 0,
         budget_currency: newProject.budget_currency || 'USD',
         actual_budget_used: newProject.actual_budget_used || 0,
+        budgeted_hours: newProject.budgeted_hours || 0,
         logged_hours: newProject.logged_hours || 0,
         start_date: newProject.start_date || null,
         end_date: newProject.end_date || null,
@@ -470,6 +474,7 @@ export const AdminProjectsSection = () => {
           allow_client_access: updatedProject.is_client_dashboard_access_enabled || project.allow_client_access,
           estimated_budget: updatedProject.estimated_budget || project.estimated_budget,
           budget_currency: updatedProject.budget_currency || project.budget_currency,
+          budgeted_hours: updatedProject.budgeted_hours || project.budgeted_hours,
           logged_hours: updatedProject.logged_hours || project.logged_hours,
           start_date: updatedProject.start_date || project.start_date,
           end_date: updatedProject.end_date || project.end_date,
@@ -494,6 +499,7 @@ export const AdminProjectsSection = () => {
           allow_client_access: updatedProject.is_client_dashboard_access_enabled || project.allow_client_access,
           estimated_budget: updatedProject.estimated_budget || project.estimated_budget,
           budget_currency: updatedProject.budget_currency || project.budget_currency,
+          budgeted_hours: updatedProject.budgeted_hours || project.budgeted_hours,
           logged_hours: updatedProject.logged_hours || project.logged_hours,
           start_date: updatedProject.start_date || project.start_date,
           end_date: updatedProject.end_date || project.end_date,

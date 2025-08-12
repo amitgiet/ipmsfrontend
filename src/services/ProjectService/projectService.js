@@ -25,7 +25,7 @@ export const projectService = {
 
   // Update project
   updateProject: async (id, projectData) => {
-    return await apiCall(allRoutes.projects.update(id), 'patch', projectData, {
+    return await apiCall(allRoutes.projects.update(id), 'post', projectData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

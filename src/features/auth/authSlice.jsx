@@ -1,13 +1,14 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-// Helper functions for localStorage
+// Helper functions for localStorage with ipms_ prefixed keys
 const getStoredAuth = () => {
   try {
-    const token = localStorage.getItem('authToken');
-    const user = localStorage.getItem('user');
-    const teamUser = localStorage.getItem('teamUser');
+    const token = localStorage.getItem('ipms_token');
+    const user = localStorage.getItem('ipms_user');
+    const teamUser = localStorage.getItem('ipms_teamUser');
+    const isAuthenticated = localStorage.getItem('ipms_isAuthenticated');
     
-    if (token && (user || teamUser)) {
+    if (token && (user || teamUser) && isAuthenticated === 'true') {
       return {
         token,
         user: user ? JSON.parse(user) : null,
@@ -24,6 +25,12 @@ const getStoredAuth = () => {
 
 const clearStoredAuth = () => {
   try {
+    localStorage.removeItem('ipms_token');
+    localStorage.removeItem('ipms_user');
+    localStorage.removeItem('ipms_teamUser');
+    localStorage.removeItem('ipms_isAuthenticated');
+    
+    // Also clear any legacy keys for backward compatibility
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
     localStorage.removeItem('teamUser');
@@ -35,6 +42,12 @@ const clearStoredAuth = () => {
 
 const storeAuth = (user, teamUser, token) => {
   try {
+    if (token) localStorage.setItem('ipms_token', token);
+    if (user) localStorage.setItem('ipms_user', JSON.stringify(user));
+    if (teamUser) localStorage.setItem('ipms_teamUser', JSON.stringify(teamUser));
+    localStorage.setItem('ipms_isAuthenticated', 'true');
+    
+    // Also store in legacy keys for backward compatibility
     if (token) localStorage.setItem('authToken', token);
     if (user) localStorage.setItem('user', JSON.stringify(user));
     if (teamUser) localStorage.setItem('teamUser', JSON.stringify(teamUser));
@@ -74,12 +87,35 @@ export const logoutUser = createAsyncThunk(
   'auth/logoutUser',
   async (_, { rejectWithValue }) => {
     try {
-      // TODO: Replace with actual API call
-      await fetch('/api/auth/logout', {
-        method: 'POST',
+      // Clear all stored data locally
+      clearStoredAuth();
+      
+      // Clear any other stored data that might exist
+      localStorage.removeItem('ipms_notifications');
+      localStorage.removeItem('ipms_projects');
+      localStorage.removeItem('ipms_timeLogs');
+      localStorage.removeItem('ipms_userPreferences');
+      
+      // Clear legacy keys
+      localStorage.removeItem('notifications');
+      localStorage.removeItem('projects');
+      localStorage.removeItem('timeLogs');
+      localStorage.removeItem('userPreferences');
+      
+      // Clear sessionStorage as well
+      sessionStorage.clear();
+      
+      // Clear any cookies if they exist
+      document.cookie.split(";").forEach(function(c) { 
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
       });
+      
+      console.log('✅ Logout successful - all data cleared');
       return null;
     } catch (error) {
+      console.error('❌ Error during logout:', error);
+      // Even if there's an error, still clear local data
+      clearStoredAuth();
       return rejectWithValue(error.message);
     }
   }
@@ -106,13 +142,13 @@ const authSlice = createSlice({
       state.user = action.payload;
       state.isAuthenticated = !!action.payload;
       if (action.payload) {
-        storeAuth(action.payload, state.teamUser, localStorage.getItem('authToken'));
+        storeAuth(action.payload, state.teamUser, localStorage.getItem('ipms_token'));
       }
     },
     setTeamUser: (state, action) => {
       state.teamUser = action.payload;
       if (action.payload) {
-        storeAuth(state.user, action.payload, localStorage.getItem('authToken'));
+        storeAuth(state.user, action.payload, localStorage.getItem('ipms_token'));
       }
     },
     logout: (state) => {

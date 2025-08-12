@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { validateProjectForm } from '@/utils/formValidation';
 import { calculateEndDate } from '@/utils/dateCalculations';
 import { ProjectInfoSection } from '@/components/forms/ProjectInfoSection';
@@ -9,9 +9,9 @@ import { ClientInfoSection } from '@/components/forms/ClientInfoSection';
 import { DateDurationSection } from '@/components/forms/DateDurationSection';
 import { BudgetSection } from '@/components/forms/BudgetSection';
 import { AdditionalDetailsSection } from '@/components/forms/AdditionalDetailsSection.tsx';
+import { projectService } from '@/services/ProjectService/projectService';
 
 export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
-  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     projectName: '',
@@ -40,7 +40,6 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
 
   const [errors, setErrors] = useState({});
 
-  // Auto-calculate end date when start date or duration changes
   useEffect(() => {
     if (formData.startDate && formData.duration && !isNaN(Number(formData.duration))) {
       const endDate = calculateEndDate(formData.startDate, Number(formData.duration));
@@ -59,97 +58,144 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
     }
     
     setIsSubmitting(true);
+    setErrors({}); // Clear previous errors
     
     try {
+      // Client-side validation first
       const validationErrors = validateProjectForm(formData);
-      console.log('🔍 Validation result:', validationErrors);
+      console.log('🔍 Client validation result:', validationErrors);
       
       if (Object.keys(validationErrors).length > 0) {
         setErrors(validationErrors);
-        toast({
-          title: "Validation Error",
-          description: "Please fill in all required fields correctly.",
-          variant: "destructive"
-        });
+        toast.error("Please fill in all required fields correctly.");
+        setIsSubmitting(false);
         return;
       }
-      
-      // Mock API call - replace with your actual API call
-      console.log('🚀 Creating project...');
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
-      
-      // Mock project data
-      const mockProjectData = {
-        id: Date.now().toString(),
-        ...formData,
-        created_at: new Date().toISOString(),
-        created_by: 'admin'
-      };
 
-      // Handle file uploads if there are any
-      if (formData.documentFiles.length > 0) {
-        console.log('📁 Uploading project documents...');
-        console.log('📄 Selected files:', formData.documentFiles.map(f => f.name));
-        // Mock file upload
-        await new Promise(resolve => setTimeout(resolve, 500));
+      // Prepare form data according to the API specification
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.projectName || '');
+      formDataToSend.append('project_code', formData.projectId || '');
+      formDataToSend.append('type', formData.projectType || '');
+      formDataToSend.append('priority', formData.priority || '');
+      formDataToSend.append('status', formData.projectStatus || '');
+      formDataToSend.append('client_name', formData.clientName || '');
+      formDataToSend.append('client_email', formData.clientEmail || '');
+      formDataToSend.append('client_phone', formData.clientPhone || '');
+      formDataToSend.append('backup_contact', formData.backupContact || '');
+      formDataToSend.append('is_client_dashboard_access_enabled', formData.allowClientAccess ? '1' : '0');
+      formDataToSend.append('duration_days', formData.duration || '');
+      formDataToSend.append('start_date', formData.startDate ? formData.startDate.toISOString().split('T')[0] : '');
+      formDataToSend.append('end_date', formData.endDate ? formData.endDate.toISOString().split('T')[0] : '');
+      formDataToSend.append('estimated_budget', formData.estimatedBudget || '');
+      formDataToSend.append('budgeted_hours', formData.budgetedHours || '');
+      formDataToSend.append('logged_hours', formData.loggedHours || '');
+      formDataToSend.append('milestones', formData.milestones || '');
+      formDataToSend.append('client_dependencies', formData.clientDependencies || '');
+      formDataToSend.append('tags', formData.tagsLabels || '');
+      
+      if (formData.documentFiles && formData.documentFiles.length > 0) {
+        formData.documentFiles.forEach((file, index) => {
+          if (file instanceof File) {
+            console.log(`📄 Appending file ${index}:`, file.name, file.size, file.type);
+            formDataToSend.append('documents[]', file);
+          } else {
+            console.warn(`⚠️ Skipping item ${index} - not a real File:`, file);
+          }
+        });
       }
-
-      // Prepare success message
-      let successMessage = `Project "${formData.projectName}" created successfully!`;
       
-      if (formData.clientEmail && formData.clientName) {
-        if (formData.allowClientAccess) {
-          successMessage += ' Client profile created and access granted with default password: Dots123';
+      // Make API call to create project
+      const response = await projectService.createProject(formDataToSend);
+      
+      if (response.success) {
+        console.log("✅ Project created successfully:", response.data);
+        
+        toast.success("Project created successfully!");
+        
+        // Call parent's onSubmit with the created project data
+        if (onSubmit) {
+          onSubmit(response.data);
+        }
+        
+        // Close the modal
+        onOpenChange(false);
+        
+        // Reset form
+        setFormData({
+          projectName: '',
+          projectId: '',
+          clientName: '',
+          clientEmail: '',
+          clientPhone: '',
+          backupContact: '',
+          allowClientAccess: false,
+          duration: '',
+          startDate: undefined,
+          endDate: undefined,
+          projectStatus: '',
+          projectType: '',
+          documents: '',
+          documentFiles: [],
+          milestones: '',
+          clientDependencies: '',
+          estimatedBudget: '',
+          budgetCurrency: 'USD',
+          priority: '',
+          budgetedHours: '',
+          loggedHours: '',
+          tagsLabels: '',
+        });
+        setErrors({});
+        
+      } else {
+        console.error("❌ Failed to create project:", response.message || response.error);
+        
+        // Handle API validation errors
+        if (response.errors) {
+          console.log("📋 API validation errors:", response.errors);
+          
+          // Map API field names to form field names
+          const apiErrors = {};
+          Object.keys(response.errors).forEach(apiField => {
+            let formField = apiField;
+            
+            // Map API field names to form field names
+            switch (apiField) {
+              case 'duration_days':
+                formField = 'duration';
+                break;
+              case 'end_date':
+                formField = 'endDate';
+                break;
+              case 'start_date':
+                formField = 'startDate';
+                break;
+              case 'project_code':
+                formField = 'projectId';
+                break;
+              case 'is_client_dashboard_access_enabled':
+                formField = 'allowClientAccess';
+                break;
+              default:
+                formField = apiField;
+            }
+            
+            apiErrors[formField] = response.errors[apiField][0]; // Take first error message
+          });
+          
+          setErrors(apiErrors);
+          
+          toast.error(response.message || "Please fix the validation errors below.");
         } else {
-          successMessage += ' Client profile created (access can be enabled later)';
+          // General API error
+          toast.error(response.message || "Failed to create project. Please try again.");
         }
       }
       
-      if (formData.documentFiles.length > 0) {
-        successMessage += ` ${formData.documentFiles.length} document(s) selected for upload.`;
-      }
-
-      toast({
-        title: "Success",
-        description: successMessage,
-      });
-
-      onSubmit(mockProjectData);
-      onOpenChange(false);
-      
-      // Reset form
-      setFormData({
-        projectName: '',
-        projectId: '',
-        clientName: '',
-        clientEmail: '',
-        clientPhone: '',
-        backupContact: '',
-        allowClientAccess: false,
-        duration: '',
-        startDate: undefined,
-        endDate: undefined,
-        projectStatus: '',
-        projectType: '',
-        documents: '',
-        documentFiles: [],
-        milestones: '',
-        clientDependencies: '',
-        estimatedBudget: '',
-        budgetCurrency: 'USD',
-        priority: '',
-        budgetedHours: '',
-        loggedHours: '',
-        tagsLabels: '',
-      });
-      setErrors({});
     } catch (error) {
-      console.error('❌ Error creating project:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
-        variant: "destructive"
-      });
+      console.error('❌ Error in form submission:', error);
+      toast.error(error instanceof Error ? error.message : "An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

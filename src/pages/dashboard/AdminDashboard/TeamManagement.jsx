@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Plus, Upload, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { TeamMemberForm } from '@/components/team/TeamMemberForm';
 import { TeamMembersTable } from '@/components/team/TeamMembersTable';
-import { ExcelImportDialog } from '@/components/team/ExcelImportDialog';
+// import { ExcelImportDialog } from '@/components/team/ExcelImportDialog';
 import { useToast } from '@/hooks/use-toast';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
@@ -85,20 +85,37 @@ export const TeamManagement = () => {
   const saveTeamMember = async (memberData, editingMember) => {
     setSaving(true);
     try {
+      // Transform the data to match API expectations
+      const transformedData = {
+        ...memberData,
+        phone: memberData.mobile_no, // Transform mobile_no to phone
+        // Remove mobile_no if it exists to avoid confusion
+        mobile_no: undefined
+      };
+      
+      // Remove undefined fields
+      Object.keys(transformedData).forEach(key => {
+        if (transformedData[key] === undefined) {
+          delete transformedData[key];
+        }
+      });
+
+      console.log('Sending team member data:', transformedData);
+
       let result;
       if (editingMember) {
         // Update existing team member
         result = await apiCall(
           allRoutes.teams.update(editingMember.id),
           'put',
-          memberData
+          transformedData
         );
       } else {
         // Create new team member
         result = await apiCall(
           allRoutes.teams.create,
           'post',
-          memberData
+          transformedData
         );
       }
 
@@ -220,16 +237,31 @@ export const TeamManagement = () => {
   };
 
   const handleEdit = (member) => {
-    setFormData({
+    console.log('Raw member data from API:', member);
+    console.log('Editing member skills:', member.skills);
+    const extractedSkills = (member.skills || []).map(skill => {
+      if (typeof skill === 'object') {
+        console.log('Skill object:', skill);
+        return skill.id;
+      }
+      console.log('Skill primitive:', skill);
+      return skill;
+    });
+    console.log('Extracted skill IDs:', extractedSkills);
+    
+    const formDataToSet = {
       name: member.name,
       email: member.email,
-      mobile_no: member.mobile_no || '',
+      mobile_no: member.phone || member.mobile_no || '', // Handle both phone and mobile_no
       emergency_contact: member.emergency_contact || '',
       password: '',
       role: member.role,
-      skills: member.skills || [],
+      skills: extractedSkills,
       is_active: member.is_active,
-    });
+    };
+    
+    console.log('Setting form data:', formDataToSet);
+    setFormData(formDataToSet);
     setEditingMember(member);
     setIsAddDialogOpen(true);
   };
@@ -267,10 +299,10 @@ export const TeamManagement = () => {
           <p className="text-gray-600">Manage your team members and their access</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => setIsImportDialogOpen(true)} variant="outline">
+          {/* <Button onClick={() => setIsImportDialogOpen(true)} variant="outline">
             <Upload className="h-4 w-4 mr-2" />
             Import from Excel
-          </Button>
+          </Button> */}
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={resetForm}>
@@ -365,11 +397,11 @@ export const TeamManagement = () => {
         </CardContent>
       </Card>
 
-      <ExcelImportDialog
+      {/* <ExcelImportDialog
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
         onImport={handleBulkImport}
-      />
+      /> */}
     </div>
   );
 };

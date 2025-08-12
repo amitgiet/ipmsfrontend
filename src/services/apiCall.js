@@ -52,7 +52,14 @@ export const apiCall = async (
     // Handle 401/403 errors - but only if we're not already on login page
     if ((axiosError.response?.status === 401 || axiosError.response?.status === 403) && 
         !window.location.pathname.includes('/login')) {
-      // Clear authentication data
+      
+      // Clear ipms_ authentication data
+      localStorage.removeItem('ipms_token');
+      localStorage.removeItem('ipms_user');
+      localStorage.removeItem('ipms_teamUser');
+      localStorage.removeItem('ipms_isAuthenticated');
+      
+      // Also clear legacy keys for backward compatibility
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
       localStorage.removeItem('teamUser');

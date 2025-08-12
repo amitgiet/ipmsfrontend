@@ -22,9 +22,10 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { apiCall } from '@/services/apiCall';
 import { useToast } from '@/hooks/use-toast';
 import { AddProjectForm } from '@/pages/dashboard/Modal/AddProjectForm';
+import { EditProjectForm } from '@/pages/dashboard/Modal/EditProjectForm';
+import { projectService } from '@/services/ProjectService/projectService';
 
 interface Project {
   id: string;
@@ -58,12 +59,14 @@ export const AdminProjectsSection = () => {
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
   const [clientFilter, setClientFilter] = useState('');
   const [projectIdFilter, setProjectIdFilter] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [addProjectModalOpen, setAddProjectModalOpen] = useState(false);
+  const [editProjectModalOpen, setEditProjectModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -71,209 +74,129 @@ export const AdminProjectsSection = () => {
     total: 0
   });
 
-  // Demo data for when no projects are available
-  const demoProjects = useMemo<Project[]>(() => [
-    {
-      id: '1',
-      project_name: 'E-commerce Platform Redesign',
-      project_id: 'ECOM-001',
-      project_status: 'in-progress',
-      project_type: 'Web Development',
-      priority: 'high',
-      client_name: 'TechCorp Solutions',
-      client_email: 'contact@techcorp.com',
-      allow_client_access: true,
-      estimated_budget: 50000,
-      budget_currency: 'USD',
-      actual_budget_used: 25000,
-      logged_hours: 120,
-      start_date: '2024-01-15',
-      end_date: '2024-06-30',
-      duration: 165,
-      documents: 'Requirements, Design Mockups',
-      milestones: 'Design Phase, Development Phase, Testing Phase',
-      client_dependencies: 'Content approval, Payment schedule',
-      tags_labels: 'ecommerce, redesign, responsive',
-      created_at: '2024-01-10T10:00:00Z',
-      created_by: 'admin',
-      progress_percent: 45
-    },
-    {
-      id: '2',
-      project_name: 'Mobile App Development',
-      project_id: 'MOBILE-002',
-      project_status: 'planned',
-      project_type: 'Mobile Development',
-      priority: 'medium',
-      client_name: 'InnovateMobile Inc',
-      client_email: 'dev@innovatemobile.com',
-      allow_client_access: true,
-      estimated_budget: 75000,
-      budget_currency: 'USD',
-      actual_budget_used: 0,
-      logged_hours: 0,
-      start_date: '2024-03-01',
-      end_date: '2024-08-31',
-      duration: 180,
-      documents: 'App Requirements, UI/UX Design',
-      milestones: 'Design, Development, Testing, Launch',
-      client_dependencies: 'App store approval',
-      tags_labels: 'mobile, ios, android, react-native',
-      created_at: '2024-02-15T14:30:00Z',
-      created_by: 'admin',
-      progress_percent: 0
-    },
-    {
-      id: '3',
-      project_name: 'Website Migration Project',
-      project_id: 'WEB-003',
-      project_status: 'completed',
-      project_type: 'Web Development',
-      priority: 'low',
-      client_name: 'Global Enterprises',
-      client_email: 'it@globalenterprises.com',
-      allow_client_access: false,
-      estimated_budget: 30000,
-      budget_currency: 'USD',
-      actual_budget_used: 28000,
-      logged_hours: 200,
-      start_date: '2023-11-01',
-      end_date: '2024-01-31',
-      duration: 90,
-      documents: 'Migration Plan, Backup Strategy',
-      milestones: 'Planning, Migration, Testing, Go-live',
-      client_dependencies: 'DNS changes, Content review',
-      tags_labels: 'migration, wordpress, seo',
-      created_at: '2023-10-15T09:15:00Z',
-      created_by: 'admin',
-      progress_percent: 100
-    },
-    {
-      id: '4',
-      project_name: 'CRM System Integration',
-      project_id: 'CRM-004',
-      project_status: 'on-hold',
-      project_type: 'System Integration',
-      priority: 'high',
-      client_name: 'SalesForce Pro',
-      client_email: 'integration@salesforcepro.com',
-      allow_client_access: true,
-      estimated_budget: 45000,
-      budget_currency: 'USD',
-      actual_budget_used: 15000,
-      logged_hours: 80,
-      start_date: '2024-02-01',
-      end_date: '2024-05-31',
-      duration: 120,
-      documents: 'API Documentation, Integration Specs',
-      milestones: 'Analysis, Development, Testing, Deployment',
-      client_dependencies: 'API access, User training',
-      tags_labels: 'crm, integration, api',
-      created_at: '2024-01-20T16:45:00Z',
-      created_by: 'admin',
-      progress_percent: 25
-    },
-    {
-      id: '5',
-      project_name: 'Data Analytics Dashboard',
-      project_id: 'DATA-005',
-      project_status: 'in-progress',
-      project_type: 'Data Analytics',
-      priority: 'medium',
-      client_name: 'DataInsight Corp',
-      client_email: 'analytics@datainsight.com',
-      allow_client_access: true,
-      estimated_budget: 35000,
-      budget_currency: 'USD',
-      actual_budget_used: 20000,
-      logged_hours: 150,
-      start_date: '2024-01-01',
-      end_date: '2024-04-30',
-      duration: 120,
-      documents: 'Data Requirements, Dashboard Mockups',
-      milestones: 'Data Analysis, Dashboard Development, Testing',
-      client_dependencies: 'Data access, User feedback',
-      tags_labels: 'analytics, dashboard, bi',
-      created_at: '2023-12-15T11:20:00Z',
-      created_by: 'admin',
-      progress_percent: 60
-    }
-  ], []);
 
-  // Fetch projects on component mount
   useEffect(() => {
     const loadProjects = async () => {
       setLoading(true);
       console.log("🔄 Fetching projects...");
 
       try {
-        const result = await apiCall(`/projects?page=1`, "get");
+        // Prepare API parameters with filters
+        const apiParams: { [key: string]: any } = {
+          page: pagination.current_page,
+          limit: pagination.per_page
+        };
 
-        if (result.success) {
-          console.log("✅ Projects fetched successfully:", result.data);
-          const projectsData = result.data.data || result.data || [];
-          const meta = result.data.meta || {};
+        // Add filters to API call if they have values
+        if (searchTerm.trim()) {
+          apiParams.search = searchTerm.trim();
+        }
+        if (clientFilter.trim()) {
+          apiParams.client_name = clientFilter.trim();
+        }
+        if (statusFilter !== 'all') {
+          apiParams.status = statusFilter;
+        }
+        if (priorityFilter !== 'all') {
+          apiParams.priority = priorityFilter;
+        }
+
+        console.log("🔍 API params:", apiParams);
+
+        // Use the project service to fetch projects with filters
+        const response = await projectService.getProjects(apiParams);
+        
+        if (response.success) {
+          console.log("✅ Projects fetched successfully:", response.data);
+          const projectsData = response.data.data || [];
+          const meta = response.data.meta || {};
           
-          // If no projects returned, use demo data
-          if (projectsData.length === 0) {
-            console.log("📊 No projects found, using demo data");
-            setProjects(demoProjects);
-            setFilteredProjects(demoProjects);
+          // Transform the data to match our Project interface if needed
+          const transformedProjects = projectsData.map((item: any) => ({
+            id: item.id?.toString() || Date.now().toString(),
+            project_name: item.name || item.title || item.project_name || 'Untitled Project',
+            project_id: item.project_code || item.project_id || item.id?.toString(),
+            project_status: item.status || 'planned',
+            project_type: item.type || 'Web Development',
+            priority: item.priority || 'medium',
+            client_name: item.client_name || item.customer_name || 'Unknown Client',
+            client_email: item.client_email || item.email || '',
+            allow_client_access: item.is_client_dashboard_access_enabled === '1' || item.allow_client_access || false,
+            estimated_budget: parseFloat(item.estimated_budget) || 0,
+            budget_currency: 'USD',
+            actual_budget_used: 0,
+            logged_hours: parseFloat(item.logged_hours) || 0,
+            start_date: item.start_date || item.created_at,
+            end_date: item.end_date || null,
+            duration: parseInt(item.duration_days) || null,
+            documents: item.documents || '',
+            milestones: item.milestones || '',
+            client_dependencies: item.client_dependencies || '',
+            tags_labels: item.tags || item.tags_labels || '',
+            created_at: item.created_at || new Date().toISOString(),
+            created_by: item.created_by || 'admin',
+            progress_percent: item.progress_percent || 0
+          }));
+          
+          if (transformedProjects.length === 0) {
+            console.log("📊 No projects found in API response");
+            setProjects([]);
+            setFilteredProjects([]);
             setPagination({
               current_page: 1,
               last_page: 1,
               per_page: 10,
-              total: demoProjects.length
+              total: 0
             });
             toast({
-              title: "Demo Mode",
-              description: "No projects found. Showing demo data.",
-              variant: "default",
+              title: "No Projects",
+              description: "No projects found. Create your first project to get started!",
+              variant: "default"
             });
           } else {
-            setProjects(projectsData);
-            setFilteredProjects(projectsData);
+            setProjects(transformedProjects);
+            setFilteredProjects(transformedProjects);
             setPagination({
               current_page: meta.current_page || 1,
               last_page: meta.last_page || 1,
               per_page: meta.per_page || 10,
-              total: meta.total || 0
+              total: meta.total || transformedProjects.length
             });
           }
         } else {
-          console.error("❌ Failed to fetch projects:", result.error);
-          // If API fails, use demo data
-          console.log("📊 Using demo data instead");
-          setProjects(demoProjects);
-          setFilteredProjects(demoProjects);
+          console.error("❌ Failed to fetch projects:", response.message || response.error);
+          // If API fails, show empty state
+          console.log("📊 API failed, showing empty state");
+          setProjects([]);
+          setFilteredProjects([]);
           setPagination({
             current_page: 1,
             last_page: 1,
             per_page: 10,
-            total: demoProjects.length
+            total: 0
           });
           toast({
-            title: "Demo Mode",
-            description: "Showing demo data. API connection failed.",
-            variant: "default",
+            title: "API Error",
+            description: "Failed to fetch projects. Please try again later.",
+            variant: "destructive"
           });
         }
       } catch (error) {
         console.error("❌ Error fetching projects:", error);
-        // If any error occurs, use demo data
-        console.log("📊 Using demo data due to error");
-        setProjects(demoProjects);
-        setFilteredProjects(demoProjects);
+        // If any error occurs, show empty state
+        console.log("📊 Error occurred, showing empty state");
+        setProjects([]);
+        setFilteredProjects([]);
         setPagination({
           current_page: 1,
           last_page: 1,
           per_page: 10,
-          total: demoProjects.length
+          total: 0
         });
         toast({
-          title: "Demo Mode",
-          description: "Showing demo data. Error occurred while fetching projects.",
-          variant: "default",
+          title: "Error",
+          description: "An error occurred while fetching projects.",
+          variant: "destructive"
         });
       }
 
@@ -281,20 +204,22 @@ export const AdminProjectsSection = () => {
     };
 
     loadProjects();
-  }, []);
+  }, [pagination.current_page, pagination.per_page, searchTerm, clientFilter, statusFilter, priorityFilter]);
 
-  // Filter projects when search or filters change
   useEffect(() => {
+    // Reset to first page when filters change
+    setPagination(prev => ({ ...prev, current_page: 1 }));
+    
+    // Apply client-side filtering for immediate UI feedback
     const filtered = projects.filter((project) => {
       const matchesSearch = !searchTerm || 
         project.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.project_id?.toLowerCase().includes(searchTerm.toLowerCase());
+        project.project_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.client_name?.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesStatus = !statusFilter || statusFilter === 'all' || 
-        project.project_status?.toLowerCase() === statusFilter.toLowerCase();
+      const matchesStatus = statusFilter === 'all' || project.project_status === statusFilter;
       
-      const matchesPriority = !priorityFilter || priorityFilter === 'all' || 
-        project.priority?.toLowerCase() === priorityFilter.toLowerCase();
+      const matchesPriority = priorityFilter === 'all' || project.priority === priorityFilter;
       
       const matchesClient = !clientFilter || 
         project.client_name?.toLowerCase().includes(clientFilter.toLowerCase());
@@ -308,87 +233,145 @@ export const AdminProjectsSection = () => {
     setFilteredProjects(filtered);
   }, [projects, searchTerm, statusFilter, priorityFilter, clientFilter, projectIdFilter]);
 
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchTerm || clientFilter || statusFilter !== 'all' || priorityFilter !== 'all') {
+        console.log("🔍 Filters changed, refreshing from API...");
+        handleRefreshProjects();
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, clientFilter, statusFilter, priorityFilter]);
+
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.last_page) {
-      // For demo data, just update the current page
-      if (projects === demoProjects) {
-        setPagination(prev => ({ ...prev, current_page: newPage }));
-      } else {
-        // For real data, would need to implement pagination
-        console.log("Pagination not implemented for real data yet");
-      }
+      setPagination(prev => ({ ...prev, current_page: newPage }));
     }
   };
 
   const handleRefreshProjects = () => {
-    // Reload projects
     const loadProjects = async () => {
       setLoading(true);
       console.log("🔄 Refreshing projects...");
 
       try {
-        const result = await apiCall(`/projects?page=1`, "get");
+        // Prepare API parameters with filters
+        const apiParams: { [key: string]: any } = {
+          page: pagination.current_page,
+          limit: pagination.per_page
+        };
 
-        if (result.success) {
-          console.log("✅ Projects refreshed successfully:", result.data);
-          const projectsData = result.data.data || result.data || [];
-          const meta = result.data.meta || {};
+        // Add filters to API call if they have values
+        if (searchTerm.trim()) {
+          apiParams.search = searchTerm.trim();
+        }
+        if (clientFilter.trim()) {
+          apiParams.client_name = clientFilter.trim();
+        }
+        if (statusFilter !== 'all') {
+          apiParams.status = statusFilter;
+        }
+        if (priorityFilter !== 'all') {
+          apiParams.priority = priorityFilter;
+        }
+
+        console.log("🔍 Refresh API params:", apiParams);
+
+        const response = await projectService.getProjects(apiParams);
+
+        if (response.success) {
+          console.log("✅ Projects refreshed successfully:", response.data);
+          const projectsData = response.data.data || [];
+          const meta = response.data.meta || {};
           
-          if (projectsData.length === 0) {
-            console.log("📊 No projects found, using demo data");
-            setProjects(demoProjects);
-            setFilteredProjects(demoProjects);
+          // Transform the data to match our Project interface if needed
+          const transformedProjects = projectsData.map((item: any) => ({
+            id: item.id?.toString() || Date.now().toString(),
+            project_name: item.name || item.title || item.project_name || 'Untitled Project',
+            project_id: item.project_code || item.project_id || item.id?.toString(),
+            project_status: item.status || 'planned',
+            project_type: item.type || 'Web Development',
+            priority: item.priority || 'medium',
+            client_name: item.client_name || item.customer_name || 'Unknown Client',
+            client_email: item.client_email || item.email || '',
+            allow_client_access: item.is_client_dashboard_access_enabled === '1' || item.allow_client_access || false,
+            estimated_budget: parseFloat(item.estimated_budget) || 0,
+            budget_currency: 'USD',
+            actual_budget_used: 0,
+            logged_hours: parseFloat(item.logged_hours) || 0,
+            start_date: item.start_date || item.created_at,
+            end_date: item.end_date || null,
+            duration: parseInt(item.duration_days) || null,
+            documents: item.documents || '',
+            milestones: item.milestones || '',
+            client_dependencies: item.client_dependencies || '',
+            tags_labels: item.tags || item.tags_labels || '',
+            created_at: item.created_at || new Date().toISOString(),
+            created_by: item.created_by || 'admin',
+            progress_percent: item.progress_percent || 0
+          }));
+          
+          if (transformedProjects.length === 0) {
+            console.log("📊 No projects found in refresh response");
+            setProjects([]);
+            setFilteredProjects([]);
             setPagination({
               current_page: 1,
               last_page: 1,
               per_page: 10,
-              total: demoProjects.length
+              total: 0
             });
             toast({
-              title: "Demo Mode",
-              description: "No projects found. Showing demo data.",
-              variant: "default",
+              title: "No Projects",
+              description: "No projects found. Create your first project to get started!",
+              variant: "default"
             });
           } else {
-            setProjects(projectsData);
-            setFilteredProjects(projectsData);
+            setProjects(transformedProjects);
+            setFilteredProjects(transformedProjects);
             setPagination({
               current_page: meta.current_page || 1,
               last_page: meta.last_page || 1,
               per_page: meta.per_page || 10,
-              total: meta.total || 0
+              total: meta.total || transformedProjects.length
             });
           }
         } else {
-          console.error("❌ Failed to refresh projects:", result.error);
-          setProjects(demoProjects);
-          setFilteredProjects(demoProjects);
+          console.error("❌ Failed to refresh projects:", response.message || response.error);
+          // If API fails, show empty state
+          console.log("📊 API failed during refresh, showing empty state");
+          setProjects([]);
+          setFilteredProjects([]);
           setPagination({
             current_page: 1,
             last_page: 1,
             per_page: 10,
-            total: demoProjects.length
+            total: 0
           });
           toast({
-            title: "Demo Mode",
-            description: "Showing demo data. API connection failed.",
-            variant: "default",
+            title: "API Error",
+            description: "Failed to refresh projects. Please try again later.",
+            variant: "destructive"
           });
         }
       } catch (error) {
         console.error("❌ Error refreshing projects:", error);
-        setProjects(demoProjects);
-        setFilteredProjects(demoProjects);
+        // If any error occurs, show empty state
+        console.log("📊 Error occurred during refresh, showing empty state");
+        setProjects([]);
+        setFilteredProjects([]);
         setPagination({
           current_page: 1,
           last_page: 1,
           per_page: 10,
-          total: demoProjects.length
+          total: 0
         });
         toast({
-          title: "Demo Mode",
-          description: "Showing demo data. Error occurred while refreshing projects.",
-          variant: "default",
+          title: "Error",
+          description: "An error occurred while refreshing projects.",
+          variant: "destructive"
         });
       }
 
@@ -400,39 +383,152 @@ export const AdminProjectsSection = () => {
 
   const handleClearFilters = () => {
     setSearchTerm('');
-    setStatusFilter('');
-    setPriorityFilter('');
+    setStatusFilter('all');
+    setPriorityFilter('all');
     setClientFilter('');
     setProjectIdFilter('');
+    
+    // Reset pagination to first page when clearing filters
+    setPagination(prev => ({ ...prev, current_page: 1 }));
+    
+    // Refresh projects with cleared filters
+    handleRefreshProjects();
   };
 
   const handleAddProject = () => {
+    console.log('🔘 Add Project button clicked');
+    console.log('📊 Current modal state:', addProjectModalOpen);
     setAddProjectModalOpen(true);
+    console.log('📊 Modal state set to true');
   };
 
-  const handleProjectSubmit = (newProject) => {
-    // Add the new project to the list
-    const projectWithId = {
-      ...newProject,
-      id: newProject.id || Date.now().toString(),
-      created_at: newProject.created_at || new Date().toISOString(),
-      created_by: newProject.created_by || 'admin'
-    };
-    
-    setProjects(prev => [projectWithId, ...prev]);
-    setFilteredProjects(prev => [projectWithId, ...prev]);
-    
-    toast({
-      title: "Success",
-      description: `Project "${newProject.projectName}" created successfully!`,
-    });
-    
-    setAddProjectModalOpen(false);
+  const handleProjectSubmit = async (newProject) => {
+    try {
+      console.log("✅ Project created successfully:", newProject);
+      
+      // Add the new project to the local state
+      const newProjectData = {
+        id: newProject.id?.toString() || Date.now().toString(),
+        project_name: newProject.name || newProject.project_name || 'Untitled Project',
+        project_id: newProject.project_code || newProject.project_id || newProject.id?.toString(),
+        project_status: newProject.status || 'planned',
+        project_type: newProject.type || 'Web Development',
+        priority: newProject.priority || 'medium',
+        client_name: newProject.client_name || 'Unknown Client',
+        client_email: newProject.client_email || '',
+        allow_client_access: newProject.is_client_dashboard_access_enabled || false,
+        estimated_budget: newProject.estimated_budget || 0,
+        budget_currency: newProject.budget_currency || 'USD',
+        actual_budget_used: newProject.actual_budget_used || 0,
+        logged_hours: newProject.logged_hours || 0,
+        start_date: newProject.start_date || null,
+        end_date: newProject.end_date || null,
+        duration: newProject.duration_days || newProject.duration || 0,
+        documents: newProject.documents || '',
+        milestones: newProject.milestones || '',
+        client_dependencies: newProject.client_dependencies || '',
+        tags_labels: newProject.tags || newProject.tags_labels || '',
+        created_at: newProject.created_at || new Date().toISOString(),
+        created_by: newProject.created_by || 'admin',
+        progress_percent: newProject.progress_percent || 0
+      };
+
+      setProjects(prev => [newProjectData, ...prev]);
+      setFilteredProjects(prev => [newProjectData, ...prev]);
+      
+      toast({
+        title: "Success!",
+        description: "Project created successfully.",
+        variant: "default"
+      });
+      
+    } catch (error) {
+      console.error("❌ Error handling project creation:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while processing the new project.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditProjectSubmit = async (updatedProject) => {
+    try {
+      console.log("✅ Project updated successfully:", updatedProject);
+      
+      // Update the project in local state
+      setProjects(prev => prev.map(project => 
+        project.id === editingProject?.id ? {
+          ...project,
+          project_name: updatedProject.name || updatedProject.project_name || project.project_name,
+          project_id: updatedProject.project_code || updatedProject.project_id || project.project_id,
+          project_status: updatedProject.status || project.project_status,
+          project_type: updatedProject.type || project.project_type,
+          priority: updatedProject.priority || project.priority,
+          client_name: updatedProject.client_name || project.client_name,
+          client_email: updatedProject.client_email || project.client_email,
+          allow_client_access: updatedProject.is_client_dashboard_access_enabled || project.allow_client_access,
+          estimated_budget: updatedProject.estimated_budget || project.estimated_budget,
+          budget_currency: updatedProject.budget_currency || project.budget_currency,
+          logged_hours: updatedProject.logged_hours || project.logged_hours,
+          start_date: updatedProject.start_date || project.start_date,
+          end_date: updatedProject.end_date || project.end_date,
+          duration: updatedProject.duration_days || updatedProject.duration || project.duration,
+          documents: updatedProject.documents || project.documents,
+          milestones: updatedProject.milestones || project.milestones,
+          client_dependencies: updatedProject.client_dependencies || project.client_dependencies,
+          tags_labels: updatedProject.tags || updatedProject.tags_labels || project.tags_labels
+        } : project
+      ));
+      
+      setFilteredProjects(prev => prev.map(project => 
+        project.id === editingProject?.id ? {
+          ...project,
+          project_name: updatedProject.name || updatedProject.project_name || project.project_name,
+          project_id: updatedProject.project_code || updatedProject.project_id || project.project_id,
+          project_status: updatedProject.status || project.project_status,
+          project_type: updatedProject.type || project.project_type,
+          priority: updatedProject.priority || project.priority,
+          client_name: updatedProject.client_name || project.client_name,
+          client_email: updatedProject.client_email || project.client_email,
+          allow_client_access: updatedProject.is_client_dashboard_access_enabled || project.allow_client_access,
+          estimated_budget: updatedProject.estimated_budget || project.estimated_budget,
+          budget_currency: updatedProject.budget_currency || project.budget_currency,
+          logged_hours: updatedProject.logged_hours || project.logged_hours,
+          start_date: updatedProject.start_date || project.start_date,
+          end_date: updatedProject.end_date || project.end_date,
+          duration: updatedProject.duration_days || updatedProject.duration || project.duration,
+          documents: updatedProject.documents || project.documents,
+          milestones: updatedProject.milestones || project.milestones,
+          client_dependencies: updatedProject.client_dependencies || project.client_dependencies,
+          tags_labels: updatedProject.tags || updatedProject.tags_labels || project.tags_labels
+        } : project
+      ));
+      
+      // Close the edit modal
+      setEditProjectModalOpen(false);
+      setEditingProject(null);
+      
+      toast({
+        title: "Success!",
+        description: "Project updated successfully.",
+        variant: "default"
+      });
+      
+    } catch (error) {
+      console.error("❌ Error handling project update:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while updating the project.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleEditProject = (project: Project) => {
-    // This would open edit modal or navigate to edit page
     console.log("Edit project:", project);
+    setEditingProject(project);
+    setEditProjectModalOpen(true);
   };
 
   const handleManageProject = (project: Project) => {
@@ -444,9 +540,9 @@ export const AdminProjectsSection = () => {
     switch (status?.toLowerCase()) {
       case 'planned':
         return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'in-progress':
+      case 'in_progress':
         return 'bg-green-100 text-green-800 border-green-200';
-      case 'on-hold':
+      case 'on_hold':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'completed':
         return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -459,8 +555,10 @@ export const AdminProjectsSection = () => {
 
   const getPriorityColor = (priority: string | null) => {
     switch (priority?.toLowerCase()) {
-      case 'high':
+      case 'urgent':
         return 'bg-red-100 text-red-800 border-red-200';
+      case 'high':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'medium':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'low':
@@ -480,26 +578,25 @@ export const AdminProjectsSection = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold">Projects Management</h2>
-        <div className="text-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading projects...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Projects Management</h2>
-        <Button onClick={handleAddProject}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Project
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleAddProject} disabled={loading} className="flex items-center gap-2">
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4" />
+                Add Project
+              </>
+            )}
+          </Button>
+        </div>
       </div>
       
       {/* Collapsible Filters Section */}
@@ -566,8 +663,8 @@ export const AdminProjectsSection = () => {
                     <SelectContent>
                       <SelectItem value="all">All Statuses</SelectItem>
                       <SelectItem value="planned">Planned</SelectItem>
-                      <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="on-hold">On Hold</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="on_hold">On Hold</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="cancelled">Cancelled</SelectItem>
                     </SelectContent>
@@ -586,9 +683,21 @@ export const AdminProjectsSection = () => {
                       <SelectItem value="low">Low</SelectItem>
                       <SelectItem value="medium">Medium</SelectItem>
                       <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="critical">Critical</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Search Button */}
+                <div className="flex items-end">
+                  <Button 
+                    onClick={handleRefreshProjects} 
+                    className="w-full flex items-center gap-2"
+                    disabled={loading}
+                  >
+                    <Search className="h-4 w-4" />
+                    {loading ? 'Searching...' : 'Search'}
+                  </Button>
                 </div>
 
                 {/* Clear Filters Button */}
@@ -608,12 +717,19 @@ export const AdminProjectsSection = () => {
           Refresh Projects
         </Button>
         <div className="text-sm text-gray-500 flex items-center">
-          Showing {filteredProjects.length} of {projects.length} projects
+          Showing {filteredProjects.length} of {pagination.total} projects
+          {searchTerm || clientFilter || statusFilter !== 'all' || priorityFilter !== 'all' ? ' (filtered)' : ''}
         </div>
       </div>
       
       <div className="grid gap-6">
-        {filteredProjects.length > 0 ? (
+        {loading && (
+          <div className="text-center py-8 text-gray-500">
+            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-gray-300" />
+            Loading projects...
+          </div>
+        )}
+        {filteredProjects.length > 0 && !loading ? (
           filteredProjects.map((project) => (
             <Card key={project.id} className="hover:shadow-md transition-shadow">
               <CardContent className="pt-6">
@@ -800,11 +916,22 @@ export const AdminProjectsSection = () => {
         </div>
       )}
 
+      {/* Add Project Modal */}
       <AddProjectForm
-        isOpen={addProjectModalOpen}
-        onClose={() => setAddProjectModalOpen(false)}
+        open={addProjectModalOpen}
+        onOpenChange={setAddProjectModalOpen}
         onSubmit={handleProjectSubmit}
       />
+
+      {/* Edit Project Modal */}
+      {editingProject && (
+        <EditProjectForm
+          open={editProjectModalOpen}
+          onOpenChange={setEditProjectModalOpen}
+          onSubmit={handleEditProjectSubmit}
+          project={editingProject}
+        />
+      )}
     </div>
   );
 };

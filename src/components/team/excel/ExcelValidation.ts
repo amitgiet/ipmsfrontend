@@ -1,5 +1,4 @@
 import { UserRole } from '@/components/types/auth';
-import { availableSkills } from '@/components/types/team';
 
 export interface ExcelTeamMember {
   name: string;
@@ -24,7 +23,9 @@ export const validateSkills = (skillsString: string | null | undefined): string[
   if (!skillsString || skillsString.toString().trim() === '') return [];
   
   const skills = skillsString.toString().split(',').map(s => s.trim()).filter(s => s);
-  return skills.filter(skill => availableSkills.includes(skill));
+  // For Excel import, we'll accept any non-empty skill names
+  // The backend can handle skill validation and mapping
+  return skills;
 };
 
 export const validateIsActive = (isActiveValue: any): boolean => {

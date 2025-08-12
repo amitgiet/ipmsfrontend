@@ -113,7 +113,10 @@ export const AdminHeader = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={onLogout}
+            onClick={() => {
+              console.log('🔘 AdminHeader logout button clicked');
+              onLogout();
+            }}
             className="flex items-center gap-2"
           >
             <LogOut className="h-4 w-4" />

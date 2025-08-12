@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,8 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DialogFooter } from '@/components/ui/dialog';
+import { Loader2 } from 'lucide-react';
 import { UserRole } from '@/components/types/auth';
-import { TeamMember, availableSkills } from '@/components/types/team';
+import { TeamMember } from '@/components/types/team';
+import { skillsService } from '@/services/skillsService';
+import { useToast } from '@/hooks/use-toast';
 
 interface TeamMemberFormProps {
   formData: {
@@ -18,7 +21,7 @@ interface TeamMemberFormProps {
     emergency_contact: string;
     password: string;
     role: UserRole;
-    skills: string[];
+    skills: (string | number)[];
     is_active: boolean;
   };
   editingMember: TeamMember | null;
@@ -34,13 +37,100 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
   onSubmit,
   onCancel
 }) => {
-  const handleSkillToggle = (skill: string) => {
+  const { toast } = useToast();
+  const [availableSkills, setAvailableSkills] = useState<Array<{id: string | number, name: string}>>([]);
+  const [loadingSkills, setLoadingSkills] = useState(true);
+
+  // Fetch skills from API on component mount
+  useEffect(() => {
+    fetchSkills();
+  }, []);
+
+  const fetchSkills = async () => {
+    setLoadingSkills(true);
+    try {
+      const result = await skillsService.getSkills();
+      
+      if (result.success) {
+        const skillsData = result.data.data || result.data || [];
+        // Store both id and name for each skill
+        const skillsWithIds = skillsData.map((skill: any) => ({
+          id: skill.id,
+          name: skill.name || skill
+        }));
+        setAvailableSkills(skillsWithIds);
+      } else {
+        console.error('Failed to fetch skills:', result.error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch skills. Using default skills.",
+          variant: "destructive",
+        });
+        // Fallback to default skills if API fails
+        setAvailableSkills([
+          { id: 'react', name: 'React' },
+          { id: 'typescript', name: 'TypeScript' },
+          { id: 'nodejs', name: 'Node.js' },
+          { id: 'python', name: 'Python' },
+          { id: 'javascript', name: 'JavaScript' },
+          { id: 'uiux', name: 'UI/UX Design' },
+          { id: 'project-management', name: 'Project Management' },
+          { id: 'devops', name: 'DevOps' },
+          { id: 'database', name: 'Database Design' },
+          { id: 'testing', name: 'Testing' },
+          { id: 'mobile', name: 'Mobile Development' },
+          { id: 'cloud', name: 'Cloud Computing' },
+          { id: 'ml', name: 'Machine Learning' },
+          { id: 'data-analysis', name: 'Data Analysis' }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching skills:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch skills. Using default skills.",
+        variant: "destructive",
+      });
+      // Fallback to default skills if API fails
+      setAvailableSkills([
+        { id: 'react', name: 'React' },
+        { id: 'typescript', name: 'TypeScript' },
+        { id: 'nodejs', name: 'Node.js' },
+        { id: 'python', name: 'Python' },
+        { id: 'javascript', name: 'JavaScript' },
+        { id: 'uiux', name: 'UI/UX Design' },
+        { id: 'project-management', name: 'Project Management' },
+        { id: 'devops', name: 'DevOps' },
+        { id: 'database', name: 'Database Design' },
+        { id: 'testing', name: 'Testing' },
+        { id: 'mobile', name: 'Mobile Development' },
+        { id: 'cloud', name: 'Cloud Computing' },
+        { id: 'ml', name: 'Machine Learning' },
+        { id: 'data-analysis', name: 'Data Analysis' }
+      ]);
+    } finally {
+      setLoadingSkills(false);
+    }
+  };
+
+  const handleSkillToggle = (skillId: string | number) => {
     onFormDataChange(prev => ({
       ...prev,
-      skills: prev.skills.includes(skill)
-        ? prev.skills.filter(s => s !== skill)
-        : [...prev.skills, skill]
+      skills: prev.skills.includes(skillId)
+        ? prev.skills.filter(s => s !== skillId)
+        : [...prev.skills, skillId]
     }));
+  };
+
+  // Helper function to check if a skill is selected
+  const isSkillSelected = (skillId: string | number) => {
+    return formData.skills.includes(skillId);
+  };
+
+  // Helper function to get skill name by ID
+  const getSkillNameById = (skillId: string | number) => {
+    const skill = availableSkills.find(s => s.id === skillId);
+    return skill ? skill.name : skillId;
   };
 
   return (
@@ -123,17 +213,34 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
       <div>
         <Label>Skills</Label>
         <div className="flex flex-wrap gap-2 mt-2">
-          {availableSkills.map((skill) => (
-            <Badge
-              key={skill}
-              variant={formData.skills.includes(skill) ? "default" : "outline"}
-              className="cursor-pointer"
-              onClick={() => handleSkillToggle(skill)}
-            >
-              {skill}
-            </Badge>
-          ))}
+          {loadingSkills ? (
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading skills...
+            </div>
+          ) : availableSkills.length > 0 ? (
+            availableSkills.map((skill) => (
+              <Badge
+                key={skill.id}
+                variant={isSkillSelected(skill.id) ? "default" : "outline"}
+                className="cursor-pointer hover:bg-primary/10 transition-colors"
+                onClick={() => handleSkillToggle(skill.id)}
+              >
+                {getSkillNameById(skill.id)}
+              </Badge>
+            ))
+          ) : (
+            <div className="text-sm text-gray-500">
+              No skills available. Please add skills in the Skills Management section.
+            </div>
+          )}
         </div>
+        {formData.skills.length > 0 && (
+          <div className="mt-2 text-xs text-gray-600">
+            Selected: {formData.skills.length} skill{formData.skills.length !== 1 ? 's' : ''} 
+            ({formData.skills.map(id => getSkillNameById(id)).join(', ')})
+          </div>
+        )}
       </div>
 
       <div className="flex items-center space-x-2">

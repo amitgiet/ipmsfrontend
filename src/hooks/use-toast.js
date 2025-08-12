@@ -1,29 +1,45 @@
-import { useState, useEffect } from 'react';
+import { toast as reactToastifyToast } from 'react-toastify';
 
-// Simple toast implementation for development
+// React-toastify implementation
 export const useToast = () => {
-  const [toasts, setToasts] = useState([]);
-
   const toast = ({ title, description, variant = 'default' }) => {
-    const id = Date.now();
-    const newToast = { id, title, description, variant };
+    const message = `${title}: ${description}`;
     
-    setToasts(prev => [...prev, newToast]);
-    
-    // Auto remove toast after 5 seconds
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 5000);
-
-    // Log to console for development
-    console.log(`Toast [${variant}]: ${title} - ${description}`);
+    switch (variant) {
+      case 'destructive':
+        reactToastifyToast.error(message);
+        break;
+      case 'success':
+        reactToastifyToast.success(message);
+        break;
+      case 'warning':
+        reactToastifyToast.warning(message);
+        break;
+      default:
+        reactToastifyToast.info(message);
+        break;
+    }
   };
 
-  return { toast, toasts };
+  return { toast };
 };
 
 // Direct toast function for non-hook usage
 export const toast = ({ title, description, variant = 'default' }) => {
-  // Simple console log for direct toast calls
-  console.log(`Toast [${variant}]: ${title} - ${description}`);
+  const message = `${title}: ${description}`;
+  
+  switch (variant) {
+    case 'destructive':
+      reactToastifyToast.error(message);
+      break;
+    case 'success':
+      reactToastifyToast.success(message);
+      break;
+    case 'warning':
+      reactToastifyToast.warning(message);
+      break;
+    default:
+      reactToastifyToast.info(message);
+      break;
+  }
 }; 

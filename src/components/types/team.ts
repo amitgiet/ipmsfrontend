@@ -21,9 +21,3 @@ export const roleColors = {
   qa: 'bg-orange-100 text-orange-800 border-orange-200',
   client: 'bg-gray-100 text-gray-800 border-gray-200',
 };
-
-export const availableSkills = [
-  'React', 'TypeScript', 'Node.js', 'Python', 'JavaScript', 'UI/UX Design',
-  'Project Management', 'DevOps', 'Database Design', 'Testing', 'Mobile Development',
-  'Cloud Computing', 'Machine Learning', 'Data Analysis'
-];

@@ -16,12 +16,20 @@ export const projectService = {
 
   // Create new project
   createProject: async (projectData) => {
-    return await apiCall(allRoutes.projects.create, 'post', projectData);
+    return await apiCall(allRoutes.projects.create, 'post', projectData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
   },
 
   // Update project
   updateProject: async (id, projectData) => {
-    return await apiCall(allRoutes.projects.update(id), 'put', projectData);
+    return await apiCall(allRoutes.projects.update(id), 'patch', projectData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
   },
 
   // Delete project

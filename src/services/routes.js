@@ -73,7 +73,9 @@ export const allRoutes = {
     delete: (id) => `/teams/${id}`,
     members: (id) => `/teams/${id}/members`,
     addMember: (id) => `/teams/${id}/members`,
-    removeMember: (teamId, memberId) => `/teams/${teamId}/members/${memberId}`
+    removeMember: (teamId, memberId) => `/teams/${teamId}/members/${memberId}`,
+    password: (id) => `/teams/${id}/password`,
+    base: '/teams'
   },
   clients: {
     list: '/clients',
@@ -113,5 +115,12 @@ export const allRoutes = {
     download: (id) => `/files/${id}/download`,
     delete: (id) => `/files/${id}`,
     list: '/files'
+  },
+  skills: {
+    list: '/skills',
+    create: '/skills',
+    update: (id) => `/skills/${id}`,
+    delete: (id) => `/skills/${id}`,
+    get: (id) => `/skills/${id}`
   }
 }; 

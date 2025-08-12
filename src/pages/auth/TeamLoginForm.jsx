@@ -7,26 +7,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDispatch } from 'react-redux';
 import { loginUser } from '@/features/auth/authSlice';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, Users, Shield, Loader2 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Users, Shield, Loader2 } from 'lucide-react';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
+import { toast } from 'react-toastify';
 
 export const TeamLoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleAdminLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     if (!email || !password) {
-      setError('Please enter both email and password');
+      toast.error('Please enter both email and password');
       setLoading(false);
       return;
     }
@@ -64,7 +62,7 @@ export const TeamLoginForm = () => {
       navigate('/dashboard');
     } else {
       console.error('❌ Admin login failed:', result.error);
-      setError(result.error?.message || 'Login failed. Please check your credentials.');
+      toast.error(result.error?.message || 'Login failed. Please check your credentials.');
     }
     
     setLoading(false);
@@ -73,10 +71,9 @@ export const TeamLoginForm = () => {
   const handleTeamLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     if (!email || !password) {
-      setError('Please enter both email and password');
+      toast.error('Please enter both email and password');
       setLoading(false);
       return;
     }
@@ -84,7 +81,7 @@ export const TeamLoginForm = () => {
     console.log('🔄 Attempting team login...');
     
     const result = await apiCall(
-      allRoutes.auth.teamLogin,
+      allRoutes.auth.login,
       'post',
       {
         email,
@@ -118,7 +115,7 @@ export const TeamLoginForm = () => {
       navigate('/dashboard');
     } else {
       console.error('❌ Team login failed:', result.error);
-      setError(result.error?.message || 'Team login failed. Please check your credentials.');
+      toast.error(result.error?.message || 'Team login failed. Please check your credentials.');
     }
     
     setLoading(false);
@@ -183,13 +180,6 @@ export const TeamLoginForm = () => {
                 />
               </div>
 
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (
                   <>
@@ -236,13 +226,6 @@ export const TeamLoginForm = () => {
                   disabled={loading}
                 />
               </div>
-
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
 
               <Button
                 type="submit"

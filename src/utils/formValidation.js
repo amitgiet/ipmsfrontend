@@ -27,6 +27,12 @@ export const validateProjectForm = (formData) => {
 
   if (!formData.duration || isNaN(Number(formData.duration))) {
     errors.duration = 'Duration is required and must be a number';
+  } else if (Number(formData.duration) < 1) {
+    errors.duration = 'Duration must be at least 1 day';
+  }
+
+  if (!formData.endDate) {
+    errors.endDate = 'End date is required';
   }
 
   if (!formData.projectStatus) {

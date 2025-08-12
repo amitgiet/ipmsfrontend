@@ -4,6 +4,7 @@ import { fetchProjects } from "../../features/projects/projectSlice";
 import { fetchTasks } from "../../features/tasks/taskSlice";
 import RoleGuard from "../../guards/RoleGuard";
 import { AdminDashboard } from "./AdminDashboard/AdminDashboard";
+import { ProductOwnerDashboard } from "./ProductOwner/ProductOwnerDashboard";
 
 const DashboardPage = () => {
   const dispatch = useDispatch();
@@ -23,7 +24,6 @@ const DashboardPage = () => {
   }, [dispatch]);
 
   const DashboardContent = ({ role }) => {
-    console.log("dashboardcontent")
     const roleComponents = {
       admin: <AdminDashboard />,
       product_owner: <ProductOwnerDashboard />,
@@ -34,26 +34,6 @@ const DashboardPage = () => {
     };
     return roleComponents[role] || <DefaultDashboard />;
   };
-
-  const ProductOwnerDashboard = () => (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">
-        Product Owner Dashboard
-      </h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-2">My Projects</h3>
-          <p className="text-3xl font-bold text-primary-600">
-            {projects.length}
-          </p>
-        </div>
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-2">Pending Reviews</h3>
-          <p className="text-3xl font-bold text-yellow-600">5</p>
-        </div>
-      </div>
-    </div>
-  );
 
   const TeamLeadDashboard = () => (
     <div className="space-y-6">

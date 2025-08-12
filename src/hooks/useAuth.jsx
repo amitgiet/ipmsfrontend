@@ -9,8 +9,42 @@ export const useAuth = () => {
     return dispatch(loginUser(credentials));
   };
 
-  const logout = () => {
-    return dispatch(logoutUser());
+  const logout = async () => {
+    try {
+      console.log('🔄 Logging out user...');
+      
+      // Dispatch the logout action
+      const result = await dispatch(logoutUser());
+      
+      // Additional cleanup
+      if (result.meta.requestStatus === 'fulfilled') {
+        console.log('✅ Logout successful');
+        
+        // Force clear any remaining data
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Clear cookies
+        document.cookie.split(";").forEach(function(c) { 
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        // Reload the page to ensure complete cleanup
+        window.location.href = '/login';
+      } else {
+        console.error('❌ Logout failed:', result.error);
+        // Even if logout fails, clear local data
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '/login';
+      }
+    } catch (error) {
+      console.error('❌ Error in logout function:', error);
+      // Emergency cleanup
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/login';
+    }
   };
 
   return {

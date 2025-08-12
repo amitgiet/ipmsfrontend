@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
-import { apiCall } from "@/services/apiCall";
+import { skillsService } from "@/services/skillsService";
 import { useToast } from "@/hooks/use-toast";
 
 export const AdminSkillsSection = () => {
@@ -36,7 +36,7 @@ export const AdminSkillsSection = () => {
     setLoading(true);
     console.log("🔄 Fetching skills...");
 
-    const result = await apiCall(`/skills?page=${page}`, "get");
+    const result = await skillsService.getSkills({ page });
 
     if (result.success) {
       console.log("✅ Skills fetched successfully:", result.data);
@@ -90,24 +90,25 @@ export const AdminSkillsSection = () => {
     setIsAdding(true);
     console.log("🔄 Adding new skill:", newSkill.trim());
 
-    const result = await apiCall("/skills", "post", {
+    const addResult = await skillsService.createSkill({
       name: newSkill.trim(),
     });
 
-    if (result.success) {
-      console.log("✅ Skill added successfully:", result.data);
+    if (addResult.success) {
+      console.log("✅ Skill added successfully:", addResult.data);
 
       // Add the new skill to the local state
-      fetchSkills
+      fetchSkills(); // Re-fetch skills to update pagination and list
+      setNewSkill(''); // Clear the input
       toast({
         title: "Success",
         description: "Skill added successfully",
       });
     } else {
-      console.error("❌ Failed to add skill:", result.error);
+      console.error("❌ Failed to add skill:", addResult.error);
       toast({
         title: "Error",
-        description: result.error?.message || "Failed to add skill. Please try again.",
+        description: addResult.error?.message || "Failed to add skill. Please try again.",
         variant: "destructive",
       });
     }
@@ -116,11 +117,9 @@ export const AdminSkillsSection = () => {
   };
 
   const removeSkill = async (skillToRemove) => {
+    const deleteResult = await skillsService.deleteSkill(skillToRemove.id || skillToRemove);
 
-    const result = await apiCall(`/skills/${skillToRemove.id || skillToRemove}`, "delete");
-
-    if (result.success) {
-
+    if (deleteResult.success) {
       // Remove the skill from local state
       setSkills((prevSkills) =>
         prevSkills.filter((skill) => skill.id !== (skillToRemove.id || skillToRemove))
@@ -131,10 +130,10 @@ export const AdminSkillsSection = () => {
         description: "Skill removed successfully",
       });
     } else {
-      console.error("❌ Failed to remove skill:", result.error);
+      console.error("❌ Failed to remove skill:", deleteResult.error);
       toast({
         title: "Error",
-        description: result.error?.message || "Failed to remove skill. Please try again.",
+        description: deleteResult.error?.message || "Failed to remove skill. Please try again.",
         variant: "destructive",
       });
     }

@@ -1,0 +1,76 @@
+
+import { supabase } from '@/integrations/supabase/client';
+
+export const isProjectInProgress = async (projectId: string): Promise<boolean> => {
+  try {
+    console.log('🔄 Checking if project is in progress:', projectId);
+
+    const { data: project, error } = await supabase
+      .from('projects')
+      .select('project_status')
+      .eq('id', projectId)
+      .single();
+
+    if (error) {
+      console.error('❌ Error fetching project status:', error);
+      return false;
+    }
+
+    if (!project) {
+      console.warn('⚠️ No project found with ID:', projectId);
+      return false;
+    }
+
+    const inProgress = project?.project_status === 'in-progress';
+    console.log(`📊 Project status: ${project?.project_status}, In progress: ${inProgress}`);
+    
+    return inProgress;
+  } catch (error) {
+    console.error('❌ Error in isProjectInProgress:', error);
+    return false;
+  }
+};
+
+export const getProjectStatus = async (projectId: string): Promise<string> => {
+  try {
+    console.log('🔄 Fetching project status for project ID:', projectId);
+
+    if (!projectId) {
+      console.warn('⚠️ No project ID provided');
+      return 'unknown';
+    }
+
+    const { data: project, error } = await supabase
+      .from('projects')
+      .select('project_status')
+      .eq('id', projectId)
+      .single();
+
+    if (error) {
+      console.error('❌ Error fetching project status:', error);
+      return 'unknown';
+    }
+
+    if (!project) {
+      console.warn('⚠️ No project found with ID:', projectId);
+      return 'not-found';
+    }
+
+    const status = project.project_status;
+    console.log(`📊 Raw project status from DB: "${status}"`);
+    
+    // Handle various status formats and null/undefined cases
+    if (!status || status.trim() === '') {
+      console.warn('⚠️ Project status is empty or null, defaulting to not-started');
+      return 'not-started';
+    }
+
+    const normalizedStatus = status.toLowerCase().trim();
+    console.log(`📊 Normalized project status: "${normalizedStatus}"`);
+    
+    return normalizedStatus;
+  } catch (error) {
+    console.error('❌ Error in getProjectStatus:', error);
+    return 'unknown';
+  }
+};

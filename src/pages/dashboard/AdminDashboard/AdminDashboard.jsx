@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminMainContent } from '@/pages/dashboard/AdminDashboard/AdminMainContent';
 import { AddProjectForm } from '@/pages/dashboard/Modal/AddProjectForm';
 import { EditProjectForm } from '@/pages/dashboard/Modal/EditProjectForm';
 
 export const AdminDashboard = () => {
+  const { logout } = useAuth();
   const [selectedProject, setSelectedProject] = useState(null);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [addProjectOpen, setAddProjectOpen] = useState(false);
   const [editProjectOpen, setEditProjectOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [skills, setSkills] = useState([]);
-
-  console.log("AdminDashboard");
 
   const handleViewProject = (project) => {
     setSelectedProject(project);
@@ -40,8 +40,14 @@ export const AdminDashboard = () => {
     setEditingProject(null);
   };
 
-  const handleLogout = () => {
-    console.log('Logging out...');
+  const handleLogout = async () => {
+    try {
+      console.log('🔄 Admin logging out...');
+      await logout();
+      console.log('✅ Admin logout successful');
+    } catch (error) {
+      console.error('❌ Error during admin logout:', error);
+    }
   };
   
   return (

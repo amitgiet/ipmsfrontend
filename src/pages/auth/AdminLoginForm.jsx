@@ -4,13 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Users, Shield, Code, TestTube, User, Crown } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { loginUser } from '@/features/auth/authSlice';
 import { useNavigate } from 'react-router-dom';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
+import { toast } from 'react-toastify';
 
 const roleIcons = {
   admin: Crown,
@@ -37,22 +37,20 @@ export const AdminLoginForm = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState('developer');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setIsLoading(true);
 
     if (!email || !password || !name) {
-      setError('Please fill in all fields');
+      toast.error('Please fill in all fields');
       setIsLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      toast.error('Password must be at least 6 characters long');
       setIsLoading(false);
       return;
     }
@@ -94,11 +92,11 @@ export const AdminLoginForm = () => {
         navigate('/dashboard');
       } else {
         // Handle API call failure
-        setError(result.error?.message || 'Login failed. Please try again.');
+        toast.error(result.error?.message || 'Login failed. Please try again.');
       }
     } catch (err) {
       console.error('❌ Login failed:', err);
-      setError('Login failed. Please check your credentials and try again.');
+      toast.error('Login failed. Please check your credentials and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -153,7 +151,7 @@ export const AdminLoginForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
+            <Label htmlFor="name">Role</Label>
             <Select value={role} onValueChange={(value) => setRole(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select your role" />
@@ -173,12 +171,6 @@ export const AdminLoginForm = () => {
               </SelectContent>
             </Select>
           </div>
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (

@@ -20,57 +20,21 @@ interface AdminRecentActivityProps {
 export const AdminRecentActivity = ({ projects }: AdminRecentActivityProps) => {
   const [notificationFreq, setNotificationFreq] = useState('1x');
 
-  // Demo data for when no projects are provided
-  const demoProjects: Project[] = [
-    {
-      id: '1',
-      project_name: 'E-commerce Platform Redesign',
-      created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-      project_status: 'in-progress',
-      client_name: 'TechCorp Solutions'
-    },
-    {
-      id: '2',
-      project_name: 'Mobile App Development',
-      created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
-      project_status: 'planned',
-      client_name: 'InnovateMobile Inc'
-    },
-    {
-      id: '3',
-      project_name: 'Website Migration Project',
-      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-      project_status: 'completed',
-      client_name: 'Global Enterprises'
-    },
-    {
-      id: '4',
-      project_name: 'CRM System Integration',
-      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-      project_status: 'on-hold',
-      client_name: 'SalesForce Pro'
-    },
-    {
-      id: '5',
-      project_name: 'Data Analytics Dashboard',
-      created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-      project_status: 'in-progress',
-      client_name: 'DataInsight Corp'
-    }
-  ];
-
-  const recentProjects = projects && projects.length > 0 ? projects.slice(0, 5) : demoProjects;
+  // Use only real projects data, no demo data
+  const recentProjects = projects && projects.length > 0 ? projects.slice(0, 5) : [];
 
   const getStatusColor = (status: string | null) => {
     switch (status?.toLowerCase()) {
-      case 'in-progress':
+      case 'planned':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'in_progress':
         return 'bg-green-100 text-green-700 border-green-200';
-      case 'on-hold':
+      case 'on_hold':
         return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'completed':
         return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'planned':
-        return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 'cancelled':
+        return 'bg-red-100 text-red-700 border-red-200';
       default:
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
@@ -114,44 +78,52 @@ export const AdminRecentActivity = ({ projects }: AdminRecentActivityProps) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {recentProjects.map((project, index) => (
-            <div 
-              key={project.id} 
-              className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50/80 transition-colors border border-gray-100/50"
-            >
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <FolderPlus className="h-4 w-4 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900 truncate">
-                      {project.project_name}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      {project.client_name && (
-                        <div className="flex items-center gap-1 text-sm text-gray-600">
-                          <User className="h-3 w-3" />
-                          <span className="truncate">{project.client_name}</span>
-                        </div>
-                      )}
-                      {project.project_status && (
-                        <Badge className={`text-xs ${getStatusColor(project.project_status)}`}>
-                          {project.project_status}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <span className="text-xs text-gray-500 whitespace-nowrap">
-                    {formatTime(project.created_at)}
-                  </span>
+          {recentProjects.length > 0 ? (
+            recentProjects.map((project, index) => (
+              <div 
+                key={project.id} 
+                className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50/80 transition-colors border border-gray-100/50"
+              >
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <FolderPlus className="h-4 w-4 text-white" />
                 </div>
-                <p className="text-sm text-gray-600 mt-1">
-                  Project created and added to the system
-                </p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 truncate">
+                        {project.project_name}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        {project.client_name && (
+                          <div className="flex items-center gap-1 text-sm text-gray-600">
+                            <User className="h-3 w-3" />
+                            <span className="truncate">{project.client_name}</span>
+                          </div>
+                        )}
+                        {project.project_status && (
+                          <Badge className={`text-xs ${getStatusColor(project.project_status)}`}>
+                            {project.project_status}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-xs text-gray-500 whitespace-nowrap">
+                      {formatTime(project.created_at)}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Project created and added to the system
+                  </p>
+                </div>
               </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <FolderPlus className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm">No recent activity</p>
+              <p className="text-gray-400 text-xs">Projects will appear here once they are created</p>
             </div>
-          ))}
+          )}
         </div>
       </CardContent>
     </Card>

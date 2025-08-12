@@ -9,10 +9,10 @@ const AuthGuard = ({ children }) => {
 
   useEffect(() => {
     // Check if we have stored authentication data
-    const token = localStorage.getItem("authToken");
-    const user = localStorage.getItem("user");
-    const teamUser = localStorage.getItem("teamUser");
-    const isStoredAuthenticated = localStorage.getItem("isAuthenticated");
+    const token = localStorage.getItem("ipms_token");
+    const user = localStorage.getItem("ipms_user");
+    const teamUser = localStorage.getItem("ipms_teamUser");
+    const isStoredAuthenticated = localStorage.getItem("ipms_isAuthenticated");
 
     if (
       token &&
@@ -27,10 +27,10 @@ const AuthGuard = ({ children }) => {
 
   // Check localStorage directly for immediate authentication state
   const checkStoredAuth = () => {
-    const token = localStorage.getItem("authToken");
-    const user = localStorage.getItem("user");
-    const teamUser = localStorage.getItem("teamUser");
-    const isStoredAuthenticated = localStorage.getItem("isAuthenticated");
+    const token = localStorage.getItem("ipms_token");
+    const user = localStorage.getItem("ipms_user");
+    const teamUser = localStorage.getItem("ipms_teamUser");
+    const isStoredAuthenticated = localStorage.getItem("ipms_isAuthenticated");
 
     return token && (user || teamUser) && isStoredAuthenticated === "true";
   };

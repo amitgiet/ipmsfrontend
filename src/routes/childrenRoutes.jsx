@@ -24,16 +24,42 @@ const SettingsPage = lazy(() => import('../pages/settings/SettingsPage'));
 const LoginPage = lazy(() => import('../pages/auth/Login'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 
+// Additional Lazy Pages for missing routes
+const AdminDashboard = lazy(() => import('../pages/dashboard/AdminDashboard/AdminDashboard'));
+const ProductOwnerDashboard = lazy(() => import('../pages/dashboard/ProductOwner/ProductOwnerDashboard'));
+const ProjectDashboardPage = lazy(() => import("../components/projects/ProjectDashboardPage"));
+// const UserStoryGrooming = lazy(() => import('../components/UserStoryGrooming'));
+// const StoryDetailsPage = lazy(() => import('../components/StoryDetailsPage'));
+// const SprintManagementPage = lazy(() => import('../components/sprints/SprintManagementPage'));
+// const CreateSprintPageWrapper = lazy(() => import('../components/sprints/CreateSprintPageWrapper'));
+// const DeveloperTasksPage = lazy(() => import('../components/DeveloperTasksPage'));
+// const QAStoriesPage = lazy(() => import('../components/QAStoriesPage'));
+// const TimeLogsPage = lazy(() => import('../components/TimeLogsPage'));
+
 // App Routes
 export const childrenComponents = [
   { path: '', element: <Navigate to="/dashboard" replace /> },
   { path: 'dashboard', element: withSuspense(DashboardPage)() },
+  { path: 'admin', element: withSuspense(AdminDashboard)() },
+  { path: 'product-owner', element: withSuspense(ProductOwnerDashboard)() },
   { path: 'projects', element: withSuspense(ProjectListPage)() },
   { path: 'sprints', element: withSuspense(SprintListPage)() },
   { path: 'stories', element: withSuspense(StoryListPage)() },
   { path: 'tasks', element: withSuspense(TaskListPage)() },
   { path: 'timesheet', element: withSuspense(TimesheetPage)() },
-  { path: 'settings', element: withSuspense(SettingsPage)() }
+  { path: 'settings', element: withSuspense(SettingsPage)() },
+  
+  // Project-specific routes
+  { path: 'project/:projectId', element: withSuspense(ProjectDashboardPage)() },
+  // { path: 'project/:projectId/time-logs', element: withSuspense(TimeLogsPage)() },
+  // { path: 'project/:projectId/sprints/create', element: withSuspense(CreateSprintPageWrapper)() },
+  // { path: 'project/:projectId/story/:storyId/groom', element: withSuspense(UserStoryGrooming)() },
+  // { path: 'project/:projectId/story/:storyId/details', element: withSuspense(StoryDetailsPage)() },
+  // { path: 'project/:projectId/sprint/:sprintId/manage', element: withSuspense(SprintManagementPage)() },
+  
+  // Developer and QA routes
+  // { path: 'my-tasks', element: withSuspense(DeveloperTasksPage)() },
+  // { path: 'qa/stories', element: withSuspense(QAStoriesPage)() }
 ];
 
 export const authChildren = [

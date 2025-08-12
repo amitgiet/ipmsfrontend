@@ -45,20 +45,11 @@ export const ProjectInfoSection = ({ formData, errors, onInputChange }) => {
               <SelectValue placeholder="Select project type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="web-development">Web Development</SelectItem>
-              <SelectItem value="mobile-development">Mobile Development</SelectItem>
-              <SelectItem value="desktop-application">Desktop Application</SelectItem>
-              <SelectItem value="api-development">API Development</SelectItem>
-              <SelectItem value="database-design">Database Design</SelectItem>
-              <SelectItem value="ui-ux-design">UI/UX Design</SelectItem>
-              <SelectItem value="testing-qa">Testing/QA</SelectItem>
-              <SelectItem value="devops-infrastructure">DevOps/Infrastructure</SelectItem>
+              <SelectItem value="web development">Web Development</SelectItem>
+              <SelectItem value="mobile app">Mobile App</SelectItem>
+              <SelectItem value="design">Design</SelectItem>
               <SelectItem value="consulting">Consulting</SelectItem>
-              <SelectItem value="maintenance-support">Maintenance/Support</SelectItem>
-              <SelectItem value="enterprise-software">Enterprise Software</SelectItem>
-              <SelectItem value="e-commerce">E-commerce</SelectItem>
-              <SelectItem value="cms-development">CMS Development</SelectItem>
-              <SelectItem value="custom-software">Custom Software</SelectItem>
+              <SelectItem value="maintenance">Maintenance</SelectItem>
             </SelectContent>
           </Select>
           {errors.projectType && <p className="text-sm text-red-500">{errors.projectType}</p>}
@@ -77,7 +68,6 @@ export const ProjectInfoSection = ({ formData, errors, onInputChange }) => {
               <SelectItem value="low">Low</SelectItem>
               <SelectItem value="medium">Medium</SelectItem>
               <SelectItem value="high">High</SelectItem>
-              <SelectItem value="critical">Critical</SelectItem>
               <SelectItem value="urgent">Urgent</SelectItem>
             </SelectContent>
           </Select>
@@ -95,14 +85,11 @@ export const ProjectInfoSection = ({ formData, errors, onInputChange }) => {
             <SelectValue placeholder="Select status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="planning">Planning</SelectItem>
-            <SelectItem value="in-progress">In Progress</SelectItem>
-            <SelectItem value="on-hold">On Hold</SelectItem>
+            <SelectItem value="planned">Planned</SelectItem>
+            <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="on_hold">On Hold</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
             <SelectItem value="cancelled">Cancelled</SelectItem>
-            <SelectItem value="review">Under Review</SelectItem>
-            <SelectItem value="testing">Testing</SelectItem>
-            <SelectItem value="deployment">Deployment</SelectItem>
           </SelectContent>
         </Select>
         {errors.projectStatus && <p className="text-sm text-red-500">{errors.projectStatus}</p>}

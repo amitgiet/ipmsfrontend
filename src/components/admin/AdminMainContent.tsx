@@ -5,9 +5,9 @@ import { AdminRecentActivity } from '@/components/admin/AdminRecentActivity';
 import { AdminSkillsSection } from '@/components/admin/AdminSkillsSection';
 import { AdminProjectsSection } from '@/components/admin/AdminProjectsSection';
 import { AdminTimesheetSection } from '@/components/admin/AdminTimesheetSection';
-import { TeamManagement } from '@/components/TeamManagement';
-import { useAdminDashboardMetrics } from '@/hooks/useAdminDashboardMetrics';
-import { Project } from '@/types/project';
+import { TeamManagement } from '@/pages/dashboard/AdminDashboard/TeamManagement';
+// import { useAdminDashboardMetrics } from '@/hooks/useAdminDashboardMetrics';
+// import { Project } from '@/types/project';
 
 interface AdminMainContentProps {
   activeSection: string;

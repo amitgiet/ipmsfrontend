@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { ProductOwnerHeader } from '@/components/ProductOwnerHeader';
-import { ProductOwnerStats } from '@/components/ProductOwnerStats';
-import { ProductOwnerProjectsTable } from '@/components/ProductOwnerProjectsTable';
-import { ProductOwnerTimeLog } from '@/components/ProductOwnerTimeLog';
-import { ProductOwnerTimeLogTable } from '@/components/ProductOwnerTimeLogTable';
-import { useProductOwnerProjects } from '@/hooks/useProductOwnerProjects';
-import { useProductOwnerTimeLogs } from '@/hooks/useProductOwnerTimeLogs';
+import { useAuth } from '@/hooks/useAuth';
+import { ProductOwnerHeader } from '@/pages/dashboard/ProductOwner/ProductOwnerHeader';
+import { ProductOwnerStats } from '@/pages/dashboard/ProductOwner/ProductOwnerStats';
+import { ProductOwnerProjectsTable } from '@/pages/dashboard/ProductOwner/ProductOwnerProjectsTable';
+import { ProductOwnerTimeLog } from '@/pages/dashboard/ProductOwner/ProductOwnerTimeLog';
+import { ProductOwnerTimeLogTable } from '@/pages/dashboard/ProductOwner/ProductOwnerTimeLogTable';
+// import { useProductOwnerTimeLogs } from '@/hooks/useProductOwnerTimeLogs';
 import { Button } from '@/components/ui/button';
 import { Clock } from 'lucide-react';
 
@@ -15,17 +14,39 @@ export const ProductOwnerDashboard = () => {
   const currentUser = user || teamUser;
   const [showTimeLogDialog, setShowTimeLogDialog] = useState(false);
   
-  const { projects, loading, refetch } = useProductOwnerProjects(currentUser);
-  const { timeLogs, refetch: refetchTimeLogs } = useProductOwnerTimeLogs(currentUser?.email || '');
+  // Demo data instead of hooks
+  const demoProjects = [
+    {
+      id: '1',
+      project_name: 'E-commerce Platform',
+      project_status: 'in_progress',
+      estimated_budget: 50000,
+      budget_currency: 'USD'
+    },
+    {
+      id: '2',
+      project_name: 'Mobile App Development',
+      project_status: 'planned',
+      estimated_budget: 35000,
+      budget_currency: 'USD'
+    },
+    {
+      id: '3',
+      project_name: 'Website Redesign',
+      project_status: 'completed',
+      estimated_budget: 25000,
+      budget_currency: 'USD'
+    }
+  ];
 
   if (!currentUser) {
     return null;
   }
 
   const handleTimeLogged = () => {
-    // Refetch both projects and time logs data when a new time log is added
-    refetch();
-    refetchTimeLogs();
+    // Demo function - just log to console
+    console.log('Time logged - would refetch data in real app');
+    // In a real app, this would refetch both projects and time logs data
   };
 
   return (
@@ -45,25 +66,32 @@ export const ProductOwnerDashboard = () => {
           </Button>
         </div>
 
-        <ProductOwnerStats projects={projects} />
+        <ProductOwnerStats projects={demoProjects} />
         
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-8">
           <ProductOwnerProjectsTable 
-            projects={projects} 
-            loading={loading} 
+            projects={demoProjects} 
+            loading={false} 
             currentUserEmail={currentUser.email} 
           />
           <ProductOwnerTimeLogTable 
             productOwnerEmail={currentUser.email} 
-            timeLogsList={timeLogs}
-            refetchTimeLogs={refetchTimeLogs}
+            timeLogsList={[]}  // Empty array will trigger demo data display
+            refetchTimeLogs={() => {}} 
           />
         </div>
 
+        {/* <ProductOwnerTimeLog
+          open={showTimeLogDialog}
+          onClose={() => setShowTimeLogDialog(false)}
+          projects={demoProjects.map(p => ({ id: p.id, project_name: p.project_name }))}
+          productOwnerEmail={currentUser.email}
+          onTimeLogged={handleTimeLogged}
+        /> */}
         <ProductOwnerTimeLog
           open={showTimeLogDialog}
           onClose={() => setShowTimeLogDialog(false)}
-          projects={projects.map(p => ({ id: p.id, project_name: p.project_name }))}
+          projects={demoProjects.map(p => ({ id: p.id, project_name: p.project_name }))}
           productOwnerEmail={currentUser.email}
           onTimeLogged={handleTimeLogged}
         />

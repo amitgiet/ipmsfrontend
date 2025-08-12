@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import AuthGuard from '../guards/AuthGuard';
+import LoginGuard from '../guards/LoginGuard';
 import AppLayout from '../components/layout/AppLayout';
 import { childrenComponents } from './childrenRoutes';
 
@@ -27,7 +28,11 @@ export const router = createBrowserRouter([
   },
   {
     path: '/login',
-    element: withSuspense(LoginPage)(),
+    element: (
+      <LoginGuard>
+        {withSuspense(LoginPage)()}
+      </LoginGuard>
+    ),
   },
   {
     path: '*',

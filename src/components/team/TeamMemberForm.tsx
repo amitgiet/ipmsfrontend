@@ -1,17 +1,25 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DialogFooter } from '@/components/ui/dialog';
-import { Loader2 } from 'lucide-react';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover';
+import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
 import { UserRole } from '@/components/types/auth';
 import { TeamMember } from '@/components/types/team';
 import { skillsService } from '@/services/skillsService';
-import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface TeamMemberFormProps {
   formData: {
@@ -37,111 +45,75 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
   onSubmit,
   onCancel
 }) => {
-  const { toast } = useToast();
-  const [availableSkills, setAvailableSkills] = useState<Array<{id: string | number, name: string}>>([]);
-  const [loadingSkills, setLoadingSkills] = useState(true);
+  const [availableSkills, setAvailableSkills] = useState<
+    Array<{ id: string | number; name: string }>
+  >([]);
+  const [loadingSkills, setLoadingSkills] = useState(false);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [open, setOpen] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
-  // Fetch skills from API on component mount
+  // Fetch skills when search, page or popover open changes
   useEffect(() => {
-    fetchSkills();
-  }, []);
+    if (open) {
+      fetchSkills(search, page);
+    }
+  }, [search, page, open]);
 
-  const fetchSkills = async () => {
+  const fetchSkills = async (searchTerm: string, pageNum: number) => {
     setLoadingSkills(true);
     try {
-      const result = await skillsService.getSkills();
-      
+      const result = await skillsService.getSkills({
+        search: searchTerm,
+        page: pageNum
+      });
       if (result.success) {
-        const skillsData = result.data.data || result.data || [];
-        // Store both id and name for each skill
-        const skillsWithIds = skillsData.map((skill: any) => ({
-          id: skill.id,
-          name: skill.name || skill
-        }));
-        setAvailableSkills(skillsWithIds);
+        const skillsData = result.data.data || [];
+        if (pageNum === 1) {
+          setAvailableSkills(skillsData);
+        } else {
+          setAvailableSkills((prev) => [...prev, ...skillsData]);
+        }
+        setHasMore(skillsData.length > 0);
       } else {
-        console.error('Failed to fetch skills:', result.error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch skills. Using default skills.",
-          variant: "destructive",
-        });
-        // Fallback to default skills if API fails
-        setAvailableSkills([
-          { id: 'react', name: 'React' },
-          { id: 'typescript', name: 'TypeScript' },
-          { id: 'nodejs', name: 'Node.js' },
-          { id: 'python', name: 'Python' },
-          { id: 'javascript', name: 'JavaScript' },
-          { id: 'uiux', name: 'UI/UX Design' },
-          { id: 'project-management', name: 'Project Management' },
-          { id: 'devops', name: 'DevOps' },
-          { id: 'database', name: 'Database Design' },
-          { id: 'testing', name: 'Testing' },
-          { id: 'mobile', name: 'Mobile Development' },
-          { id: 'cloud', name: 'Cloud Computing' },
-          { id: 'ml', name: 'Machine Learning' },
-          { id: 'data-analysis', name: 'Data Analysis' }
-        ]);
+        setAvailableSkills([]);
+        setHasMore(false);
       }
     } catch (error) {
       console.error('Error fetching skills:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch skills. Using default skills.",
-        variant: "destructive",
-      });
-      // Fallback to default skills if API fails
-      setAvailableSkills([
-        { id: 'react', name: 'React' },
-        { id: 'typescript', name: 'TypeScript' },
-        { id: 'nodejs', name: 'Node.js' },
-        { id: 'python', name: 'Python' },
-        { id: 'javascript', name: 'JavaScript' },
-        { id: 'uiux', name: 'UI/UX Design' },
-        { id: 'project-management', name: 'Project Management' },
-        { id: 'devops', name: 'DevOps' },
-        { id: 'database', name: 'Database Design' },
-        { id: 'testing', name: 'Testing' },
-        { id: 'mobile', name: 'Mobile Development' },
-        { id: 'cloud', name: 'Cloud Computing' },
-        { id: 'ml', name: 'Machine Learning' },
-        { id: 'data-analysis', name: 'Data Analysis' }
-      ]);
+      setAvailableSkills([]);
+      setHasMore(false);
     } finally {
       setLoadingSkills(false);
     }
   };
 
-  const handleSkillToggle = (skillId: string | number) => {
-    onFormDataChange(prev => ({
+  // Toggle skill selection
+  const toggleSkill = (skillId: string | number) => {
+    onFormDataChange((prev: typeof formData) => ({
       ...prev,
       skills: prev.skills.includes(skillId)
-        ? prev.skills.filter(s => s !== skillId)
+        ? prev.skills.filter((id) => id !== skillId)
         : [...prev.skills, skillId]
     }));
   };
 
-  // Helper function to check if a skill is selected
-  const isSkillSelected = (skillId: string | number) => {
-    return formData.skills.includes(skillId);
-  };
-
-  // Helper function to get skill name by ID
-  const getSkillNameById = (skillId: string | number) => {
-    const skill = availableSkills.find(s => s.id === skillId);
-    return skill ? skill.name : skillId;
-  };
-
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+      {/* Name + Email */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="name">Name</Label>
           <Input
             id="name"
             value={formData.name}
-            onChange={(e) => onFormDataChange(prev => ({ ...prev, name: e.target.value }))}
+            onChange={(e) =>
+              onFormDataChange((prev: any) => ({
+                ...prev,
+                name: e.target.value
+              }))
+            }
             required
           />
         </div>
@@ -151,12 +123,18 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             id="email"
             type="email"
             value={formData.email}
-            onChange={(e) => onFormDataChange(prev => ({ ...prev, email: e.target.value }))}
+            onChange={(e) =>
+              onFormDataChange((prev: any) => ({
+                ...prev,
+                email: e.target.value
+              }))
+            }
             required
           />
         </div>
       </div>
 
+      {/* Mobile + Emergency Contact */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="mobile_no">Mobile Number</Label>
@@ -164,7 +142,12 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             id="mobile_no"
             type="tel"
             value={formData.mobile_no}
-            onChange={(e) => onFormDataChange(prev => ({ ...prev, mobile_no: e.target.value }))}
+            onChange={(e) =>
+              onFormDataChange((prev: any) => ({
+                ...prev,
+                mobile_no: e.target.value
+              }))
+            }
             placeholder="+1 (555) 123-4567"
           />
         </div>
@@ -173,12 +156,18 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
           <Input
             id="emergency_contact"
             value={formData.emergency_contact}
-            onChange={(e) => onFormDataChange(prev => ({ ...prev, emergency_contact: e.target.value }))}
+            onChange={(e) =>
+              onFormDataChange((prev: any) => ({
+                ...prev,
+                emergency_contact: e.target.value
+              }))
+            }
             placeholder="Name and phone number"
           />
         </div>
       </div>
 
+      {/* Password + Role */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="password">
@@ -188,78 +177,133 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             id="password"
             type="password"
             value={formData.password}
-            onChange={(e) => onFormDataChange(prev => ({ ...prev, password: e.target.value }))}
+            onChange={(e) =>
+              onFormDataChange((prev: any) => ({
+                ...prev,
+                password: e.target.value
+              }))
+            }
             required={!editingMember}
           />
         </div>
         <div>
           <Label htmlFor="role">Role</Label>
-          <Select value={formData.role} onValueChange={(value: UserRole) => onFormDataChange(prev => ({ ...prev, role: value }))}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="team_lead">Team Lead</SelectItem>
-              <SelectItem value="product_owner">Product Owner</SelectItem>
-              <SelectItem value="developer">Developer</SelectItem>
-              <SelectItem value="qa">QA</SelectItem>
-              <SelectItem value="client">Client</SelectItem>
-            </SelectContent>
-          </Select>
+          <select
+            id="role"
+            value={formData.role}
+            onChange={(e) =>
+              onFormDataChange((prev: any) => ({
+                ...prev,
+                role: e.target.value as UserRole
+              }))
+            }
+            className="w-full rounded border border-gray-300 px-3 py-2"
+          >
+            <option value="admin">Admin</option>
+            <option value="team_lead">Team Lead</option>
+            <option value="product_owner">Product Owner</option>
+            <option value="developer">Developer</option>
+            <option value="qa">QA</option>
+            <option value="client">Client</option>
+          </select>
         </div>
       </div>
 
+      {/* Skills dropdown with search + pagination */}
       <div>
         <Label>Skills</Label>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {loadingSkills ? (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading skills...
-            </div>
-          ) : availableSkills.length > 0 ? (
-            availableSkills.map((skill) => (
-              <Badge
-                key={skill.id}
-                variant={isSkillSelected(skill.id) ? "default" : "outline"}
-                className="cursor-pointer hover:bg-primary/10 transition-colors"
-                onClick={() => handleSkillToggle(skill.id)}
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              className="w-full justify-between"
+              aria-expanded={open}
+            >
+              {formData.skills.length > 0
+                ? `${formData.skills.length} selected`
+                : 'Select skills...'}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] p-0">
+            <Command>
+              <CommandInput
+                placeholder="Search skills..."
+                value={search}
+                onValueChange={(value) => {
+                  setSearch(value);
+                  setPage(1);
+                }}
+                autoFocus
+              />
+              <CommandEmpty>No skills found.</CommandEmpty>
+              <CommandGroup
+                style={{
+                  maxHeight: '250px',  // fixed max height
+                  overflowY: 'auto',   // vertical scroll when content overflows
+                }}
               >
-                {getSkillNameById(skill.id)}
-              </Badge>
-            ))
-          ) : (
-            <div className="text-sm text-gray-500">
-              No skills available. Please add skills in the Skills Management section.
-            </div>
-          )}
-        </div>
-        {formData.skills.length > 0 && (
-          <div className="mt-2 text-xs text-gray-600">
-            Selected: {formData.skills.length} skill{formData.skills.length !== 1 ? 's' : ''} 
-            ({formData.skills.map(id => getSkillNameById(id)).join(', ')})
-          </div>
-        )}
+                {availableSkills.map((skill) => (
+                  <CommandItem
+                    key={skill.id}
+                    onSelect={() => toggleSkill(skill.id)}
+                  >
+                    <Check
+                      className={cn(
+                        'mr-2 h-4 w-4',
+                        formData.skills.includes(skill.id) ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    {skill.name}
+                  </CommandItem>
+                ))}
+
+                {loadingSkills && (
+                  <div className="flex items-center justify-center p-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </div>
+                )}
+
+                {!loadingSkills && hasMore && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Load more
+                  </Button>
+                )}
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+
+        </Popover>
       </div>
 
+      {/* Active toggle */}
       <div className="flex items-center space-x-2">
         <Switch
           id="is_active"
           checked={formData.is_active}
-          onCheckedChange={(checked) => onFormDataChange(prev => ({ ...prev, is_active: checked }))}
+          onCheckedChange={(checked) =>
+            onFormDataChange((prev: any) => ({
+              ...prev,
+              is_active: checked
+            }))
+          }
         />
         <Label htmlFor="is_active">Active (can login)</Label>
       </div>
 
-      <DialogFooter>
+      {/* Actions */}
+      <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit">
-          {editingMember ? 'Update' : 'Add'} Team Member
-        </Button>
-      </DialogFooter>
+        <Button type="submit">{editingMember ? 'Update' : 'Add'} Team Member</Button>
+      </div>
     </form>
   );
 };

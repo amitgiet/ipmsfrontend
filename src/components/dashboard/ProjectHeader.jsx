@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
 
 export const ProjectHeader = ({ project, onBack }) => {
+  console.log("project", project);
   // Safety check for project prop
   if (!project) {
     return (
@@ -58,13 +59,13 @@ export const ProjectHeader = ({ project, onBack }) => {
       </Button>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{project.project_name || 'Project'}</h1>
-          <p className="text-gray-600 text-sm sm:text-base break-all">Project ID: {project.project_id || project.id || 'N/A'}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{project.name || 'Project'}</h1>
+          <p className="text-gray-600 text-sm sm:text-base break-all">Project ID: {project.id || 'N/A'}</p>
         </div>
         <div className="flex flex-wrap gap-2 sm:flex-nowrap">
-          {project.project_status && (
-            <Badge className={getStatusColor(project.project_status)}>
-              {project.project_status.replace('_', ' ').toUpperCase()}
+          {project.status && (
+            <Badge className={getStatusColor(project.status)}>
+              {project.status.replace('_', ' ').toUpperCase()}
             </Badge>
           )}
           {project.priority && (

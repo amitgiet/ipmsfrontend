@@ -336,7 +336,7 @@ export const AdminTimesheetSection = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full p-6">
       <h2 className="text-2xl font-bold">Team Timesheets</h2>
       
       {/* Today's Summary */}

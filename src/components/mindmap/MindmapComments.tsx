@@ -4,10 +4,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/contexts/AuthContext';
-import { MindmapComment, useMindmapComments } from '@/hooks/useMindmapComments';
+import { useAuth } from '@/hooks/useAuth';
 import { formatDistanceToNow } from 'date-fns';
 import { Send, Trash2 } from 'lucide-react';
+
+interface MindmapComment {
+  id: string;
+  content: string;
+  author_name: string;
+  author_email: string;
+  author_role: string;
+  created_at: string;
+}
 
 interface MindmapCommentsProps {
   projectId: string;
@@ -18,7 +26,33 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
   const { user, teamUser } = useAuth();
   const currentUser = user || teamUser;
   const [commentText, setCommentText] = useState('');
-  const { comments, loading, addComment, deleteComment } = useMindmapComments(projectId, nodeId, currentUser);
+  const [comments, setComments] = useState<MindmapComment[]>([
+    {
+      id: '1',
+      content: 'This project looks great! Looking forward to working on it.',
+      author_name: 'John Developer',
+      author_email: 'john@example.com',
+      author_role: 'developer',
+      created_at: '2024-01-15T10:30:00Z'
+    },
+    {
+      id: '2',
+      content: 'The timeline seems realistic. Let\'s make sure we stick to it.',
+      author_name: 'Sarah Manager',
+      author_email: 'sarah@example.com',
+      author_role: 'product_owner',
+      created_at: '2024-01-15T11:15:00Z'
+    },
+    {
+      id: '3',
+      content: 'I have some questions about the requirements. Can we discuss this?',
+      author_name: 'Mike QA',
+      author_email: 'mike@example.com',
+      author_role: 'qa',
+      created_at: '2024-01-15T14:20:00Z'
+    }
+  ]);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,16 +67,24 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
     }
     
     console.log('Submitting comment as user:', currentUser);
-    const targetNodeId = nodeId || 'project'; // Use 'project' as default node ID
     
-    const success = await addComment(targetNodeId, commentText);
-    if (success) {
-      setCommentText('');
-    }
+    // Add new comment to local state
+    const newComment: MindmapComment = {
+      id: Date.now().toString(),
+      content: commentText,
+      author_name: currentUser.name || currentUser.email || 'Anonymous',
+      author_email: currentUser.email || '',
+      author_role: currentUser.role || 'user',
+      created_at: new Date().toISOString()
+    };
+    
+    setComments(prev => [newComment, ...prev]);
+    setCommentText('');
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    await deleteComment(commentId);
+    // Remove comment from local state
+    setComments(prev => prev.filter(comment => comment.id !== commentId));
   };
 
   const canDeleteComment = (comment: MindmapComment) => {

@@ -8,10 +8,10 @@ import { formatBudget, formatDate, statusColors, priorityColors } from '@/utils/
 
 interface Project {
   id: string;
-  project_name: string;
+  name: string;
   project_id: string | null;
   client_name: string | null;
-  project_status: string | null;
+  status: string | null;
   start_date: string | null;
   end_date: string | null;
   estimated_budget: number | null;
@@ -31,9 +31,9 @@ export const ProjectTableRow = ({ project, onViewProject }: ProjectTableRowProps
     <TableRow>
       <TableCell>
         <div className="max-w-[200px]">
-          <div className="font-medium truncate" title={project.project_name}>{project.project_name}</div>
-          {project.project_id && (
-            <div className="text-sm text-gray-500 truncate" title={`ID: ${project.project_id}`}>ID: {project.project_id}</div>
+          <div className="font-medium truncate" title={project.name}>{project.name}</div>
+          {project.id && (
+            <div className="text-sm text-gray-500 truncate" title={`ID: ${project.id}`}>ID: {project.id}</div>
           )}
         </div>
       </TableCell>
@@ -46,8 +46,8 @@ export const ProjectTableRow = ({ project, onViewProject }: ProjectTableRowProps
         </div>
       </TableCell>
       <TableCell>
-        <Badge className={statusColors[project.project_status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}>
-          {project.project_status?.replace('-', ' ') || 'Unknown'}
+          <Badge className={statusColors[project.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}>
+          {project.status?.replace('-', ' ') || 'Unknown'}
         </Badge>
       </TableCell>
       <TableCell>

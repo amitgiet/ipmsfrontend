@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Upload, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { TeamMemberForm } from '@/components/team/TeamMemberForm';
+import { TeamMemberForm } from '@/components/team/TeamMemberForm.tsx';
 import { TeamMembersTable } from '@/components/team/TeamMembersTable';
 // import { ExcelImportDialog } from '@/components/team/ExcelImportDialog';
 import { useToast } from '@/hooks/use-toast';
@@ -292,17 +292,13 @@ export const TeamManagement = () => {
 
 
   return (
-    <div className="space-y-6">
+      <div className="space-y-6 w-full p-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Team Management</h2>
           <p className="text-gray-600">Manage your team members and their access</p>
         </div>
         <div className="flex gap-2">
-          {/* <Button onClick={() => setIsImportDialogOpen(true)} variant="outline">
-            <Upload className="h-4 w-4 mr-2" />
-            Import from Excel
-          </Button> */}
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={resetForm}>

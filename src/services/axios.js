@@ -12,7 +12,7 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('ipms_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -33,10 +33,10 @@ api.interceptors.response.use(
     if ((error.response?.status === 401 || error.response?.status === 403) && 
         !window.location.pathname.includes('/login')) {
       // Clear authentication data
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
-      localStorage.removeItem('teamUser');
-      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('ipms_token');
+      localStorage.removeItem('ipms_user');
+      localStorage.removeItem('ipms_teamUser');
+      localStorage.removeItem('ipms_isAuthenticated');
       
       // Only redirect if we're not already on login page
       if (!window.location.pathname.includes('/login')) {

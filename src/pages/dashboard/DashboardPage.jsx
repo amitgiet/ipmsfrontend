@@ -5,6 +5,8 @@ import { fetchTasks } from "../../features/tasks/taskSlice";
 import RoleGuard from "../../guards/RoleGuard";
 import { AdminDashboard } from "./AdminDashboard/AdminDashboard";
 import { ProductOwnerDashboard } from "./ProductOwner/ProductOwnerDashboard";
+import { Routes, Route } from 'react-router-dom';
+import { AdminProjectsSection } from '@/components/admin/AdminProjectsSection';
 
 const DashboardPage = () => {
   const dispatch = useDispatch();
@@ -18,13 +20,14 @@ const DashboardPage = () => {
 
   const currentUser = user || teamUser;
 
+
   useEffect(() => {
-    // Only fetch tasks here, let individual dashboard components handle their own data fetching
     dispatch(fetchTasks());
   }, [dispatch]);
 
   const DashboardContent = ({ role }) => {
     const roleComponents = {
+      "super-admin": <AdminDashboard />,
       admin: <AdminDashboard />,
       product_owner: <ProductOwnerDashboard />,
       team_lead: <TeamLeadDashboard />,
@@ -84,7 +87,7 @@ const DashboardPage = () => {
       </div>
     </div>
   );
- 
+
   const ClientDashboard = () => (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Client Dashboard</h1>
@@ -123,7 +126,7 @@ const DashboardPage = () => {
   return (
     <RoleGuard
       allowedRoles={[
-        "admin",
+        "super-admin",
         "product_owner",
         "team_lead",
         "developer",
@@ -131,8 +134,7 @@ const DashboardPage = () => {
         "client",
       ]}
     >
-      {/* <DashboardContent role={currentUser?.role} /> */}
-      <DashboardContent role="admin" />
+      <DashboardContent role={currentUser?.role} />
     </RoleGuard>
   );
 };

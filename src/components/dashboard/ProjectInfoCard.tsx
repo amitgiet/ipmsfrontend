@@ -11,6 +11,7 @@ interface ProjectInfoCardProps {
 }
 
 export const ProjectInfoCard = ({ project }: ProjectInfoCardProps) => {
+  console.log("project", project);
   return (
     <Card className="h-full">
       <CardHeader>
@@ -57,35 +58,35 @@ export const ProjectInfoCard = ({ project }: ProjectInfoCardProps) => {
             <h4 className="font-medium text-gray-900 mb-2 text-sm">Details</h4>
             <div className="space-y-1 text-xs">
               <p className="text-gray-600">
-                <strong>Type:</strong> {project?.project_type || 'Not specified'}
+                <strong>Type:</strong> {project?.type || 'Not specified'}
               </p>
               {project?.tags_labels && (
                 <div>
                   <strong className="text-gray-600">Tags:</strong>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {Array.isArray(project.tags_labels) 
+                    {Array.isArray(project.tags_labels)
                       ? project.tags_labels.slice(0, 2).map((tag: string, index: number) => (
-                          <Badge key={index} variant="secondary" className="text-xs px-1 py-0">
-                            {tag}
-                          </Badge>
-                        ))
+                        <Badge key={index} variant="secondary" className="text-xs px-1 py-0">
+                          {tag}
+                        </Badge>
+                      ))
                       : project.tags_labels?.split(',').slice(0, 2).map((tag: string, index: number) => (
-                          <Badge key={index} variant="secondary" className="text-xs px-1 py-0">
-                            {tag.trim()}
-                          </Badge>
-                        ))
+                        <Badge key={index} variant="secondary" className="text-xs px-1 py-0">
+                          {tag.trim()}
+                        </Badge>
+                      ))
                     }
-                    {Array.isArray(project.tags_labels) 
+                    {Array.isArray(project.tags_labels)
                       ? (project.tags_labels.length > 2 ? (
-                          <Badge variant="secondary" className="text-xs px-1 py-0">
-                            +{project.tags_labels.length - 2}
-                          </Badge>
-                        ) : null)
+                        <Badge variant="secondary" className="text-xs px-1 py-0">
+                          +{project.tags_labels.length - 2}
+                        </Badge>
+                      ) : null)
                       : (project.tags_labels?.split(',').length > 2 ? (
-                          <Badge variant="secondary" className="text-xs px-1 py-0">
-                            +{project.tags_labels.split(',').length - 2}
-                          </Badge>
-                        ) : null)
+                        <Badge variant="secondary" className="text-xs px-1 py-0">
+                          +{project.tags_labels.split(',').length - 2}
+                        </Badge>
+                      ) : null)
                     }
                   </div>
                 </div>

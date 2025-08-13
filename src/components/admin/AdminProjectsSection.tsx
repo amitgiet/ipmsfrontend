@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { 
+import {
   Plus,
   Edit,
   Calendar,
@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AddProjectForm } from '@/pages/dashboard/Modal/AddProjectForm';
 import { EditProjectForm } from '@/pages/dashboard/Modal/EditProjectForm';
 import { projectService } from '@/services/ProjectService/projectService';
+import { AdminHeader } from '@/components/admin/AdminHeader';
 
 interface Project {
   id: string;
@@ -79,8 +80,6 @@ export const AdminProjectsSection = () => {
   useEffect(() => {
     const loadProjects = async () => {
       setLoading(true);
-      console.log("🔄 Fetching projects...");
-
       try {
         // Prepare API parameters with filters
         const apiParams: { [key: string]: any } = {
@@ -102,16 +101,13 @@ export const AdminProjectsSection = () => {
           apiParams.priority = priorityFilter;
         }
 
-        console.log("🔍 API params:", apiParams);
-
         // Use the project service to fetch projects with filters
         const response = await projectService.getProjects(apiParams);
-        
+
         if (response.success) {
-          console.log("✅ Projects fetched successfully:", response.data);
           const projectsData = response.data.data || [];
           const meta = response.data.meta || {};
-          
+
           // Transform the data to match our Project interface if needed
           const transformedProjects = projectsData.map((item: any) => ({
             id: item.id?.toString() || Date.now().toString(),
@@ -139,9 +135,8 @@ export const AdminProjectsSection = () => {
             created_by: item.created_by || 'admin',
             progress_percent: item.progress_percent || 0
           }));
-          
+
           if (transformedProjects.length === 0) {
-            console.log("📊 No projects found in API response");
             setProjects([]);
             setFilteredProjects([]);
             setPagination({
@@ -168,7 +163,6 @@ export const AdminProjectsSection = () => {
         } else {
           console.error("❌ Failed to fetch projects:", response.message || response.error);
           // If API fails, show empty state
-          console.log("📊 API failed, showing empty state");
           setProjects([]);
           setFilteredProjects([]);
           setPagination({
@@ -186,7 +180,6 @@ export const AdminProjectsSection = () => {
       } catch (error) {
         console.error("❌ Error fetching projects:", error);
         // If any error occurs, show empty state
-        console.log("📊 Error occurred, showing empty state");
         setProjects([]);
         setFilteredProjects([]);
         setPagination({
@@ -211,27 +204,27 @@ export const AdminProjectsSection = () => {
   useEffect(() => {
     // Reset to first page when filters change
     setPagination(prev => ({ ...prev, current_page: 1 }));
-    
+
     // Apply client-side filtering for immediate UI feedback
     const filtered = projects.filter((project) => {
-      const matchesSearch = !searchTerm || 
+      const matchesSearch = !searchTerm ||
         project.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         project.project_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         project.client_name?.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const matchesStatus = statusFilter === 'all' || project.project_status === statusFilter;
-      
+
       const matchesPriority = priorityFilter === 'all' || project.priority === priorityFilter;
-      
-      const matchesClient = !clientFilter || 
+
+      const matchesClient = !clientFilter ||
         project.client_name?.toLowerCase().includes(clientFilter.toLowerCase());
-      
-      const matchesProjectId = !projectIdFilter || 
+
+      const matchesProjectId = !projectIdFilter ||
         project.project_id?.toLowerCase().includes(projectIdFilter.toLowerCase());
 
       return matchesSearch && matchesStatus && matchesPriority && matchesClient && matchesProjectId;
     });
-    
+
     setFilteredProjects(filtered);
   }, [projects, searchTerm, statusFilter, priorityFilter, clientFilter, projectIdFilter]);
 
@@ -239,7 +232,6 @@ export const AdminProjectsSection = () => {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (searchTerm || clientFilter || statusFilter !== 'all' || priorityFilter !== 'all') {
-        console.log("🔍 Filters changed, refreshing from API...");
         handleRefreshProjects();
       }
     }, 500); // 500ms delay
@@ -256,7 +248,6 @@ export const AdminProjectsSection = () => {
   const handleRefreshProjects = () => {
     const loadProjects = async () => {
       setLoading(true);
-      console.log("🔄 Refreshing projects...");
 
       try {
         // Prepare API parameters with filters
@@ -279,15 +270,12 @@ export const AdminProjectsSection = () => {
           apiParams.priority = priorityFilter;
         }
 
-        console.log("🔍 Refresh API params:", apiParams);
-
         const response = await projectService.getProjects(apiParams);
 
         if (response.success) {
-          console.log("✅ Projects refreshed successfully:", response.data);
           const projectsData = response.data.data || [];
           const meta = response.data.meta || {};
-          
+
           // Transform the data to match our Project interface if needed
           const transformedProjects = projectsData.map((item: any) => ({
             id: item.id?.toString() || Date.now().toString(),
@@ -315,9 +303,8 @@ export const AdminProjectsSection = () => {
             created_by: item.created_by || 'admin',
             progress_percent: item.progress_percent || 0
           }));
-          
+
           if (transformedProjects.length === 0) {
-            console.log("📊 No projects found in refresh response");
             setProjects([]);
             setFilteredProjects([]);
             setPagination({
@@ -344,7 +331,6 @@ export const AdminProjectsSection = () => {
         } else {
           console.error("❌ Failed to refresh projects:", response.message || response.error);
           // If API fails, show empty state
-          console.log("📊 API failed during refresh, showing empty state");
           setProjects([]);
           setFilteredProjects([]);
           setPagination({
@@ -362,7 +348,6 @@ export const AdminProjectsSection = () => {
       } catch (error) {
         console.error("❌ Error refreshing projects:", error);
         // If any error occurs, show empty state
-        console.log("📊 Error occurred during refresh, showing empty state");
         setProjects([]);
         setFilteredProjects([]);
         setPagination({
@@ -390,25 +375,20 @@ export const AdminProjectsSection = () => {
     setPriorityFilter('all');
     setClientFilter('');
     setProjectIdFilter('');
-    
+
     // Reset pagination to first page when clearing filters
     setPagination(prev => ({ ...prev, current_page: 1 }));
-    
+
     // Refresh projects with cleared filters
     handleRefreshProjects();
   };
 
   const handleAddProject = () => {
-    console.log('🔘 Add Project button clicked');
-    console.log('📊 Current modal state:', addProjectModalOpen);
-    setAddProjectModalOpen(true);
-    console.log('📊 Modal state set to true');
+      setAddProjectModalOpen(true);
   };
 
   const handleProjectSubmit = async (newProject) => {
     try {
-      console.log("✅ Project created successfully:", newProject);
-      
       // Add the new project to the local state
       const newProjectData = {
         id: newProject.id?.toString() || Date.now().toString(),
@@ -439,13 +419,13 @@ export const AdminProjectsSection = () => {
 
       setProjects(prev => [newProjectData, ...prev]);
       setFilteredProjects(prev => [newProjectData, ...prev]);
-      
+
       toast({
         title: "Success!",
         description: "Project created successfully.",
         variant: "default"
       });
-      
+
     } catch (error) {
       console.error("❌ Error handling project creation:", error);
       toast({
@@ -458,10 +438,8 @@ export const AdminProjectsSection = () => {
 
   const handleEditProjectSubmit = async (updatedProject) => {
     try {
-      console.log("✅ Project updated successfully:", updatedProject);
-      
       // Update the project in local state
-      setProjects(prev => prev.map(project => 
+      setProjects(prev => prev.map(project =>
         project.id === editingProject?.id ? {
           ...project,
           project_name: updatedProject.name || updatedProject.project_name || project.project_name,
@@ -485,8 +463,8 @@ export const AdminProjectsSection = () => {
           tags_labels: updatedProject.tags || updatedProject.tags_labels || project.tags_labels
         } : project
       ));
-      
-      setFilteredProjects(prev => prev.map(project => 
+
+      setFilteredProjects(prev => prev.map(project =>
         project.id === editingProject?.id ? {
           ...project,
           project_name: updatedProject.name || updatedProject.project_name || project.project_name,
@@ -510,17 +488,17 @@ export const AdminProjectsSection = () => {
           tags_labels: updatedProject.tags || updatedProject.tags_labels || project.tags_labels
         } : project
       ));
-      
+
       // Close the edit modal
       setEditProjectModalOpen(false);
       setEditingProject(null);
-      
+
       toast({
         title: "Success!",
         description: "Project updated successfully.",
         variant: "default"
       });
-      
+
     } catch (error) {
       console.error("❌ Error handling project update:", error);
       toast({
@@ -532,16 +510,14 @@ export const AdminProjectsSection = () => {
   };
 
   const handleEditProject = (project: Project) => {
-    console.log("Edit project:", project);
     setEditingProject(project);
     setEditProjectModalOpen(true);
   };
 
   const handleManageProject = (project: Project) => {
     // This would navigate to project management page
-    console.log("Manage project:", project);
   };
-  
+
   const getProjectStatusColor = (status: string | null) => {
     switch (status?.toLowerCase()) {
       case 'planned':
@@ -583,9 +559,8 @@ export const AdminProjectsSection = () => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
   };
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full p-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Projects Management</h2>
         <div className="flex gap-2">
@@ -604,7 +579,7 @@ export const AdminProjectsSection = () => {
           </Button>
         </div>
       </div>
-      
+
       {/* Collapsible Filters Section */}
       <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
         <Card>
@@ -696,8 +671,8 @@ export const AdminProjectsSection = () => {
 
                 {/* Search Button */}
                 <div className="flex items-end">
-                  <Button 
-                    onClick={handleRefreshProjects} 
+                  <Button
+                    onClick={handleRefreshProjects}
                     className="w-full flex items-center gap-2"
                     disabled={loading}
                   >
@@ -717,7 +692,7 @@ export const AdminProjectsSection = () => {
           </CollapsibleContent>
         </Card>
       </Collapsible>
-      
+
       <div className="flex gap-2 mb-4">
         <Button onClick={handleRefreshProjects} variant="outline">
           Refresh Projects
@@ -727,7 +702,7 @@ export const AdminProjectsSection = () => {
           {searchTerm || clientFilter || statusFilter !== 'all' || priorityFilter !== 'all' ? ' (filtered)' : ''}
         </div>
       </div>
-      
+
       <div className="grid gap-6">
         {loading && (
           <div className="text-center py-8 text-gray-500">

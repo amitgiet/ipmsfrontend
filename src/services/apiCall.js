@@ -43,8 +43,6 @@ export const apiCall = async (
             ...config,
             headers: finalHeaders,
           });
-
-    console.log('API Response:', response);
     return { success: true, data: response.data };
   } catch (error) {
     const axiosError = error;
@@ -71,24 +69,6 @@ export const apiCall = async (
       }
       return { success: false };
     }
-
-    // Retry logic for 500 errors
-    if (axiosError.response?.status === 500 && retryCount < MAX_RETRIES) {
-      console.log(`Retrying API call due to 500 error. Attempt ${retryCount + 1}/${MAX_RETRIES}`);
-      await delay(RETRY_DELAY * (retryCount + 1)); // Exponential backoff
-      return apiCall(url, method, data, config, retryCount + 1);
-    }
-    
-    // Log detailed error information
-    console.error('API Call Error Details:', {
-      url: axiosError.url || url,
-      method: axiosError.method || method,
-      status: axiosError.response?.status || axiosError.status,
-      message: axiosError.response?.data?.message || axiosError.message,
-      data: axiosError.response?.data,
-      retryCount,
-      timestamp: new Date().toISOString()
-    });
 
     const errors = axiosError?.response?.data?.errors;
     const message = axiosError?.response?.data?.message || axiosError.message;

@@ -17,7 +17,15 @@ export const allRoutes = {
     get: (id) => `/projects/${id}`,
     delete: (id) => `/projects/${id}`,
     stats: '/projects/stats',
-    recentActivity: '/projects/recent-activity'
+    recentActivity: '/projects/recent-activity',
+    getById: (id) => `/projects/dashboard/${id}`,
+    addTeamMember: (id) => `/projects/${id}/team-members`
+  },
+  productOwner: {
+    time_logs_list: '/time-logs',
+    add_time_log: '/time-logs',
+    dashboard: '/dashboard',
+    get_assigned_projects: '/user-project/assigned-projects'
   },
   tasks: {
     list: '/tasks',

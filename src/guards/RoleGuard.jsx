@@ -6,11 +6,11 @@ const RoleGuard = ({ children, allowedRoles, fallback, redirectTo = "/unauthoriz
   const { user, teamUser } = useSelector((state) => state.auth);
   const currentUser = user || teamUser;
   
-  // if (!currentUser) {
-  //   return <Navigate to="/auth/login" replace />;
-  // }
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
   
-  if (!allowedRoles.includes("admin")) {
+  if (!allowedRoles.includes(currentUser.role)) {
     return fallback ? <>{fallback}</> : <Navigate to={redirectTo} replace />;
   }
   

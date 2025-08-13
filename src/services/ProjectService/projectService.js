@@ -32,6 +32,9 @@ export const projectService = {
     });
   },
 
+  getProjectDetails: async (id) => {
+    return await apiCall(allRoutes.projects.getById(id), 'get');
+  },
   // Delete project
   deleteProject: async (id) => {
     return await apiCall(allRoutes.projects.delete(id), 'delete');

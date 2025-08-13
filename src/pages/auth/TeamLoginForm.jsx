@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDispatch } from 'react-redux';
 import { loginUser } from '@/features/auth/authSlice';
 import { useNavigate } from 'react-router-dom';
-import { Users, Shield, Loader2 } from 'lucide-react';
+import { Users, Shield, Loader2, Eye, EyeOff } from 'lucide-react';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
 import { toast } from 'react-toastify';
@@ -16,6 +16,7 @@ export const TeamLoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -43,79 +44,18 @@ export const TeamLoginForm = () => {
       const responseData = result.data.data || result.data;
       const userData = responseData.user;
       const token = responseData.token || responseData.access_token;
-      
-      // Store token in localStorage
-      if (token) {
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('isAuthenticated', 'true');
-      }
 
       // Dispatch login action with actual API response
       dispatch(loginUser.fulfilled({
         user: userData,
         teamUser: null,
-        token: token
+        token: token,
+        userRole: userData.role
       }, 'loginUser', { email, password }));
       
-      console.log('✅ Login successful, navigating to dashboard with user:', userData);
       navigate('/dashboard');
     } else {
       console.error('❌ Admin login failed:', result.error);
-      toast.error(result.error?.message || 'Login failed. Please check your credentials.');
-    }
-    
-    setLoading(false);
-  };
-
-  const handleTeamLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    if (!email || !password) {
-      toast.error('Please enter both email and password');
-      setLoading(false);
-      return;
-    }
-
-    console.log('🔄 Attempting team login...');
-    
-    const result = await apiCall(
-      allRoutes.auth.login,
-      'post',
-      {
-        email,
-        password
-      }
-    );
-
-    if (result.success) {
-      console.log('✅ Team login successful:', result.data);
-
-      // Extract user data from response - handle nested data structure
-      const responseData = result.data.data || result.data;
-      const userData = responseData.user;
-      const token = responseData.token || responseData.access_token;
-
-      // Store token in localStorage
-      if (token) {
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('teamUser', JSON.stringify(userData));
-        localStorage.setItem('isAuthenticated', 'true');
-      }
-
-      // Dispatch login action with actual API response
-      dispatch(loginUser.fulfilled({
-        user: null,
-        teamUser: userData,
-        token: token
-      }, 'loginUser', { email, password }));
-      
-      console.log('✅ Team login successful, navigating to dashboard with user:', userData);
-      navigate('/dashboard');
-    } else {
-      console.error('❌ Team login failed:', result.error);
-      toast.error(result.error?.message || 'Team login failed. Please check your credentials.');
     }
     
     setLoading(false);
@@ -169,15 +109,32 @@ export const TeamLoginForm = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="admin-password">Password</Label>
-                <Input
-                  id="admin-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  required
-                  disabled={loading}
-                />
+                <div className="relative">
+                  <Input
+                    id="admin-password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    required
+                    disabled={loading}
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-500" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-500" />
+                    )}
+                  </Button>
+                </div>
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
@@ -200,7 +157,7 @@ export const TeamLoginForm = () => {
               </p>
             </div>
 
-            <form onSubmit={handleTeamLogin} className="space-y-4">
+            <form onSubmit={handleAdminLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="team-email">Email</Label>
                 <Input
@@ -216,15 +173,32 @@ export const TeamLoginForm = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="team-password">Password</Label>
-                <Input
-                  id="team-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your team password"
-                  required
-                  disabled={loading}
-                />
+                <div className="relative">
+                  <Input
+                    id="team-password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your team password"
+                    required
+                    disabled={loading}
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-500" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-500" />
+                    )}
+                  </Button>
+                </div>
               </div>
 
               <Button

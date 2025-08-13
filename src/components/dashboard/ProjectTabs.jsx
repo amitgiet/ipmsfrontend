@@ -2,19 +2,20 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProjectMindmap } from '@/components/projects/ProjectMindmap.tsx';
-// import { ProjectBacklog } from '@/components/projects/ProjectBacklog.jsx';
-// import { SprintsSection } from '@/components/sprints/SprintsSection';
+import { ProjectBacklog } from '@/components/projects/ProjectBacklog.jsx';
+// import { SprintsSection } from '@/components/sprints/SprintsSection.tsx';
 import { ProjectTeamManagement } from '@/components/projects/ProjectTeamManagement.jsx';
-// import { useUserRole } from '@/hooks/useUserRole';
-// import { hasPermission } from '@/utils/permissions';
-// import { MindmapComments } from '@/components/mindmap/MindmapComments';
+
+import { hasPermission } from '@/utils/permissions.ts';
+import { MindmapComments } from '@/components/mindmap/MindmapComments';
+import { useAuth } from '@/hooks/useAuth';
 
 export const ProjectTabs = ({ projectId }) => {
   console.log('ProjectTabs: Received projectId:', projectId);
-
+  const {user,teamUser} = useAuth();
+  const isClient = user?.role === 'client' || teamUser?.role === 'client';  
   // Safety check for projectId prop
   if (!projectId) {
-    console.log('ProjectTabs: No projectId, showing error state');
     return (
       <div className="overflow-hidden">
         <div className="text-center py-8 text-gray-500">
@@ -24,15 +25,13 @@ export const ProjectTabs = ({ projectId }) => {
     );
   }
 
-  console.log('ProjectTabs: Rendering tabs with projectId:', projectId);
-
-  // const { userRole, isClient } = useUserRole();
+  const userRole = user?.role || teamUser?.role;
   
   // Check if user can edit mindmap (only product owners can edit)
-  // const canEditMindmap = hasPermission(userRole, 'editMindmap');
+  const canEditMindmap = hasPermission(userRole, 'editMindmap');
   
   // For clients, show mindmap, backlog, and sprints tabs (all read-only)
-  if (false) {
+  if (isClient) {
     return (
       <div className="overflow-hidden">
         <Tabs defaultValue="mindmap" className="space-y-6">
@@ -74,21 +73,21 @@ export const ProjectTabs = ({ projectId }) => {
         </div>
         
         <TabsContent value="mindmap" className="space-y-4">
-          <ProjectMindmap projectId={projectId} readOnly={false} />
-          {/* <MindmapComments projectId={projectId} /> */}
+          <ProjectMindmap projectId={projectId} readOnly={!canEditMindmap} />
+          <MindmapComments projectId={projectId} />
         </TabsContent>
         
         <TabsContent value="backlog" className="space-y-4">
-          {/* <ProjectBacklog projectId={projectId} readOnly={false} /> */}
+          <ProjectBacklog projectId={projectId} readOnly={!canEditMindmap} />
         </TabsContent>
         
-        {/* <TabsContent value="sprints" className="space-y-4">
-          <SprintsSection projectId={projectId} readOnly={!canEditMindmap} />
+        <TabsContent value="sprints" className="space-y-4">
+          {/* <SprintsSection projectId={projectId} readOnly={!canEditMindmap} /> */}
         </TabsContent>
 
         <TabsContent value="team" className="space-y-4">
           <ProjectTeamManagement projectId={projectId} />
-        </TabsContent> */}
+        </TabsContent>
       </Tabs>
     </div>
   );

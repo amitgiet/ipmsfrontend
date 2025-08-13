@@ -16,7 +16,7 @@ export interface TeamUser {
   is_active: boolean;
 }
 
-export type UserRole = 'admin' | 'team_lead' | 'product_owner' | 'developer' | 'qa' | 'client';
+export type UserRole = 'super-admin' | 'admin' | 'team_lead' | 'product_owner' | 'developer' | 'qa' | 'client';
 
 export interface AuthState {
   user: User | null;

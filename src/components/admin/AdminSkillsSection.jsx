@@ -159,7 +159,7 @@ export const AdminSkillsSection = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full p-6">
       <h2 className="text-2xl font-bold">Skills Master</h2>
 
       <Card>

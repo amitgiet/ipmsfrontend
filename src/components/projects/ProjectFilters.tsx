@@ -35,10 +35,9 @@ export const ProjectFilters = ({
         <SelectContent>
           <SelectItem value="all">All Statuses</SelectItem>
           <SelectItem value="planned">Planned</SelectItem>
-          <SelectItem value="in-progress">In Progress</SelectItem>
-          <SelectItem value="on-hold">On Hold</SelectItem>
-          <SelectItem value="completed">Completed</SelectItem>
-          <SelectItem value="cancelled">Cancelled</SelectItem>
+          <SelectItem value="in_progress">In Progress</SelectItem> 
+          <SelectItem value="on_hold">On Hold</SelectItem>
+          <SelectItem value="completed">Completed</SelectItem> 
         </SelectContent>
       </Select>
     </div>

@@ -18,15 +18,16 @@ import {
   Clock,
   BookOpen,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const AdminHeader = ({
   userName,
   onLogout,
   activeSection,
-  setActiveSection,
   projectsCount,
   teamMembersCount
 }) => {
+  const navigate = useNavigate();
   const [mainMenuOpen, setMainMenuOpen] = useState(false);
 
   return (
@@ -51,7 +52,7 @@ export const AdminHeader = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 bg-white border shadow-lg">
               <DropdownMenuItem
-                onClick={() => setActiveSection('dashboard')}
+                onClick={() => navigate('/dashboard')}
                 className={`flex items-center gap-2 cursor-pointer ${
                   activeSection === 'dashboard' ? 'bg-blue-50 text-blue-700' : ''
                 }`}
@@ -63,7 +64,7 @@ export const AdminHeader = ({
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
-                onClick={() => setActiveSection('projects')}
+                  onClick={() => navigate('/dashboard/all-projects')}
                 className={`flex items-center gap-2 cursor-pointer ${
                   activeSection === 'projects' ? 'bg-blue-50 text-blue-700' : ''
                 }`}
@@ -76,7 +77,7 @@ export const AdminHeader = ({
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                onClick={() => setActiveSection('team')}
+                onClick={() => navigate('/dashboard/team-management')}
                 className={`flex items-center gap-2 cursor-pointer ${
                   activeSection === 'team' ? 'bg-blue-50 text-blue-700' : ''
                 }`}
@@ -89,7 +90,7 @@ export const AdminHeader = ({
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                onClick={() => setActiveSection('timesheets')}
+                onClick={() => navigate('/dashboard/timesheets')}
                 className={`flex items-center gap-2 cursor-pointer ${
                   activeSection === 'timesheets' ? 'bg-blue-50 text-blue-700' : ''
                 }`}
@@ -99,7 +100,7 @@ export const AdminHeader = ({
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                onClick={() => setActiveSection('skills')}
+                onClick={() => navigate('/dashboard/skills')}
                 className={`flex items-center gap-2 cursor-pointer ${
                   activeSection === 'skills' ? 'bg-blue-50 text-blue-700' : ''
                 }`}

@@ -5,51 +5,17 @@ import { Clock, CheckCircle, AlertTriangle, Bug, Calendar, Timer } from 'lucide-
 
 export const ProjectOverviewCards = ({ project }) => {
   const navigate = useNavigate();
-  const [metrics, setMetrics] = useState({
-    storiesInBacklog: 0,
-    storiesCompleted: 0,
-    overrunSprints: 0,
-    totalIssues: 0,
-    totalDuration: 0,
-    hoursLogged: 0,
-  });
-  const [loading, setLoading] = useState(true);
 
-  const fetchProjectMetrics = async () => {
-    try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Use demo data instead of Supabase
-      const demoMetrics = {
-        storiesInBacklog: 12,
-        storiesCompleted: 8,
-        overrunSprints: 1,
-        totalIssues: 3,
-        totalDuration: 150,
-        hoursLogged: 245.5,
-      };
-
-      setMetrics(demoMetrics);
-      console.log('✅ Project metrics fetched successfully');
-    } catch (error) {
-      console.error('❌ Error fetching project metrics:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleHoursLoggedClick = () => {
-    // if (project && project.id) {
       navigate(`/project/${project.id}/time-logs`);
-    // }
+
   };
 
-  useEffect(() => {
-    // if (project && project.id) {?
-      fetchProjectMetrics();
-    // }
-  }, []);
+ 
+
+  console.log("project", project);
+
 
 
   return (
@@ -62,7 +28,7 @@ export const ProjectOverviewCards = ({ project }) => {
               <Clock className="h-8 w-8 text-blue-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Stories in Backlog</p>
-                <div className="text-2xl font-bold">{metrics.storiesInBacklog}</div>
+                <div className="text-2xl font-bold">{project.story_in_backlog_count}</div>
               </div>
             </div>
           </CardContent>
@@ -74,7 +40,7 @@ export const ProjectOverviewCards = ({ project }) => {
               <CheckCircle className="h-8 w-8 text-green-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Stories Completed</p>
-                <div className="text-2xl font-bold">{metrics.storiesCompleted}</div>
+                <div className="text-2xl font-bold">{project.story_completed_count}</div>
               </div>
             </div>
           </CardContent>
@@ -86,7 +52,7 @@ export const ProjectOverviewCards = ({ project }) => {
               <AlertTriangle className="h-8 w-8 text-orange-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Overrun Sprints</p>
-                <div className="text-2xl font-bold">{metrics.overrunSprints}</div>
+                <div className="text-2xl font-bold">{project.overrun_sprint_count}</div>
               </div>
             </div>
           </CardContent>
@@ -98,7 +64,7 @@ export const ProjectOverviewCards = ({ project }) => {
               <Bug className="h-8 w-8 text-red-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Issues</p>
-                <div className="text-2xl font-bold">{metrics.totalIssues}</div>
+                <div className="text-2xl font-bold">{project.total_issues_count}</div>
               </div>
             </div>
           </CardContent>
@@ -110,7 +76,7 @@ export const ProjectOverviewCards = ({ project }) => {
               <Calendar className="h-8 w-8 text-purple-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Duration</p>
-                <div className="text-2xl font-bold">{metrics.totalDuration} days</div>
+                <div className="text-2xl font-bold">{project.duration_days} days</div>
               </div>
             </div>
           </CardContent>
@@ -125,7 +91,7 @@ export const ProjectOverviewCards = ({ project }) => {
               <Timer className="h-8 w-8 text-indigo-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Hours Logged</p>
-                <div className="text-2xl font-bold">{metrics.hoursLogged}h</div>
+                  <div className="text-2xl font-bold">{project.logged_hours}h</div>
               </div>
             </div>
           </CardContent>

@@ -25,8 +25,6 @@ const LoginPage = lazy(() => import('../pages/auth/Login'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 
 // Additional Lazy Pages for missing routes
-const AdminDashboard = lazy(() => import('../pages/dashboard/AdminDashboard/AdminDashboard'));
-const ProductOwnerDashboard = lazy(() => import('../pages/dashboard/ProductOwner/ProductOwnerDashboard'));
 const ProjectDashboardPage = lazy(() => import("../components/projects/ProjectDashboardPage"));
 // const UserStoryGrooming = lazy(() => import('../components/UserStoryGrooming'));
 // const StoryDetailsPage = lazy(() => import('../components/StoryDetailsPage'));
@@ -39,9 +37,7 @@ const ProjectDashboardPage = lazy(() => import("../components/projects/ProjectDa
 // App Routes
 export const childrenComponents = [
   { path: '', element: <Navigate to="/dashboard" replace /> },
-  { path: 'dashboard', element: withSuspense(DashboardPage)() },
-  { path: 'admin', element: withSuspense(AdminDashboard)() },
-  { path: 'product-owner', element: withSuspense(ProductOwnerDashboard)() },
+  { path: 'dashboard/*', element: withSuspense(DashboardPage)() },
   { path: 'projects', element: withSuspense(ProjectListPage)() },
   { path: 'sprints', element: withSuspense(SprintListPage)() },
   { path: 'stories', element: withSuspense(StoryListPage)() },

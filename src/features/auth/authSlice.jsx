@@ -6,14 +6,16 @@ const getStoredAuth = () => {
     const token = localStorage.getItem('ipms_token');
     const user = localStorage.getItem('ipms_user');
     const teamUser = localStorage.getItem('ipms_teamUser');
-    const isAuthenticated = localStorage.getItem('ipms_isAuthenticated');
+    const isAuthenticated = localStorage.getItem('ipms_isAuthenticated')
+    const userRole = localStorage.getItem('ipms_userRole');
     
     if (token && (user || teamUser) && isAuthenticated === 'true') {
       return {
         token,
         user: user ? JSON.parse(user) : null,
         teamUser: teamUser ? JSON.parse(teamUser) : null,
-        isAuthenticated: true
+        isAuthenticated: true,
+        userRole: userRole || 'admin'
       };
     }
     return null;
@@ -29,29 +31,20 @@ const clearStoredAuth = () => {
     localStorage.removeItem('ipms_user');
     localStorage.removeItem('ipms_teamUser');
     localStorage.removeItem('ipms_isAuthenticated');
-    
-    // Also clear any legacy keys for backward compatibility
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    localStorage.removeItem('teamUser');
-    localStorage.removeItem('isAuthenticated');
-  } catch (error) {
+    localStorage.removeItem('ipms_userRole');
+    } catch (error) {
     console.error('Error clearing localStorage:', error);
   }
 };
 
-const storeAuth = (user, teamUser, token) => {
+const storeAuth = (user, teamUser, token, userRole) => {
   try {
+    console.log("storing auth", user, teamUser, token, userRole);
     if (token) localStorage.setItem('ipms_token', token);
     if (user) localStorage.setItem('ipms_user', JSON.stringify(user));
     if (teamUser) localStorage.setItem('ipms_teamUser', JSON.stringify(teamUser));
     localStorage.setItem('ipms_isAuthenticated', 'true');
-    
-    // Also store in legacy keys for backward compatibility
-    if (token) localStorage.setItem('authToken', token);
-    if (user) localStorage.setItem('user', JSON.stringify(user));
-    if (teamUser) localStorage.setItem('teamUser', JSON.stringify(teamUser));
-    localStorage.setItem('isAuthenticated', 'true');
+    if (userRole) localStorage.setItem('ipms_userRole', userRole);
   } catch (error) {
     console.error('Error storing in localStorage:', error);
   }
@@ -87,25 +80,10 @@ export const logoutUser = createAsyncThunk(
   'auth/logoutUser',
   async (_, { rejectWithValue }) => {
     try {
-      // Clear all stored data locally
       clearStoredAuth();
       
-      // Clear any other stored data that might exist
-      localStorage.removeItem('ipms_notifications');
-      localStorage.removeItem('ipms_projects');
-      localStorage.removeItem('ipms_timeLogs');
-      localStorage.removeItem('ipms_userPreferences');
-      
-      // Clear legacy keys
-      localStorage.removeItem('notifications');
-      localStorage.removeItem('projects');
-      localStorage.removeItem('timeLogs');
-      localStorage.removeItem('userPreferences');
-      
-      // Clear sessionStorage as well
       sessionStorage.clear();
       
-      // Clear any cookies if they exist
       document.cookie.split(";").forEach(function(c) { 
         document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
       });
@@ -114,7 +92,6 @@ export const logoutUser = createAsyncThunk(
       return null;
     } catch (error) {
       console.error('❌ Error during logout:', error);
-      // Even if there's an error, still clear local data
       clearStoredAuth();
       return rejectWithValue(error.message);
     }
@@ -127,6 +104,7 @@ const initialState = {
   user: storedAuth?.user || null,
   teamUser: storedAuth?.teamUser || null,
   isAuthenticated: storedAuth?.isAuthenticated || false,
+  userRole: storedAuth?.userRole || 'admin',
   isLoading: false,
   error: null,
 };
@@ -142,13 +120,14 @@ const authSlice = createSlice({
       state.user = action.payload;
       state.isAuthenticated = !!action.payload;
       if (action.payload) {
-        storeAuth(action.payload, state.teamUser, localStorage.getItem('ipms_token'));
+        storeAuth(action.payload, state.teamUser, localStorage.getItem('ipms_token'), state.userRole);
       }
     },
-    setTeamUser: (state, action) => {
+    setTeamUser: (state, action) => { 
       state.teamUser = action.payload;
+        state.userRole = action.payload.user.role || '';
       if (action.payload) {
-        storeAuth(state.user, action.payload, localStorage.getItem('ipms_token'));
+        storeAuth(state.user, action.payload, localStorage.getItem('ipms_token'), state.userRole);
       }
     },
     logout: (state) => {
@@ -163,6 +142,7 @@ const authSlice = createSlice({
         state.user = storedAuth.user;
         state.teamUser = storedAuth.teamUser;
         state.isAuthenticated = storedAuth.isAuthenticated;
+        state.userRole = storedAuth.userRole;
       }
     },
   },
@@ -174,12 +154,7 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.teamUser = action.payload.teamUser;
-        state.isAuthenticated = true;
-        
-        // Store in localStorage
-        storeAuth(action.payload.user, action.payload.teamUser, action.payload.token);
+        storeAuth(action.payload.user, action.payload.teamUser, action.payload.token, action.payload.userRole);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;

@@ -12,28 +12,16 @@ interface Project {
 }
 
 interface ProductOwnerStatsProps {
-  projects: Project[];
+  projects: {
+    assigned_project_count: number;
+    running_sprint_count: number;
+    sprint_about_to_end: number;
+    overrun_sprint_count: number;
+  };
 }
 
 export const ProductOwnerStats = ({ projects }: ProductOwnerStatsProps) => {
-  // Memoize projectIds to prevent unnecessary re-renders
-  const projectIds = useMemo(() => projects.map(p => p.id), [projects]);
-  
-  // Demo data instead of hook
-  const demoData = {
-    sprints: [
-      { id: '1', name: 'Sprint 1', status: 'active', end_date: '2024-01-15' },
-      { id: '2', name: 'Sprint 2', status: 'active', end_date: '2024-01-22' },
-      { id: '3', name: 'Sprint 3', status: 'active', end_date: '2024-01-29' }
-    ],
-    sprintsAboutToEnd: [
-      { id: '1', name: 'Sprint 1', status: 'ending_soon', end_date: '2024-01-15' }
-    ],
-    overrunSprints: [
-      { id: '4', name: 'Sprint 4', status: 'overrun', end_date: '2024-01-10' }
-    ],
-    loading: false
-  };
+ 
 
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {
@@ -53,7 +41,7 @@ export const ProductOwnerStats = ({ projects }: ProductOwnerStatsProps) => {
       <Card>
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium">Projects Assigned</CardTitle>
-          {projectIds.length > 0 && (
+          {/* {projects.assigned_project_count > 0 && (
             <Button 
               variant="ghost" 
               size="sm" 
@@ -63,10 +51,10 @@ export const ProductOwnerStats = ({ projects }: ProductOwnerStatsProps) => {
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
-          )}
+          )} */}
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{projects.length}</div>
+          <div className="text-2xl font-bold">{projects.assigned_project_count}</div>
           <p className="text-xs text-muted-foreground">
             Assigned to you
           </p>
@@ -78,21 +66,16 @@ export const ProductOwnerStats = ({ projects }: ProductOwnerStatsProps) => {
           <CardTitle className="text-sm font-medium">Running Sprints</CardTitle>
         </CardHeader>
         <CardContent>
-          {demoData.loading ? (
-            <div className="flex items-center gap-2">
-              <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-              <span className="text-sm text-muted-foreground">Loading...</span>
-            </div>
-          ) : (
+         
             <>
               <div className="text-2xl font-bold">
-                {demoData.sprints.length}
+                {projects.running_sprint_count}
               </div>
               <p className="text-xs text-muted-foreground">
                 Currently active
               </p>
             </>
-          )}
+         
         </CardContent>
       </Card>
 
@@ -101,21 +84,16 @@ export const ProductOwnerStats = ({ projects }: ProductOwnerStatsProps) => {
           <CardTitle className="text-sm font-medium">Sprints About to End</CardTitle>
         </CardHeader>
         <CardContent>
-          {demoData.loading ? (
-            <div className="flex items-center gap-2">
-              <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-              <span className="text-sm text-muted-foreground">Loading...</span>
-            </div>
-          ) : (
+         
             <>
               <div className="text-2xl font-bold">
-                {demoData.sprintsAboutToEnd.length}
+                {projects.sprint_about_to_end}
               </div>
               <p className="text-xs text-muted-foreground">
                 Ending in next 72 hours
               </p>
             </>
-          )}
+          
         </CardContent>
       </Card>
 
@@ -124,21 +102,14 @@ export const ProductOwnerStats = ({ projects }: ProductOwnerStatsProps) => {
           <CardTitle className="text-sm font-medium">Overrun Sprints</CardTitle>
         </CardHeader>
         <CardContent>
-          {demoData.loading ? (
-            <div className="flex items-center gap-2">
-              <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-              <span className="text-sm text-muted-foreground">Loading...</span>
-            </div>
-          ) : (
             <>
               <div className="text-2xl font-bold">
-                {demoData.overrunSprints.length}
+                {projects.overrun_sprint_count}
               </div>
               <p className="text-xs text-muted-foreground">
                 Past end date, not completed
               </p>
             </>
-          )}
         </CardContent>
       </Card>
     </div>

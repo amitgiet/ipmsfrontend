@@ -4,27 +4,38 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminMainContent } from '@/pages/dashboard/AdminDashboard/AdminMainContent';
 import { AddProjectForm } from '@/pages/dashboard/Modal/AddProjectForm';
 import { EditProjectForm } from '@/pages/dashboard/Modal/EditProjectForm';
+import { Routes, Route, Outlet } from 'react-router-dom';
+import { AdminProjectsSection } from '@/components/admin/AdminProjectsSection';
+import { TeamManagement } from './TeamManagement';
+import { AdminSkillsSection } from '@/components/admin/AdminSkillsSection';
+import { AdminTimesheetSection } from '@/components/admin/AdminTimesheetSection';
 
-export const AdminDashboard = () => {
+const AppLayout = () => {
   const { logout } = useAuth();
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [activeSection, setActiveSection] = useState('dashboard');
+  const handleLogout = async () => {
+    try {
+        await logout();
+    } catch (error) {
+      console.error('❌ Error during admin logout:', error);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <AdminHeader userName="Admin" onLogout={handleLogout} />
+      <main className="">
+        <Outlet />
+      </main>
+    </div>
+  );
+};
+
+const MainContentAdminDashboard = () => {
   const [addProjectOpen, setAddProjectOpen] = useState(false);
   const [editProjectOpen, setEditProjectOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [skills, setSkills] = useState([]);
-
-  const handleViewProject = (project) => {
-    setSelectedProject(project);
-  };
-
-  const handleBackToList = () => {
-    setSelectedProject(null);
-  };
-
-  const handleAddProject = () => {
-    setAddProjectOpen(true);
-  };
+  const [activeSection, setActiveSection] = useState('dashboard');
 
   const handleEditProject = (project) => {
     setEditingProject(project);
@@ -34,37 +45,12 @@ export const AdminDashboard = () => {
   const handleProjectSubmit = async (projectData) => {
     setAddProjectOpen(false);
   };
-
-  const handleProjectUpdate = () => {
-    setEditProjectOpen(false);
-    setEditingProject(null);
-  };
-
-  const handleLogout = async () => {
-    try {
-      console.log('🔄 Admin logging out...');
-      await logout();
-      console.log('✅ Admin logout successful');
-    } catch (error) {
-      console.error('❌ Error during admin logout:', error);
-    }
-  };
-  
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-        <AdminHeader 
-          userName="Admin"
-          onLogout={handleLogout}
-          activeSection={activeSection}
-          setActiveSection={setActiveSection}
-          projectsCount={0}
-          teamMembersCount={12}
-        />
-        
         <div className="w-full">
           <div className="p-6">
-            <AdminMainContent 
+            <AdminMainContent
               activeSection={activeSection}
               skills={skills}
               setSkills={setSkills}
@@ -84,8 +70,20 @@ export const AdminDashboard = () => {
         open={editProjectOpen}
         onOpenChange={setEditProjectOpen}
         project={editingProject}
-        onSubmit={handleProjectUpdate}
-      />
-    </>
+      /></>
+  )
+}
+
+export const AdminDashboard = () => {
+  return (
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route path="/" element={<MainContentAdminDashboard />} />
+        <Route path="/all-projects" element={<AdminProjectsSection />} />
+        <Route path="/team-management" element={<TeamManagement />} />
+        <Route path="/skills" element={<AdminSkillsSection />} />
+        <Route path="/timesheets" element={<AdminTimesheetSection />} />
+      </Route>
+    </Routes>
   );
-}; 
+};

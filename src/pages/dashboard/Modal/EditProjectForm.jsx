@@ -54,12 +54,6 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
   // Load project data when modal opens
   useEffect(() => {
     if (project && open) {
-      console.log('📝 Setting form data for project:', project.id);
-      console.log('📝 Project data:', project);
-      console.log('🔍 Available project fields:', Object.keys(project));
-      console.log('🔍 Budget hours field:', project.budgeted_hours);
-      console.log('🔍 Budget hours field (alternative):', project.budgetedHours, project.budgeted_hours);
-      
       // Map API response structure to form fields
       setFormData({
         projectName: project.project_name || '',
@@ -100,8 +94,6 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
       return;
     }
     
-    console.log('📝 Form submitted with data:', formData);
-    
     if (isSubmitting) {
       console.log('⏳ Already submitting, ignoring...');
       return;
@@ -113,8 +105,6 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
     try {
       // Client-side validation first
       const validationErrors = validateProjectForm(formData);
-      console.log('🔍 Client validation result:', validationErrors);
-      
       if (Object.keys(validationErrors).length > 0) {
         setErrors(validationErrors);
         toast.error("Please fill in all required fields correctly.");
@@ -166,25 +156,11 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
       const response = await projectService.updateProject(project.id, formDataToSend);
       
       if (response.success) {
-        console.log("✅ Project updated successfully:", response.data);
-        
         toast.success("Project updated successfully!");
-        
-        // Call parent's onSubmit with the updated project data
-        if (onSubmit) {
-          onSubmit(response.data);
-        }
-        
-        // Close the modal
         onOpenChange(false);
-        
       } else {
-        console.error("❌ Failed to update project:", response.message || response.error);
-        
         // Handle API validation errors
         if (response.errors) {
-          console.log("📋 API validation errors:", response.errors);
-          
           // Map API field names to form field names
           const apiErrors = {};
           Object.keys(response.errors).forEach(apiField => {
@@ -251,7 +227,6 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
           });
           
           setErrors(apiErrors);
-          
           toast.error(response.message || "Please fix the validation errors below.");
         } else {
           // General API error
@@ -260,7 +235,6 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
       }
       
     } catch (error) {
-      console.error('❌ Error in form submission:', error);
       toast.error(error instanceof Error ? error.message : "An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);

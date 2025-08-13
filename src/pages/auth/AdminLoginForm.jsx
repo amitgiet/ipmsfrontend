@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Users, Shield, Code, TestTube, User, Crown } from 'lucide-react';
+import { Loader2, Users, Shield, Code, TestTube, User, Crown, Eye, EyeOff } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { loginUser } from '@/features/auth/authSlice';
 import { useNavigate } from 'react-router-dom';
@@ -38,6 +38,7 @@ export const AdminLoginForm = () => {
   const [name, setName] = useState('');
   const [role, setRole] = useState('developer');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -69,18 +70,10 @@ export const AdminLoginForm = () => {
       );
 
       if (result.success) {
-        console.log('✅ Login successful:', result.data);
-
         // Extract user data from response
         const userData = result.data.user || result.data;
         const token = result.data.token || result.data.access_token;
-
-        // Store token in localStorage
-        if (token) {
-          localStorage.setItem('authToken', token);
-          localStorage.setItem('isAuthenticated', 'true');
-        }
-
+        
         // Dispatch login action with actual API response
         dispatch(loginUser.fulfilled({
           user: userData,
@@ -140,14 +133,29 @@ export const AdminLoginForm = () => {
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Enter your password (min 6 characters)"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full"
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password (min 6 characters)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-500" />
+                )}
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-2">

@@ -6,23 +6,16 @@ import { Clock, Calendar, FileText, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface TimeLog {
-  id: string;
-  product_owner_email: string;
-  project_id: string;
+  id: number;
+  project: string;
   activity_type: string;
-  description: string | null;
   start_time: string;
   end_time: string;
-  duration_minutes: number;
-  logged_at: string;
+  description: string | null;
   created_at: string;
-  projects?: {
-    project_name: string;
-  };
 }
 
 interface ProductOwnerTimeLogTableProps {
-  productOwnerEmail: string;
   timeLogsList?: TimeLog[];
   refetchTimeLogs?: () => void;
 }
@@ -44,10 +37,20 @@ const getActivityTypeColor = (type: string) => {
   }
 };
 
-const formatDuration = (minutes: number) => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return `${hours}h ${mins}m`;
+const calculateDuration = (startTime: string, endTime: string) => {
+  try {
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(`2000-01-01T${endTime}`);
+    const diffMs = end.getTime() - start.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    
+    const hours = Math.floor(diffMins / 60);
+    const mins = diffMins % 60;
+    return `${hours}h ${mins}m`;
+  } catch (error) {
+    console.error('Error calculating duration:', error);
+    return '0h 0m';
+  }
 };
 
 const formatTime = (timeString: string) => {
@@ -76,101 +79,18 @@ const formatDate = (dateString: string) => {
   }
 };
 
-export const ProductOwnerTimeLogTable: React.FC<ProductOwnerTimeLogTableProps> = ({
-  productOwnerEmail,
+export const ProductOwnerTimeLogTable = ({
   timeLogsList,
   refetchTimeLogs
 }) => {
-  // Demo data instead of hook
-  const demoTimeLogs: TimeLog[] = [
-    {
-      id: '1',
-      product_owner_email: productOwnerEmail,
-      project_id: '1',
-      activity_type: 'grooming',
-      description: 'Backlog grooming session for sprint planning',
-      start_time: '2024-01-15T09:00:00Z',
-      end_time: '2024-01-15T11:00:00Z',
-      duration_minutes: 120,
-      logged_at: '2024-01-15T11:00:00Z',
-      created_at: '2024-01-15T11:00:00Z',
-      projects: {
-        project_name: 'E-commerce Platform'
-      }
-    },
-    {
-      id: '2',
-      product_owner_email: productOwnerEmail,
-      project_id: '1',
-      activity_type: 'meeting',
-      description: 'Stakeholder review meeting for MVP features',
-      start_time: '2024-01-15T14:00:00Z',
-      end_time: '2024-01-15T15:30:00Z',
-      duration_minutes: 90,
-      logged_at: '2024-01-15T15:30:00Z',
-      created_at: '2024-01-15T15:30:00Z',
-      projects: {
-        project_name: 'E-commerce Platform'
-      }
-    },
-    {
-      id: '3',
-      product_owner_email: productOwnerEmail,
-      project_id: '2',
-      activity_type: 'planning',
-      description: 'Mobile app feature planning and prioritization',
-      start_time: '2024-01-16T10:00:00Z',
-      end_time: '2024-01-16T12:00:00Z',
-      duration_minutes: 120,
-      logged_at: '2024-01-16T12:00:00Z',
-      created_at: '2024-01-16T12:00:00Z',
-      projects: {
-        project_name: 'Mobile App Development'
-      }
-    },
-    {
-      id: '4',
-      product_owner_email: productOwnerEmail,
-      project_id: '3',
-      activity_type: 'review',
-      description: 'Final review of website redesign deliverables',
-      start_time: '2024-01-16T15:00:00Z',
-      end_time: '2024-01-16T16:00:00Z',
-      duration_minutes: 60,
-      logged_at: '2024-01-16T16:00:00Z',
-      created_at: '2024-01-16T16:00:00Z',
-      projects: {
-        project_name: 'Website Redesign'
-      }
-    },
-    {
-      id: '5',
-      product_owner_email: productOwnerEmail,
-      project_id: '1',
-      activity_type: 'sprint_management',
-      description: 'Sprint retrospective and next sprint planning',
-      start_time: '2024-01-17T09:00:00Z',
-      end_time: '2024-01-17T11:00:00Z',
-      duration_minutes: 120,
-      logged_at: '2024-01-17T11:00:00Z',
-      created_at: '2024-01-17T11:00:00Z',
-      projects: {
-        project_name: 'E-commerce Platform'
-      }
-    }
-  ];
+  const displayTimeLogs = timeLogsList && timeLogsList.length > 0 ? timeLogsList : [];
   
-  // Use the provided time logs if available, otherwise use demo data
-  const displayTimeLogs = timeLogsList && timeLogsList.length > 0 ? timeLogsList : demoTimeLogs;
-  
-  // Handle refresh functionality
   const handleRefresh = () => {
     if (refetchTimeLogs) {
       refetchTimeLogs();
     } else {
-      // Demo refresh - just log to console
       console.log('Refreshing time logs...');
-      console.log('Demo data refreshed for Product Owner:', productOwnerEmail);
+      console.log('Data refreshed successfully');
     }
   };
 
@@ -210,7 +130,7 @@ export const ProductOwnerTimeLogTable: React.FC<ProductOwnerTimeLogTableProps> =
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="font-medium text-gray-900">
-                      {log.projects?.project_name || 'Unknown Project'}
+                      {log.project || 'Unknown Project'}
                     </h3>
                     <Badge className={getActivityTypeColor(log.activity_type)}>
                       {log.activity_type.replace('_', ' ').toUpperCase()}
@@ -220,7 +140,7 @@ export const ProductOwnerTimeLogTable: React.FC<ProductOwnerTimeLogTableProps> =
                   <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      {formatDate(log.logged_at)}
+                      {formatDate(log.created_at)}
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
@@ -238,7 +158,7 @@ export const ProductOwnerTimeLogTable: React.FC<ProductOwnerTimeLogTableProps> =
 
                 <div className="text-right">
                   <div className="text-lg font-semibold text-blue-600">
-                    {formatDuration(log.duration_minutes)}
+                    {calculateDuration(log.start_time, log.end_time)}
                   </div>
                 </div>
               </div>

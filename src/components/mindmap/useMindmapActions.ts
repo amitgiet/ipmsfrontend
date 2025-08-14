@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { toast as reactToastifyToast } from 'react-toastify';
 
 interface MindmapNode {
   id: string;
@@ -28,26 +27,6 @@ export const useMindmapActions = () => {
     iShouldBeAbleTo: '',
     soThatICan: ''
   });
-
-  // React-toastify toast function
-  const toast = ({ title, description, variant = 'default' }: { title: string; description: string; variant?: string }) => {
-    const message = `${title}: ${description}`;
-    
-    switch (variant) {
-      case 'destructive':
-        reactToastifyToast.error(message);
-        break;
-      case 'success':
-        reactToastifyToast.success(message);
-        break;
-      case 'warning':
-        reactToastifyToast.warning(message);
-        break;
-      default:
-        reactToastifyToast.info(message);
-        break;
-    }
-  };
 
   const resetUserStoryData = () => {
     setUserStoryData({
@@ -95,6 +74,5 @@ export const useMindmapActions = () => {
     resetUserStoryData,
     handleSetSelectedParent,
     handleOpenUserStoryDialog,
-    toast
   };
 };

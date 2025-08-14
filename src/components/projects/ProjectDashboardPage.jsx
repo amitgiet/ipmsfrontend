@@ -34,7 +34,6 @@ const ProjectDashboardPage = () => {
     navigate("/dashboard");
   };
 
-  console.log("project", project);
   if (!project) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

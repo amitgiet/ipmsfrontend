@@ -12,7 +12,7 @@ import { useMindmapData } from '@/components/mindmap/useMindmapData';
 import { useMindmapOperations } from '@/components/mindmap/useMindmapOperations';
 import { useMindmapActions } from '@/components/mindmap/useMindmapActions';
 import { useMindmapHelpers } from '@/components/mindmap/useMindmapHelpers';
-
+import { toast } from "react-toastify";
 interface MindmapNode {
   id: string;
   title: string;
@@ -45,7 +45,6 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
     resetUserStoryData,
     handleSetSelectedParent,
     handleOpenUserStoryDialog,
-    toast
   } = useMindmapActions();
 
   const {
@@ -66,16 +65,12 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
         if (node.type === 'user') {
           const sentenceCaseTitle = toSentenceCase(node.title);
           if (node.title !== sentenceCaseTitle) {
-            console.log(`🔧 Fixing title from "${node.title}" to "${sentenceCaseTitle}"`);
             try {
               await updateMindmapNode(node.id, { title: sentenceCaseTitle });
               setNodes(prev => updateNodeTitle(prev, node.id, sentenceCaseTitle));
-              toast({
-                title: "Fixed",
-                description: `Updated "${node.title}" to "${sentenceCaseTitle}"`,
-              });
+              toast.success(`Updated "${node.title}" to "${sentenceCaseTitle}"`);
             } catch (error) {
-              console.error('❌ Failed to fix node title:', error);
+              console.error('Failed to fix node title:', error);
             }
           }
         }
@@ -102,17 +97,10 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
     try {
       await saveMindmapNode(newNode);
       setNodes(prev => [...prev, newNode]);
-      toast({
-        title: "Success",
-        description: "User added successfully",
-      });
+      toast.success("User added successfully");
     } catch (error) {
-      console.error('❌ Failed to add user:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add user",
-        variant: "destructive",
-      });
+      console.error('Failed to add user:', error);
+      toast.error("Failed to add user");
     }
   };
 
@@ -134,17 +122,10 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
         setNodes(prev => addNodeToParent(prev, userId, newNode));
       }
 
-      toast({
-        title: "Success",
-        description: `Epic added to ${selectedUserIds.length} user(s)`,
-      });
+      toast.success(`Epic added to ${selectedUserIds.length} user(s)`);
     } catch (error) {
-      console.error('❌ Failed to add epic:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add epic",
-        variant: "destructive",
-      });
+      console.error('Failed to add epic:', error);
+      toast.error("Failed to add epic");
     }
   };
 
@@ -154,26 +135,26 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
     const newNode: MindmapNode = {
       id: `node_${Date.now()}`,
       title,
-      type: getNextType(selectedParentNode.type),
+      type: 'task',
       children: [],
       isExpanded: true,
       hasUserStory: false,
     };
 
     try {
-      await saveMindmapNode(newNode, selectedParentNode.id);
-      setNodes(prev => addNodeToParent(prev, selectedParentNode.id, newNode));
-      toast({
-        title: "Success",
-        description: "Item added successfully",
-      });
+      const response = await saveMindmapNode(newNode, selectedParentNode.id);
+      
+      const newMindmapNode: MindmapNode = {
+        ...response.data.data,
+        children: []
+      };
+
+      setNodes(prev => addNodeToParent(prev, selectedParentNode.id, newMindmapNode));
+      
+      toast.success("Item added successfully");
     } catch (error) {
-      console.error('❌ Failed to add child item:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add item",
-        variant: "destructive",
-      });
+      console.error('Failed to add child item:', error);
+      toast.error("Failed to add item");
     }
   };
 
@@ -185,7 +166,7 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
       await updateMindmapNode(nodeId, { is_expanded: !node.isExpanded });
       setNodes(prev => toggleNodeExpansion(prev, nodeId));
     } catch (error) {
-      console.error('❌ Failed to toggle node expansion:', error);
+      console.error('Failed to toggle node expansion:', error);
     }
   };
 
@@ -196,7 +177,7 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
       await deleteMindmapNode(nodeId);
       setNodes(prev => removeNode(prev, nodeId));
     } catch (error) {
-      console.error('❌ Failed to delete node:', error);
+      console.error('Failed to delete node:', error);
     }
   };
 
@@ -213,13 +194,9 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
     };
 
     try {
-      console.log('🔄 ProjectMindmap: Calling global addStoryToBacklog function...');
       if (window && (window as any).addStoryToBacklog) {
         const success = await (window as any).addStoryToBacklog(userStory);
         if (success) {
-          console.log('✅ ProjectMindmap: Successfully added to backlog via global function');
-          
-          // Mark the node as having a user story
           await markNodeAsHavingUserStory(selectedNode.id);
           setNodes(prev => updateNodeUserStoryStatus(prev, selectedNode.id, true));
           
@@ -227,33 +204,15 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
           setSelectedNode(null);
           resetUserStoryData();
 
-          toast({
-            title: "Success",
-            description: "User story created and added to backlog",
-          });
+            toast.success("User story created and added to backlog");
         } else {
-          console.error('❌ ProjectMindmap: Failed to add to backlog via global function');
-          toast({
-            title: "Error",
-            description: "Failed to add user story to backlog",
-            variant: "destructive",
-          });
+          toast.error("Failed to add user story to backlog");
         }
       } else {
-        console.error('❌ ProjectMindmap: Global addStoryToBacklog function not found');
-        toast({
-          title: "Error",
-          description: "Backlog function not available. Please try switching to the backlog tab and back.",
-          variant: "destructive",
-        });
+        toast.error("Backlog function not available. Please try switching to the backlog tab and back.");
       }
     } catch (error) {
-      console.error('❌ ProjectMindmap: Failed to add user story to backlog:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add user story to backlog",
-        variant: "destructive",
-      });
+      toast.error("Failed to add user story to backlog");
     }
   };
 

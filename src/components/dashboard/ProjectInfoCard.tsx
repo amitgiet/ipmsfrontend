@@ -11,7 +11,7 @@ interface ProjectInfoCardProps {
 }
 
 export const ProjectInfoCard = ({ project }: ProjectInfoCardProps) => {
-  console.log("project", project);
+
   return (
     <Card className="h-full">
       <CardHeader>

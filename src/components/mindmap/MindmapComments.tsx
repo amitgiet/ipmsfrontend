@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,6 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDistanceToNow } from 'date-fns';
 import { Send, Trash2 } from 'lucide-react';
+import { apiCall } from '@/services/apiCall';
+import { allRoutes } from '@/services/routes';
 
 interface MindmapComment {
   id: string;
@@ -26,61 +28,8 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
   const { user, teamUser } = useAuth();
   const currentUser = user || teamUser;
   const [commentText, setCommentText] = useState('');
-  const [comments, setComments] = useState<MindmapComment[]>([
-    {
-      id: '1',
-      content: 'This project looks great! Looking forward to working on it.',
-      author_name: 'John Developer',
-      author_email: 'john@example.com',
-      author_role: 'developer',
-      created_at: '2024-01-15T10:30:00Z'
-    },
-    {
-      id: '2',
-      content: 'The timeline seems realistic. Let\'s make sure we stick to it.',
-      author_name: 'Sarah Manager',
-      author_email: 'sarah@example.com',
-      author_role: 'product_owner',
-      created_at: '2024-01-15T11:15:00Z'
-    },
-    {
-      id: '3',
-      content: 'I have some questions about the requirements. Can we discuss this?',
-      author_name: 'Mike QA',
-      author_email: 'mike@example.com',
-      author_role: 'qa',
-      created_at: '2024-01-15T14:20:00Z'
-    }
-  ]);
+  const [comments, setComments] = useState<MindmapComment[]>([]);
   const [loading, setLoading] = useState(false);
-
-  const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!commentText.trim()) {
-      return;
-    }
-    
-    if (!currentUser) {
-      console.error('Cannot add comment: No authenticated user');
-      return;
-    }
-    
-    console.log('Submitting comment as user:', currentUser);
-    
-    // Add new comment to local state
-    const newComment: MindmapComment = {
-      id: Date.now().toString(),
-      content: commentText,
-      author_name: currentUser.name || currentUser.email || 'Anonymous',
-      author_email: currentUser.email || '',
-      author_role: currentUser.role || 'user',
-      created_at: new Date().toISOString()
-    };
-    
-    setComments(prev => [newComment, ...prev]);
-    setCommentText('');
-  };
 
   const handleDeleteComment = async (commentId: string) => {
     // Remove comment from local state
@@ -89,7 +38,7 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
 
   const canDeleteComment = (comment: MindmapComment) => {
     if (!currentUser) return false;
-    return currentUser.email === comment.author_email;
+    return currentUser.user_id === comment.user.id;
   };
 
   const getTimestamp = (dateString: string) => {
@@ -113,13 +62,37 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
     }
   };
   
-  // Debug authentication status
-  console.log('💡 MindmapComments Auth:', { 
-    user: user?.email,
-    teamUser: teamUser?.email,
-    currentUser: currentUser?.email,
-    role: currentUser?.role
-  });
+  const fetchComments = async () => {
+    const { data, error } = await apiCall(allRoutes.comments.get(projectId, 'mindmap'), 'get');
+
+
+    if (error) {
+      console.error('❌ Error fetching comments:', error);
+      throw error;
+    }
+    setComments(data.data || []);
+  }
+
+  const addComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+    const { data, error } = await apiCall(allRoutes.comments.store, 'post', {
+      project_id: projectId,
+      type: 'mindmap',
+      content: commentText
+    });
+    console.log(data, error);
+    if (error) {
+      console.error('❌ Error adding comment:', error);
+      throw error;
+    }
+    setComments(prev => [data.data, ...prev]);
+    setCommentText('');
+  }
+
+  useEffect(() => {
+    fetchComments();
+  }, [projectId]);
 
   return (
     <Card>
@@ -133,7 +106,7 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
       </CardHeader>
       <CardContent className="space-y-4">
         {currentUser ? (
-          <form onSubmit={handleSubmitComment} className="space-y-2">
+            <form onSubmit={addComment} className="space-y-2">
             <Textarea 
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
@@ -168,9 +141,9 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
               <div key={comment.id} className="border rounded-lg p-3 bg-gray-50">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{comment.author_name}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${getRoleBadgeColor(comment.author_role)}`}>
-                      {comment.author_role.replace('_', ' ')}
+                    <span className="font-medium">{comment.user.name}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${getRoleBadgeColor(comment.user.role)}`}>
+                      {comment.user.role.replace('_', ' ')}
                     </span>
                   </div>
                   <div className="flex items-center text-xs text-gray-500 gap-2">

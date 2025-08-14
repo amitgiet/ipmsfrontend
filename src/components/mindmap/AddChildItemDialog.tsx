@@ -64,7 +64,7 @@ export const AddChildItemDialog = ({
   };
 
   if (!parentNode) return null;
-
+  
   const childType = getChildType(parentNode.type);
 
   return (

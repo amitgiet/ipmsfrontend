@@ -104,15 +104,7 @@ export const AdminSkillsSection = () => {
         title: "Success",
         description: "Skill added successfully",
       });
-    } else {
-      console.error("❌ Failed to add skill:", addResult.error);
-      toast({
-        title: "Error",
-        description: addResult.error?.message || "Failed to add skill. Please try again.",
-        variant: "destructive",
-      });
-    }
-
+    } 
     setIsAdding(false);
   };
 

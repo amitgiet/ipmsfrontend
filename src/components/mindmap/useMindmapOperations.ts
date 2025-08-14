@@ -1,3 +1,5 @@
+import { apiCall } from "@/services/apiCall";
+import { allRoutes } from "@/services/routes";
 
 interface MindmapNode {
   id: string;
@@ -10,21 +12,13 @@ interface MindmapNode {
 
 export const useMindmapOperations = (projectId: string) => {
   const saveMindmapNode = async (node: MindmapNode, parentId?: string) => {
-    // Demo operation - just log instead of saving to Supabase
-    console.log('🔄 Demo: Saving mindmap node:', {
-      node_id: node.id,
+    const payload = {
+      ...node,
       project_id: projectId,
-      title: node.title,
-      type: node.type,
-      parent_id: parentId || null,
-      is_expanded: node.isExpanded,
-      has_user_story: node.hasUserStory || false,
-    });
-
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    console.log('✅ Demo: Mindmap node saved successfully');
+      parent_id: parentId
+    }
+    const response = await apiCall(allRoutes.mindmap.store, 'post', payload);
+    return response;
   };
 
   const updateMindmapNode = async (nodeId: string, updates: Partial<{ title: string; is_expanded: boolean; has_user_story: boolean }>) => {

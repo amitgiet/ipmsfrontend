@@ -30,7 +30,7 @@ const typeColors = {
   epic: 'bg-purple-100 text-purple-800 border-purple-200',
   feature: 'bg-blue-100 text-blue-800 border-blue-200',
   task: 'bg-green-100 text-green-800 border-green-200',
-  user_story: 'bg-orange-100 text-orange-800 border-orange-200',
+  child: 'bg-orange-100 text-orange-800 border-orange-200',
 };
 
 const typeIcons = {
@@ -41,29 +41,29 @@ const typeIcons = {
   user_story: User,
 };
 
-export const MindmapNodeComponent = ({ 
-  node, 
-  level, 
-  isLast, 
-  parentConnections, 
-  onToggleExpand, 
-  onSetSelectedParent, 
-  onOpenUserStoryDialog, 
+export const MindmapNodeComponent = ({
+  node,
+  level,
+  isLast,
+  parentConnections,
+  onToggleExpand,
+  onSetSelectedParent,
+  onOpenUserStoryDialog,
   onDeleteNode,
   readOnly = false
 }: MindmapNodeProps) => {
-  const Icon = typeIcons[node.type];
-  
+  const Icon = typeIcons[node.type] || Target;
+
   const handleAdminAction = (actionName: string) => {
     if (readOnly) {
       alert(`Access Denied: Your role does not allow you to ${actionName}. Admin users have read-only access.`);
       return;
     }
   };
-  
+
   const renderChildren = () => {
     if (!node.isExpanded || node.children.length === 0) return null;
-    
+
     return (
       <div className="relative">
         {node.children.map((child, index) => {
@@ -90,9 +90,7 @@ export const MindmapNodeComponent = ({
 
   return (
     <div className="relative">
-      {/* Connection lines */}
       <div className="flex items-start">
-        {/* Vertical connection lines for parent levels */}
         {parentConnections.map((showLine, index) => (
           <div key={index} className="w-6 flex justify-center">
             {showLine && (
@@ -100,26 +98,20 @@ export const MindmapNodeComponent = ({
             )}
           </div>
         ))}
-        
-        {/* Current level connection */}
+
         {level > 0 && (
           <div className="w-6 h-6 flex items-center justify-center relative">
-            {/* Vertical line from parent */}
             <div className="absolute w-px bg-gray-300 h-3 top-0"></div>
-            {/* Horizontal line to node */}
             <div className="w-3 h-px bg-gray-300"></div>
-            {/* Vertical line to next sibling (if not last) */}
             {!isLast && (
               <div className="absolute w-px bg-gray-300 h-3 bottom-0"></div>
             )}
           </div>
         )}
-        
-        {/* Node content */}
+
         <div className="flex-1 min-w-0">
-          <div className={`flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 group ${
-            node.hasUserStory ? 'bg-green-50 border border-green-200' : ''
-          }`}>
+          <div className={`flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 group ${node.hasUserStory ? 'bg-green-50 border border-green-200' : ''
+            }`}>
             <Button
               variant="ghost"
               size="sm"
@@ -127,25 +119,25 @@ export const MindmapNodeComponent = ({
               onClick={() => onToggleExpand(node.id)}
               disabled={node.children.length === 0}
             >
-              {node.children.length > 0 ? (
-                node.isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />
+              {node?.children?.length > 0 ? (
+                node?.isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />
               ) : null}
             </Button>
-            
+
             <Icon className="h-4 w-4 flex-shrink-0" />
-            
-            <span className="flex-1 min-w-0 truncate">{node.title}</span>
-            
-            {node.hasUserStory && (
+
+            <span className="flex-1 min-w-0 truncate">{node?.title}</span>
+
+            {node?.hasUserStory && (
               <div className="flex items-center" title="Has user story">
                 <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
               </div>
             )}
-            
-            <Badge className={`${typeColors[node.type]} flex-shrink-0`}>
-              {node.type === 'user_story' ? 'user story' : node.type}
+
+            <Badge className={`${typeColors[node?.type]} flex-shrink-0`}>
+              {node?.type === 'user_story' ? 'user story' : node?.type === 'user' ? 'user' : node?.type === 'epic' ? 'epic' : node?.type === 'feature' ? 'feature' : node?.type === 'task' && 'task'}
             </Badge>
-            
+
             <div className="opacity-0 group-hover:opacity-100 flex gap-1 flex-shrink-0">
               <Button
                 variant="ghost"
@@ -162,8 +154,8 @@ export const MindmapNodeComponent = ({
               >
                 <Plus className="h-3 w-3" />
               </Button>
-              
-              {node.type !== 'user' && (
+
+              {node?.type != 'user' && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -180,7 +172,7 @@ export const MindmapNodeComponent = ({
                   <ArrowRight className="h-3 w-3" />
                 </Button>
               )}
-              
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -198,7 +190,7 @@ export const MindmapNodeComponent = ({
               </Button>
             </div>
           </div>
-          
+
           {/* Render children */}
           {renderChildren()}
         </div>

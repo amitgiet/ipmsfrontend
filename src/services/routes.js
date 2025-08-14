@@ -19,13 +19,23 @@ export const allRoutes = {
     stats: '/projects/stats',
     recentActivity: '/projects/recent-activity',
     getById: (id) => `/projects/dashboard/${id}`,
-    addTeamMember: (id) => `/projects/${id}/team-members`
+    addTeamMember: '/user-project/assign-user',
+    getAssignedUsers: (id) => `/user-project/assigned-users?project_id=${id}`,
+    getTeamMembersDropdown: (id) => `/teams/dropdown?project_id=${id}`
   },
   productOwner: {
     time_logs_list: '/time-logs',
     add_time_log: '/time-logs',
     dashboard: '/dashboard',
     get_assigned_projects: '/user-project/assigned-projects'
+  },
+  mindmap: {
+    store: '/mindmaps',
+    get:(projectId) => `mindmaps?project_id=${projectId}`,
+  },
+  comments: {
+    store: '/comments',
+    get: (projectId, type) => `comments?project_id=${projectId}&type=${type}`
   },
   tasks: {
     list: '/tasks',

@@ -130,20 +130,8 @@ export const TeamManagement = () => {
         // Refresh the team members list
         await fetchTeamMembers(pagination.current_page);
         return true;
-      } else {
-        toast({
-          title: "Error",
-          description: result.error?.message || "Failed to save team member. Please try again.",
-          variant: "destructive",
-        });
-        return false;
-      }
+      } 
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save team member. Please try again.",
-        variant: "destructive",
-      });
       return false;
     } finally {
       setSaving(false);
@@ -239,14 +227,26 @@ export const TeamManagement = () => {
   const handleEdit = (member) => {
     console.log('Raw member data from API:', member);
     console.log('Editing member skills:', member.skills);
-    const extractedSkills = (member.skills || []).map(skill => {
-      if (typeof skill === 'object') {
-        console.log('Skill object:', skill);
-        return skill.id;
-      }
-      console.log('Skill primitive:', skill);
-      return skill;
-    });
+    
+    // Handle different skills data structures
+    let extractedSkills = [];
+    if (member.skills && Array.isArray(member.skills)) {
+      extractedSkills = member.skills.map(skill => {
+        if (typeof skill === 'object' && skill.id !== undefined) {
+          console.log('Skill object with ID:', skill);
+          return skill.id;
+        } else if (typeof skill === 'object' && skill.skill_id !== undefined) {
+          console.log('Skill object with skill_id:', skill);
+          return skill.skill_id;
+        } else if (typeof skill === 'string' || typeof skill === 'number') {
+          console.log('Skill primitive:', skill);
+          return skill;
+        }
+        console.log('Unknown skill format:', skill);
+        return skill;
+      });
+    }
+    
     console.log('Extracted skill IDs:', extractedSkills);
     
     const formDataToSet = {

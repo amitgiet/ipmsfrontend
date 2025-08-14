@@ -11,7 +11,6 @@ import { MindmapComments } from '@/components/mindmap/MindmapComments';
 import { useAuth } from '@/hooks/useAuth';
 
 export const ProjectTabs = ({ projectId }) => {
-  console.log('ProjectTabs: Received projectId:', projectId);
   const {user,teamUser} = useAuth();
   const isClient = user?.role === 'client' || teamUser?.role === 'client';  
   // Safety check for projectId prop

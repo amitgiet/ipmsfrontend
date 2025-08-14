@@ -15,7 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover';
-import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
+import { Check, ChevronsUpDown, Loader2, Eye, EyeOff, CloudCog } from 'lucide-react';
 import { UserRole } from '@/components/types/auth';
 import { TeamMember } from '@/components/types/team';
 import { skillsService } from '@/services/skillsService';
@@ -53,6 +53,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Fetch skills when search, page or popover open changes
   useEffect(() => {
@@ -61,6 +62,18 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     }
   }, [search, page, open]);
 
+  // Fetch initial skills when editing a member or component mounts
+  useEffect(() => {
+    if (editingMember && editingMember.skills && editingMember.skills.length > 0) {
+      // Fetch skills to display existing skill names
+      fetchSkills('', 1);
+    }
+  }, [editingMember]);
+
+
+
+  console.log(editingMember);
+  
   const fetchSkills = async (searchTerm: string, pageNum: number) => {
     setLoadingSkills(true);
     try {
@@ -98,6 +111,15 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
         : [...prev.skills, skillId]
     }));
   };
+
+  useEffect(() => {
+   if(editingMember){
+    onFormDataChange((prev: any) => ({
+      ...prev,
+      skills: editingMember.skills.map((skill: any) => skill.id)
+    }));
+   }
+  }, [editingMember]);
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -173,18 +195,32 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
           <Label htmlFor="password">
             Password {editingMember && '(leave empty to keep current)'}
           </Label>
-          <Input
-            id="password"
-            type="password"
-            value={formData.password}
-            onChange={(e) =>
-              onFormDataChange((prev: any) => ({
-                ...prev,
-                password: e.target.value
-              }))
-            }
-            required={!editingMember}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={formData.password}
+              onChange={(e) =>
+                onFormDataChange((prev: any) => ({
+                  ...prev,
+                  password: e.target.value
+                }))
+              }
+              required={!editingMember}
+              className="pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         </div>
         <div>
           <Label htmlFor="role">Role</Label>
@@ -221,7 +257,18 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
               aria-expanded={open}
             >
               {formData.skills.length > 0
-                ? `${formData.skills.length} selected`
+                ? (() => {
+                    const skillNames = formData.skills
+                      .map(skillId => 
+                        availableSkills.find(skill => skill.id == skillId)?.name || editingMember?.skills.find((skill: any) => skill.id == skillId)?.name || skillId
+                      )
+                      .join(', ');
+                    
+                    // Limit to 75 characters and add ellipsis if longer
+                    return skillNames.length > 75 
+                      ? skillNames.substring(0, 75) + '...' 
+                      : skillNames;
+                  })()
                 : 'Select skills...'}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>

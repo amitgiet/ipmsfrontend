@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
 
 export const ProjectHeader = ({ project, onBack }) => {
-  console.log("project", project);
+
   // Safety check for project prop
   if (!project) {
     return (

@@ -7,77 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Plus, X, Users } from 'lucide-react';
 import { toast } from 'react-toastify';
-
-// Demo team members data
-const demoTeamMembers = [
-  {
-    id: "1",
-    name: "John Smith",
-    email: "john.smith@company.com",
-    role: "Developer",
-    skills: ["React", "Node.js", "TypeScript"],
-    is_active: true,
-    created_at: "2024-01-15T10:00:00Z"
-  },
-  {
-    id: "2",
-    name: "Sarah Johnson",
-    email: "sarah.johnson@company.com",
-    role: "Designer",
-    skills: ["UI/UX", "Figma", "Adobe Creative Suite"],
-    is_active: true,
-    created_at: "2024-01-20T10:00:00Z"
-  },
-  {
-    id: "3",
-    name: "Mike Chen",
-    email: "mike.chen@company.com",
-    role: "QA Engineer",
-    skills: ["Manual Testing", "Automation", "JIRA"],
-    is_active: true,
-    created_at: "2024-02-01T10:00:00Z"
-  },
-  {
-    id: "4",
-    name: "Emily Davis",
-    email: "emily.davis@company.com",
-    role: "Project Manager",
-    skills: ["Agile", "Scrum", "Risk Management"],
-    is_active: true,
-    created_at: "2024-01-10T10:00:00Z"
-  },
-  {
-    id: "5",
-    name: "Alex Rodriguez",
-    email: "alex.rodriguez@company.com",
-    role: "Backend Developer",
-    skills: ["Python", "Django", "PostgreSQL"],
-    is_active: true,
-    created_at: "2024-02-05T10:00:00Z"
-  }
-];
-
-// Demo project team assignments
-const demoProjectAssignments = [
-  {
-    project_id: "1",
-    team_member_id: "1",
-    assigned_at: "2024-01-20T10:00:00Z",
-    assigned_by: "admin@company.com"
-  },
-  {
-    project_id: "1",
-    team_member_id: "2",
-    assigned_at: "2024-01-22T10:00:00Z",
-    assigned_by: "admin@company.com"
-  },
-  {
-    project_id: "1",
-    team_member_id: "4",
-    assigned_at: "2024-01-18T10:00:00Z",
-    assigned_by: "admin@company.com"
-  }
-];
+import { apiCall } from '@/services/apiCall';
+import { allRoutes } from '@/services/routes';
 
 export const ProjectTeamManagement = ({ projectId }) => {
   const [assignedMembers, setAssignedMembers] = useState([]);
@@ -86,7 +17,6 @@ export const ProjectTeamManagement = ({ projectId }) => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-
   useEffect(() => {
     fetchProjectTeamMembers();
     fetchAvailableTeamMembers();
@@ -94,37 +24,24 @@ export const ProjectTeamManagement = ({ projectId }) => {
 
   const fetchProjectTeamMembers = async () => {
     try {
-      console.log('Fetching project team members for project:', projectId);
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Get project assignments from demo data
-      const projectAssignments = demoProjectAssignments.filter(
-        assignment => assignment.project_id === projectId
-      );
+      const { data, error } = await apiCall(allRoutes.projects.getAssignedUsers(projectId), 'get');
+      if (error) {
+        console.error('Error fetching project team members:', error);
+        toast.error("Failed to fetch project team members");
+        return;
+      }
+      setAssignedMembers(data.data);
 
-      if (projectAssignments.length === 0) {
+      if (data.data.length === 0) {
         console.log('No team members assigned to this project');
         setAssignedMembers([]);
         return;
       }
 
       // Get team member details and combine with assignment data
-      const formattedData = projectAssignments.map(assignment => {
-        const member = demoTeamMembers.find(m => m.id === assignment.team_member_id);
-        if (member) {
-          return {
-            ...member,
-            assigned_at: assignment.assigned_at,
-            assigned_by: assignment.assigned_by
-          };
-        }
-        return null;
-      }).filter(Boolean);
 
-      console.log('Formatted assigned members:', formattedData);
-      setAssignedMembers(formattedData);
+      console.log('Formatted assigned members:', data.data);
+      setAssignedMembers(data.data);
     } catch (error) {
       console.error('Error fetching project team members:', error);
       toast.error("Failed to fetch project team members");
@@ -134,22 +51,13 @@ export const ProjectTeamManagement = ({ projectId }) => {
   const fetchAvailableTeamMembers = async () => {
     try {
       setLoading(true);
-      console.log('Fetching available team members');
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      // Use demo data instead of Supabase
-      const typedData = demoTeamMembers.map(member => {
-        return {
-            ...member,
-          role: member.role,
-          skills: member.skills || []
-        }
-      });
-
-      console.log('Formatted available members:', typedData);
-      setAvailableMembers(typedData);
+      const { data, error } = await apiCall(allRoutes.projects.getTeamMembersDropdown(projectId), 'get');
+      if (error) {
+        console.error('Error fetching available team members:', error);
+        toast.error("Failed to fetch available team members");
+        return;
+      }
+      setAvailableMembers(data.data);
     } catch (error) {
       console.error('Error fetching available team members:', error);
       toast.error("Failed to fetch available team members");
@@ -165,31 +73,15 @@ export const ProjectTeamManagement = ({ projectId }) => {
     }
 
     try {
-      console.log('Assigning team member:', { projectId, selectedMemberId });
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 400));
-      
-      // Check if already assigned
-      const isAlreadyAssigned = demoProjectAssignments.some(
-        assignment => assignment.project_id === projectId && assignment.team_member_id === selectedMemberId
-      );
-
-      if (isAlreadyAssigned) {
-        toast.error("This team member is already assigned to the project");
+      const { error } = await apiCall(allRoutes.projects.addTeamMember, 'post', {
+        project_id: projectId,
+        user_id: selectedMemberId
+      });
+      if (error) {
+        console.error('Error assigning team member:', error);
+        toast.error("Failed to assign team member to project");
         return;
       }
-
-      // Add new assignment to demo data
-      const newAssignment = {
-        project_id: projectId,
-        team_member_id: selectedMemberId,
-        assigned_at: new Date().toISOString(),
-        assigned_by: "admin@company.com"
-      };
-      
-      demoProjectAssignments.push(newAssignment);
-
       toast.success("Team member assigned to project successfully");
 
       setSelectedMemberId('');
@@ -201,18 +93,18 @@ export const ProjectTeamManagement = ({ projectId }) => {
     }
   };
 
-    const removeTeamMember = async (teamMemberId) => {
+  const removeTeamMember = async (teamMemberId) => {
     try {
       console.log('Removing team member:', { projectId, teamMemberId });
-      
+
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       // Remove assignment from demo data
       const assignmentIndex = demoProjectAssignments.findIndex(
         assignment => assignment.project_id === projectId && assignment.team_member_id === teamMemberId
       );
-      
+
       if (assignmentIndex !== -1) {
         demoProjectAssignments.splice(assignmentIndex, 1);
       }
@@ -238,11 +130,11 @@ export const ProjectTeamManagement = ({ projectId }) => {
     fetchAvailableTeamMembers();
   }, [projectId]);
 
-  console.log('Component state:', { 
-    assignedMembers: assignedMembers.length, 
-    availableMembers: availableMembers.length, 
-    loading, 
-    projectId 
+  console.log('Component state:', {
+    assignedMembers: assignedMembers.length,
+    availableMembers: availableMembers.length,
+    loading,
+    projectId
   });
 
   return (
@@ -302,15 +194,15 @@ export const ProjectTeamManagement = ({ projectId }) => {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Button 
-                    onClick={assignTeamMember} 
+                  <Button
+                    onClick={assignTeamMember}
                     disabled={!selectedMemberId}
                     className="flex-1"
                   >
                     Assign Member
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => setDialogOpen(false)}
                     className="flex-1"
                   >

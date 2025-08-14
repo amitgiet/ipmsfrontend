@@ -12,12 +12,6 @@ export const ProjectOverviewCards = ({ project }) => {
 
   };
 
- 
-
-  console.log("project", project);
-
-
-
   return (
     <div className="space-y-6">
       {/* Project Metrics Overview Cards */}

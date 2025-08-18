@@ -3,11 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
+// import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { MessageSquare, Send } from 'lucide-react';
 import { ChangeRequestComment } from '@/hooks/useChangeRequests';
+import { apiCall } from '@/services/apiCall';
+import { allRoutes } from '@/services/routes';
 
 interface ChangeRequestCommentsProps {
   requestId: string;
@@ -35,11 +37,7 @@ export const ChangeRequestComments = ({
   const loadComments = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('change_request_comments')
-        .select('*')
-        .eq('change_request_id', requestId)
-        .order('created_at', { ascending: true });
+      const { data, error } = await apiCall(allRoutes.comments.get(projectId, 'change_request'), 'get');
 
       if (error) {
         console.error('❌ Error loading comments:', error);
@@ -69,15 +67,13 @@ export const ChangeRequestComments = ({
 
     try {
       setSubmitting(true);
-      const { error } = await supabase
-        .from('change_request_comments')
-        .insert({
-          change_request_id: requestId,
-          content: newComment.trim(),
-          author_email: currentUserEmail,
-          author_name: currentUserName,
-          author_role: currentUserRole,
-        });
+      const { error } = await apiCall(allRoutes.comments.store, 'post', {
+        change_request_id: requestId,
+        content: newComment.trim(),
+        author_email: currentUserEmail,
+        author_name: currentUserName,
+        author_role: currentUserRole,
+      });
 
       if (error) {
         console.error('❌ Error adding comment:', error);
@@ -130,27 +126,28 @@ export const ChangeRequestComments = ({
     loadComments();
 
     // Set up real-time subscription for comments
-    const channel = supabase
-      .channel('change_request_comments_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'change_request_comments',
-          filter: `change_request_id=eq.${requestId}`
-        },
-        (payload) => {
-          console.log('📥 New comment added:', payload.new);
-          const newCommentData = payload.new as ChangeRequestComment;
-          setComments(prev => [...prev, newCommentData]);
-        }
-      )
-      .subscribe();
+    // const channel = apiCall(allRoutes.comments.get(projectId, 'change_request'), 'get', {
+    //   event: 'INSERT',
+    //   schema: 'public',
+    //   table: 'change_request_comments',
+    //   filter: `change_request_id=eq.${requestId}`
+    // }, {
+    //   event: 'INSERT',
+    //   schema: 'public',
+    //   table: 'change_request_comments',
+    //   filter: `change_request_id=eq.${requestId}`
+    // });
+    //     (payload) => {
+    //       console.log('📥 New comment added:', payload.new);
+    //       const newCommentData = payload.new as ChangeRequestComment;
+    //       setComments(prev => [...prev, newCommentData]);
+    //     }
+    //   )
+    //   .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // return () => {
+    //   apiCall(allRoutes.comments.get(projectId, 'change_request'), 'get');
+    // };
   }, [requestId]);
 
   if (loading) {

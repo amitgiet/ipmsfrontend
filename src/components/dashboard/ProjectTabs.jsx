@@ -1,18 +1,23 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ProjectMindmap } from '@/components/projects/ProjectMindmap.tsx';
-import { ProjectBacklog } from '@/components/projects/ProjectBacklog.jsx';
-// import { SprintsSection } from '@/components/sprints/SprintsSection.tsx';
-import { ProjectTeamManagement } from '@/components/projects/ProjectTeamManagement.jsx';
-
-import { hasPermission } from '@/utils/permissions.ts';
+import { ProjectMindmap } from '@/components/projects/ProjectMindmap';
+import { ProjectBacklog } from '@/components/projects/ProjectBacklog';
+import { SprintsSection } from '@/components/sprints/SprintsSection';
+import { ProjectTeamManagement } from '@/components/projects/ProjectTeamManagement';
+import { useSearchParams } from 'react-router-dom';
+import { hasPermission } from '@/utils/permissions';
 import { MindmapComments } from '@/components/mindmap/MindmapComments';
 import { useAuth } from '@/hooks/useAuth';
 
 export const ProjectTabs = ({ projectId }) => {
-  const {user,teamUser} = useAuth();
-  const isClient = user?.role === 'client' || teamUser?.role === 'client';  
+  const { user, teamUser } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isClient = user?.role === 'client' || teamUser?.role === 'client';
+  
+  // Get current tab from URL parameter, default to 'mindmap'
+  const currentTab = searchParams.get('tab') || 'mindmap';
+  
   // Safety check for projectId prop
   if (!projectId) {
     return (
@@ -29,11 +34,16 @@ export const ProjectTabs = ({ projectId }) => {
   // Check if user can edit mindmap (only product owners can edit)
   const canEditMindmap = hasPermission(userRole, 'editMindmap');
   
+  // Handle tab change and update URL parameter
+  const handleTabChange = (value) => {
+    setSearchParams({ tab: value });
+  };
+  
   // For clients, show mindmap, backlog, and sprints tabs (all read-only)
   if (isClient) {
     return (
       <div className="overflow-hidden">
-        <Tabs defaultValue="mindmap" className="space-y-6">
+        <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
           <div className="overflow-x-auto">
             <TabsList className="grid w-full grid-cols-3 min-w-max">
               <TabsTrigger value="mindmap" className="px-3 py-2 text-sm">Mindmap</TabsTrigger>
@@ -42,7 +52,7 @@ export const ProjectTabs = ({ projectId }) => {
             </TabsList>
           </div>
           
-          {/* <TabsContent value="mindmap" className="space-y-4">
+          <TabsContent value="mindmap" className="space-y-4">
             <ProjectMindmap projectId={projectId} readOnly={true} />
             <MindmapComments projectId={projectId} />
           </TabsContent>
@@ -53,7 +63,7 @@ export const ProjectTabs = ({ projectId }) => {
           
           <TabsContent value="sprints" className="space-y-4">
             <SprintsSection projectId={projectId} readOnly={true} />
-          </TabsContent> */}
+          </TabsContent>
         </Tabs>
       </div>
     );
@@ -61,7 +71,7 @@ export const ProjectTabs = ({ projectId }) => {
   
   return (
     <div className="overflow-hidden">
-      <Tabs defaultValue="mindmap" className="space-y-6">
+      <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
         <div className="overflow-x-auto">
           <TabsList className="grid w-full grid-cols-4 min-w-max">
             <TabsTrigger value="mindmap" className="px-3 py-2 text-sm">Mindmap</TabsTrigger>
@@ -81,7 +91,7 @@ export const ProjectTabs = ({ projectId }) => {
         </TabsContent>
         
         <TabsContent value="sprints" className="space-y-4">
-          {/* <SprintsSection projectId={projectId} readOnly={!canEditMindmap} /> */}
+          <SprintsSection projectId={projectId} readOnly={!canEditMindmap} />
         </TabsContent>
 
         <TabsContent value="team" className="space-y-4">

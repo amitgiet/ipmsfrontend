@@ -11,6 +11,7 @@ export const allRoutes = {
     teamLogin: '/team-login'
   },
   projects: {
+    dashboard: '/dashboard',
     list: '/projects',
     create: '/projects',
     update: (id) => `/projects/${id}`,
@@ -32,6 +33,7 @@ export const allRoutes = {
   mindmap: {
     store: '/mindmaps',
     get:(projectId) => `mindmaps?project_id=${projectId}`,
+    delete: (nodeId, projectId) => `/mindmaps/${nodeId}?project_id=${projectId}`
   },
   comments: {
     store: '/comments',

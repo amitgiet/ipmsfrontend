@@ -1,10 +1,12 @@
 
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CreateSprintPage } from './CreateSprintPage';
+import { CreateSprintPage } from './CreateSprintPage.tsx';   
 
-export const CreateSprintPageWrapper = () => {
-  const { projectId } = useParams<{ projectId: string }>();
+const CreateSprintPageWrapper = () => {
+  console.log('CreateSprintPageWrapper');
+  const params = useParams();
+  const projectId = params?.projectId;
   const navigate = useNavigate();
 
   if (!projectId) {
@@ -30,3 +32,5 @@ export const CreateSprintPageWrapper = () => {
     </div>
   );
 };
+
+export default CreateSprintPageWrapper;

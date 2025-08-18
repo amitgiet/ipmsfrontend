@@ -5,7 +5,7 @@ import { AdminSkillsSection } from '@/components/admin/AdminSkillsSection';
 import { AdminProjectsSection } from '@/components/admin/AdminProjectsSection';
 import { AdminTimesheetSection } from '@/components/admin/AdminTimesheetSection'; 
 import { TeamManagement } from './TeamManagement';
-// import { useAdminDashboardMetrics } from '@/hooks/useAdminDashboardMetrics';
+import { useAdminDashboardMetrics } from '@/hooks/useAdminDashboardMetrics';
 
 export const AdminMainContent = ({
   activeSection,
@@ -33,7 +33,7 @@ export const AdminMainContent = ({
   onRefreshProjects,
   onClearFilters
 }) => {
-  // const { metrics, loading: metricsLoading } = useAdminDashboardMetrics();
+  const { metrics, loading: metricsLoading } = useAdminDashboardMetrics();
 
   switch (activeSection) {
     case 'projects':
@@ -82,7 +82,7 @@ export const AdminMainContent = ({
           <h2 className="text-2xl font-bold">Admin Dashboard</h2>
           
           <AdminDashboardStats
-            metrics={[]}
+            metrics={metrics}
             loading={false}
             onProjectsClick={() => setActiveSection('projects')}
           />

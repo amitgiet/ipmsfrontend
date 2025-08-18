@@ -35,26 +35,12 @@ export const useMindmapOperations = (projectId: string) => {
     console.log('✅ Demo: Mindmap node updated successfully');
   };
 
-  const deleteMindmapNode = async (nodeId: string) => {
-    // Demo operation - just log instead of deleting from Supabase
-    console.log('🔄 Demo: Deleting mindmap node:', {
-      node_id: nodeId,
-      project_id: projectId
-    });
-
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 200));
-
-    console.log('✅ Demo: Mindmap node deleted successfully');
+  const deleteMindmapNode = async (nodeId: string, projectId: string) => {
+    const response = await apiCall(allRoutes.mindmap.delete(nodeId, projectId), 'delete');
+    return response;
   };
 
   const markNodeAsHavingUserStory = async (nodeId: string) => {
-    // Demo operation - just log instead of updating in Supabase
-    console.log('🔄 Demo: Marking node as having user story:', {
-      node_id: nodeId,
-      project_id: projectId,
-      has_user_story: true
-    });
 
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 150));

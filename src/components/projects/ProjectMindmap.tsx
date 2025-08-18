@@ -143,14 +143,14 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
 
     try {
       const response = await saveMindmapNode(newNode, selectedParentNode.id);
-      
+
       const newMindmapNode: MindmapNode = {
         ...response.data.data,
         children: []
       };
 
       setNodes(prev => addNodeToParent(prev, selectedParentNode.id, newMindmapNode));
-      
+
       toast.success("Item added successfully");
     } catch (error) {
       console.error('Failed to add child item:', error);
@@ -174,10 +174,15 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
     if (readOnly) return;
 
     try {
-      await deleteMindmapNode(nodeId);
-      setNodes(prev => removeNode(prev, nodeId));
+      const response = await deleteMindmapNode(nodeId, projectId);
+      if (response.success) {
+        toast.success("Node deleted successfully");
+        setNodes(prev => removeNode(prev, nodeId));
+      }
+
     } catch (error) {
       console.error('Failed to delete node:', error);
+      toast.error("Failed to delete node");
     }
   };
 
@@ -185,7 +190,7 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
     if (!selectedNode || readOnly) return;
 
     const userStoryText = `As a ${userStoryData.asA} I should be able to ${userStoryData.iShouldBeAbleTo} so that I can ${userStoryData.soThatICan}`;
-    
+
     const userStory = {
       ...selectedNode,
       title: userStoryText,
@@ -199,12 +204,12 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
         if (success) {
           await markNodeAsHavingUserStory(selectedNode.id);
           setNodes(prev => updateNodeUserStoryStatus(prev, selectedNode.id, true));
-          
+
           setShowUserStoryDialog(false);
           setSelectedNode(null);
           resetUserStoryData();
 
-            toast.success("User story created and added to backlog");
+          toast.success("User story created and added to backlog");
         } else {
           toast.error("Failed to add user story to backlog");
         }
@@ -231,7 +236,6 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
       </Card>
     );
   }
-
   return (
     <>
       <Card>

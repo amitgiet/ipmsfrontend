@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { User, Eye, FileEdit, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { BacklogControls } from '@/components/backlog/BacklogControls.tsx';
-// import { UserStoryCard } from './backlog/UserStoryCard.tsx';
-// import { ChangeRequestDialog } from './backlog/ChangeRequestDialog.tsx';
-// import { ChangeRequestsSection } from './backlog/ChangeRequestsSection.tsx';
+import { UserStoryCard } from '@/components/backlog/UserStoryCard.tsx';
+import { ChangeRequestDialog } from '@/components/backlog/ChangeRequestDialog.tsx';
+import { ChangeRequestsSection } from '@/components/backlog/ChangeRequestsSection.tsx';
 import { useBacklogData } from '@/components/backlog/useBacklogData.ts';
 // import { useUserRole } from '@/hooks/useUserRole.tsx';
 import { useAuth } from '@/hooks/useAuth.jsx';
@@ -42,12 +42,14 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
   const { toast } = useToast();
   const { user, teamUser } = useAuth();
   const currentUser = user || teamUser;
+
+  const userRole = localStorage.getItem('ipms_userRole');
   // const { downloadSRS, isGenerating } = useSRSDownload();
 
   // Check if user can edit (product owners) or review change requests
-  const canEdit = localStorage.getItem('ipms_userRole') === 'product_owner';
-  const canReviewChangeRequests = localStorage.getItem('ipms_userRole') === 'product_owner';
-  const canSubmitChangeRequests = localStorage.getItem('ipms_userRole') === 'client'; // Only clients can submit change requests
+  const canEdit = userRole === 'product_owner';
+  const canReviewChangeRequests = userRole === 'product_owner';
+  const canSubmitChangeRequests = userRole === 'client'; // Only clients can submit change requests
 
   // Listen for user stories added from mindmap
   useEffect(() => {
@@ -279,7 +281,7 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
               />
             )}
 
-            {/* {!canEdit && !readOnly && (
+            {!canEdit && !readOnly && (
               <div className="flex gap-2 items-center justify-between">
                 <div className="flex gap-2 items-center">
                   <Input
@@ -361,12 +363,12 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
                   />
                 ))
               )}
-            </div> */}
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* {(canReviewChangeRequests || canSubmitChangeRequests) && (
+        {(canReviewChangeRequests || canSubmitChangeRequests) && (
         <ChangeRequestsSection
           projectId={projectId}
           currentUserEmail={currentUser?.email || ''}
@@ -387,7 +389,7 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
           userName={currentUser.name || currentUser.email}
           userRole={currentUser.role || 'client'}
         />
-      )} */}
+      )}
     </div>
   );
 };

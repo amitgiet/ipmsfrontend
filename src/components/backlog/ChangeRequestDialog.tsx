@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@/components/ui/textarea';  
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Send } from 'lucide-react';
+import { apiCall } from '@/services/apiCall';
+import { allRoutes } from '@/services/routes';
 
 interface ChangeRequestDialogProps {
   open: boolean;
@@ -49,17 +50,16 @@ export const ChangeRequestDialog = ({
     setSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from('change_requests')
-        .insert({
-          project_id: projectId,
-          title: title.trim(),
-          description: description.trim(),
-          priority,
-          requested_by_email: userEmail,
-          requested_by_name: userName,
-          requested_by_role: userRole,
-        });
+      const { error } = await apiCall(allRoutes.comments.store, 'post', {
+        project_id: projectId,
+        type: 'change_request',
+        title: title.trim(),
+        description: description.trim(),
+        priority,
+        author_email: userEmail,
+        author_name: userName,
+        author_role: userRole,
+      });
 
       if (error) {
         console.error('❌ Error submitting change request:', error);

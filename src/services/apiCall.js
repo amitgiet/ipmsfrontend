@@ -21,9 +21,9 @@ export const checkApiHealth = async () => {
 };
 
 export const apiCall = async (
-  url, 
-  method = 'get', 
-  data = null, 
+  url,
+  method = 'get',
+  data = null,
   config = {},
   retryCount = 0
 ) => {
@@ -40,32 +40,33 @@ export const apiCall = async (
       method === "get" || method === "delete"
         ? await api[method](url, config)
         : await api[method](url, data, {
-            ...config,
-            headers: finalHeaders,
-          });
+          ...config,
+          headers: finalHeaders,
+        });
     return { success: true, data: response.data };
   } catch (error) {
     const axiosError = error;
-    
+
     // Handle 401/403 errors - but only if we're not already on login page
-    if ((axiosError.response?.status === 401 || axiosError.response?.status === 403) && 
-        !window.location.pathname.includes('/login')) {
-      
+    if ((axiosError.response?.status === 401 || axiosError.response?.status === 403) &&
+      !window.location.pathname.includes('/login')) {
+
       // Clear ipms_ authentication data
       localStorage.removeItem('ipms_token');
       localStorage.removeItem('ipms_user');
       localStorage.removeItem('ipms_teamUser');
       localStorage.removeItem('ipms_isAuthenticated');
-      
+
       // Also clear legacy keys for backward compatibility
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
       localStorage.removeItem('teamUser');
       localStorage.removeItem('isAuthenticated');
-      
+
       // Only redirect if we're not already on login page
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
+        toast.error("Unauthorized");
       }
       return { success: false };
     }
@@ -82,9 +83,9 @@ export const apiCall = async (
     } else {
       toast.error("Something went wrong, please try again.");
     }
-    
-    return { 
-      success: false, 
+
+    return {
+      success: false,
       error: {
         status: axiosError.response?.status || axiosError.status,
         message: message,

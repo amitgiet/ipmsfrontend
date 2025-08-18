@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Plus, Calendar, Play, CheckCircle, Clock, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-// import { useSprintsData } from '@/hooks/useSprintsData';
+import { useSprintsData } from '@/hooks/useSprintsData';
 import { SprintsTable } from './SprintsTable';
 
 interface SprintsSectionProps {
@@ -13,10 +13,10 @@ interface SprintsSectionProps {
 }
 
 export const SprintsSection = ({ projectId, readOnly = false }: SprintsSectionProps) => {
-  // const { sprints, loading } = useSprintsData(projectId);
+  const { sprints, loading, createSprint } = useSprintsData(projectId);
   const navigate = useNavigate();
 
-  const handleCreateSprint = () => {
+  const handleCreateSprint = async () => {
     if (readOnly) {
       alert('Access Denied: Your role does not allow you to create sprints. Admin users have read-only access.');
       return;
@@ -31,7 +31,7 @@ export const SprintsSection = ({ projectId, readOnly = false }: SprintsSectionPr
   const activeSprintsCount = sprints.filter(s => s.status === 'running').length;
   const completedSprintsCount = sprints.filter(s => s.status === 'completed').length;
 
-  if (false) {
+  if (loading) {
     return (
       <Card>
         <CardHeader>

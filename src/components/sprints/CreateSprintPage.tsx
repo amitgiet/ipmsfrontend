@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { calculateEndDate } from '@/utils/dateCalculations';
-import { supabase } from '@/integrations/supabase/client';
+import { apiCall } from '@/services/apiCall';
+import { allRoutes } from '@/services/routes';
 import { useToast } from '@/hooks/use-toast';
 import { SprintDetailsForm } from './SprintDetailsForm';
 import { SprintBacklogSelector } from './SprintBacklogSelector';
@@ -26,6 +27,7 @@ interface CreateSprintPageProps {
 }
 
 export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateSprintPageProps) => {
+  console.log('CreateSprintPage');
   const [sprintName, setSprintName] = useState('');
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [duration, setDuration] = useState(14);
@@ -49,18 +51,11 @@ export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateS
     const loadUnassignedStories = async () => {
       try {
         setLoading(true);
-        console.log('🔄 Loading unassigned ready stories for project:', projectId);
         
         // Get all ready stories for this project
-        const { data: allStories, error: storiesError } = await supabase
-          .from('user_stories')
-          .select('*')
-          .eq('project_id', projectId)
-          .eq('status', 'ready')
-          .order('priority', { ascending: false });
+        const { data: allStories, error: storiesError } = await apiCall(allRoutes.stories.list(projectId), 'get');
 
         if (storiesError) {
-          console.error('❌ Error loading stories:', storiesError);
           toast({
             title: "Error",
             description: "Failed to load user stories",
@@ -70,12 +65,9 @@ export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateS
         }
 
         // Get all story IDs that are already assigned to sprints
-        const { data: assignedStories, error: assignedError } = await supabase
-          .from('sprint_backlog')
-          .select('story_id');
+        const { data: assignedStories, error: assignedError } = await apiCall(allRoutes.sprintBacklog.list(projectId), 'get');
 
         if (assignedError) {
-          console.error('❌ Error loading assigned stories:', assignedError);
           toast({
             title: "Error",
             description: "Failed to check assigned stories",
@@ -88,7 +80,6 @@ export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateS
         const assignedStoryIds = new Set(assignedStories?.map(item => item.story_id) || []);
         const unassignedStories = allStories?.filter(story => !assignedStoryIds.has(story.id)) || [];
 
-        console.log('✅ Found unassigned stories:', unassignedStories.length);
 
         const mappedStories: UserStory[] = unassignedStories.map(story => ({
           id: story.id,
@@ -101,7 +92,6 @@ export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateS
 
         setReadyStories(mappedStories);
       } catch (error) {
-        console.error('❌ Error loading unassigned stories:', error);
         toast({
           title: "Error",
           description: "Failed to load available user stories",
@@ -112,7 +102,7 @@ export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateS
       }
     };
 
-    loadUnassignedStories();
+    // loadUnassignedStories();
   }, [projectId]);
 
   const handleStorySelection = (storyId: string, checked: boolean) => {
@@ -144,8 +134,6 @@ export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateS
 
     try {
       setCreating(true);
-      console.log('🔄 Creating sprint:', { sprintName, startDate, endDate, duration, selectedStories });
-
       // Create the sprint
       const sprintData = {
         project_id: projectId,
@@ -156,14 +144,9 @@ export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateS
         status: 'created' as const
       };
 
-      const { data: sprint, error: sprintError } = await supabase
-        .from('sprints')
-        .insert([sprintData])
-        .select()
-        .single();
+      const { data: sprint, error: sprintError } = await apiCall(allRoutes.sprints.create, 'post', sprintData);
 
       if (sprintError) {
-        console.error('❌ Error creating sprint:', sprintError);
         
         if (sprintError.code === '42501') {
           toast({
@@ -181,7 +164,6 @@ export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateS
         return;
       }
 
-      console.log('✅ Sprint created successfully:', sprint);
 
       // Add selected stories to the sprint backlog
       const sprintBacklogEntries = selectedStories.map(storyId => ({
@@ -189,19 +171,15 @@ export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateS
         story_id: storyId
       }));
 
-      const { error: backlogError } = await supabase
-        .from('sprint_backlog')
-        .insert(sprintBacklogEntries);
+      const { error: backlogError } = await apiCall(allRoutes.sprintBacklog.create, 'post', sprintBacklogEntries);
 
       if (backlogError) {
-        console.error('❌ Error adding stories to sprint:', backlogError);
         toast({
           title: "Warning",
           description: "Sprint created but failed to add some stories. You can add them later.",
           variant: "destructive",
         });
       } else {
-        console.log('✅ Added stories to sprint backlog');
       }
 
       toast({
@@ -211,7 +189,6 @@ export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateS
 
       onSprintCreated();
     } catch (error) {
-      console.error('❌ Error creating sprint:', error);
       toast({
         title: "Error",
         description: "Failed to create sprint",
@@ -244,7 +221,7 @@ export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateS
         />
 
         <SprintBacklogSelector
-          loading={loading}
+          loading={false}
           readyStories={readyStories}
           selectedStories={selectedStories}
           onStorySelection={handleStorySelection}

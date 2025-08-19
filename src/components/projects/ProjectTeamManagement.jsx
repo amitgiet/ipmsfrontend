@@ -130,13 +130,6 @@ export const ProjectTeamManagement = ({ projectId }) => {
     fetchAvailableTeamMembers();
   }, [projectId]);
 
-  console.log('Component state:', {
-    assignedMembers: assignedMembers.length,
-    availableMembers: availableMembers.length,
-    loading,
-    projectId
-  });
-
   return (
     <Card>
       <CardHeader>

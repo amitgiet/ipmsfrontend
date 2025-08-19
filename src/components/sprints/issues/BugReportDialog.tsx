@@ -18,9 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+import { apiCall } from '@/services/apiCall';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, X, Image } from 'lucide-react';
+import { allRoutes } from '@/services/routes';
 
 interface Story {
   id: string;
@@ -113,9 +114,10 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
         const fileExt = image.file.name.split('.').pop();
         const fileName = `${bugId}/${Date.now()}.${fileExt}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('story-documents')
-          .upload(fileName, image.file);
+        const { error: uploadError } = await apiCall(allRoutes.sprints.uploadImage(fileName, image.file), 'POST', {
+          file: image.file,
+          fileName: fileName
+        });
 
         if (uploadError) {
           console.error('❌ Error uploading image:', uploadError);
@@ -146,9 +148,7 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
       setLoading(true);
       console.log('🔄 Creating bug report:', formData);
 
-      const { data: bugData, error } = await supabase
-        .from('bugs')
-        .insert({
+      const { data: bugData, error } = await apiCall(allRoutes.sprints.createBug, 'POST', {
           title: formData.title.trim(),
           description: formData.description.trim() || null,
           severity: formData.severity,
@@ -156,9 +156,7 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
           sprint_id: sprintId,
           reported_by: 'QA User',
           status: 'open'
-        })
-        .select()
-        .single();
+      });
 
       if (error) {
         console.error('❌ Error creating bug:', error);
@@ -172,13 +170,10 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
 
       // Update story status back to in_progress since a bug was found
       console.log('🔄 Updating story status back to in_progress for story:', formData.storyId);
-      const { error: statusError } = await supabase
-        .from('user_stories')
-        .update({ 
+        const { error: statusError } = await apiCall(allRoutes.stories.update(formData.storyId), 'PUT', { 
           status: 'in_progress',
           updated_at: new Date().toISOString()
-        })
-        .eq('id', formData.storyId);
+      });
 
       if (statusError) {
         console.error('❌ Error updating story status:', statusError);

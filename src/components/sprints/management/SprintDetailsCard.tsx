@@ -31,10 +31,10 @@ export const SprintDetailsCard: React.FC<SprintDetailsCardProps> = ({
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Timeline</h4>
             <p className="text-gray-600">
-              <strong>Start:</strong> {format(new Date(sprint.start_date), 'MMM dd, yyyy')}
+              <strong>Start:</strong> {format(new Date(sprint?.start_date || ''), 'MMM dd, yyyy')}
             </p>
             <p className="text-gray-600">
-              <strong>End:</strong> {format(new Date(sprint.end_date), 'MMM dd, yyyy')}
+              <strong>End:</strong> {format(new Date(sprint?.end_date || ''), 'MMM dd, yyyy')}
             </p>
           </div>
           <div>

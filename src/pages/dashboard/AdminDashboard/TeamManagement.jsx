@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Upload, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { TeamMemberForm } from '@/components/team/TeamMemberForm.tsx';
 import { TeamMembersTable } from '@/components/team/TeamMembersTable';
 // import { ExcelImportDialog } from '@/components/team/ExcelImportDialog';
-import { useToast } from '@/hooks/use-toast';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
+import { toast } from 'react-toastify';
 
 export const TeamManagement = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -23,7 +23,6 @@ export const TeamManagement = () => {
     per_page: 10,
     total: 0
   });
-  const { toast } = useToast();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -45,11 +44,11 @@ export const TeamManagement = () => {
     setLoading(true);
     try {
       const result = await apiCall(`${allRoutes.teams.list}?page=${page}`, 'get');
-      
+
       if (result.success) {
         const members = result.data.data || result.data || [];
         const meta = result.data.meta || {};
-        
+
         setTeamMembers(members);
         setPagination({
           current_page: meta.current_page || 1,
@@ -58,19 +57,11 @@ export const TeamManagement = () => {
           total: meta.total || 0
         });
       } else {
-        toast({
-          title: "Error",
-          description: "Failed to fetch team members. Please try again.",
-          variant: "destructive",
-        });
+        toast.error("Failed to fetch team members. Please try again.");
       }
 
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch team members. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to fetch team members. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -92,15 +83,13 @@ export const TeamManagement = () => {
         // Remove mobile_no if it exists to avoid confusion
         mobile_no: undefined
       };
-      
+
       // Remove undefined fields
       Object.keys(transformedData).forEach(key => {
         if (transformedData[key] === undefined) {
           delete transformedData[key];
         }
       });
-
-      console.log('Sending team member data:', transformedData);
 
       let result;
       if (editingMember) {
@@ -120,17 +109,13 @@ export const TeamManagement = () => {
       }
 
       if (result.success) {
-        toast({
-          title: "Success",
-          description: editingMember 
-            ? "Team member updated successfully" 
-            : "Team member created successfully",
-        });
-        
+        toast.success(editingMember ? "Team member updated successfully" : "Team member created successfully");
+
+
         // Refresh the team members list
         await fetchTeamMembers(pagination.current_page);
         return true;
-      } 
+      }
     } catch (error) {
       return false;
     } finally {
@@ -146,26 +131,15 @@ export const TeamManagement = () => {
       );
 
       if (result.success) {
-        toast({
-          title: "Success",
-          description: "Team member deleted successfully",
-        });
-        
+        toast.success("Team member deleted successfully");
+
         // Refresh the team members list
         await fetchTeamMembers(pagination.current_page);
       } else {
-        toast({
-          title: "Error",
-          description: result.error?.message || "Failed to delete team member. Please try again.",
-          variant: "destructive",
-        });
+        toast.error(result.error?.message || "Failed to delete team member. Please try again.");
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete team member. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to delete team member. Please try again.");
     }
   };
 
@@ -178,26 +152,15 @@ export const TeamManagement = () => {
       );
 
       if (result.success) {
-        toast({
-          title: "Success",
-          description: `Team member ${!currentStatus ? 'activated' : 'deactivated'} successfully`,
-        });
-        
+        toast.success(`Team member ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+
         // Refresh the team members list
         await fetchTeamMembers(pagination.current_page);
       } else {
-        toast({
-          title: "Error",
-          description: result.error?.message || "Failed to update team member status. Please try again.",
-          variant: "destructive",
-        });
+        toast.error(result.error?.message || "Failed to update team member status. Please try again.");
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update team member status. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to update team member status. Please try again.");
     }
   };
 
@@ -225,30 +188,21 @@ export const TeamManagement = () => {
   };
 
   const handleEdit = (member) => {
-    console.log('Raw member data from API:', member);
-    console.log('Editing member skills:', member.skills);
-    
     // Handle different skills data structures
     let extractedSkills = [];
     if (member.skills && Array.isArray(member.skills)) {
       extractedSkills = member.skills.map(skill => {
         if (typeof skill === 'object' && skill.id !== undefined) {
-          console.log('Skill object with ID:', skill);
           return skill.id;
         } else if (typeof skill === 'object' && skill.skill_id !== undefined) {
-          console.log('Skill object with skill_id:', skill);
           return skill.skill_id;
         } else if (typeof skill === 'string' || typeof skill === 'number') {
-          console.log('Skill primitive:', skill);
           return skill;
         }
-        console.log('Unknown skill format:', skill);
         return skill;
       });
     }
-    
-    console.log('Extracted skill IDs:', extractedSkills);
-    
+
     const formDataToSet = {
       name: member.name,
       email: member.email,
@@ -259,8 +213,7 @@ export const TeamManagement = () => {
       skills: extractedSkills,
       is_active: member.is_active,
     };
-    
-    console.log('Setting form data:', formDataToSet);
+
     setFormData(formDataToSet);
     setEditingMember(member);
     setIsAddDialogOpen(true);
@@ -280,11 +233,7 @@ export const TeamManagement = () => {
     }
 
     if (errorCount > 0) {
-      toast({
-        title: 'Partial Import',
-        description: `Imported ${successCount} members successfully. ${errorCount} failed.`,
-        variant: errorCount > successCount ? 'destructive' : 'default',
-      });
+      toast.error(`Imported ${successCount} members successfully. ${errorCount} failed.`);
     }
 
     return successCount > 0;
@@ -292,10 +241,10 @@ export const TeamManagement = () => {
 
 
   return (
-      <div className="space-y-6 w-full p-6">
+    <div className="space-y-6 w-full p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Team Management</h2>
+          <h2 className="text-2xl font-bold">Team Management ({pagination.total})</h2>
           <p className="text-gray-600">Manage your team members and their access</p>
         </div>
         <div className="flex gap-2">
@@ -330,10 +279,6 @@ export const TeamManagement = () => {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Team Members ({pagination.total})</CardTitle>
-          <CardDescription>Manage team member access and permissions</CardDescription>
-        </CardHeader>
         <CardContent>
           <TeamMembersTable
             teamMembers={teamMembers}
@@ -346,7 +291,7 @@ export const TeamManagement = () => {
               No team members found. Add your first team member to get started.
             </div>
           )}
-          
+
           {/* Pagination */}
           {pagination.total > 0 && (
             <div className="flex items-center justify-between mt-6">

@@ -12,10 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { skillsService } from "@/services/skillsService";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "react-toastify";
 
 export const AdminSkillsSection = () => {
-  const { toast } = useToast();
   const [skills, setSkills] = useState([]);
   const [newSkill, setNewSkill] = useState("");
   const [loading, setLoading] = useState(false);
@@ -52,11 +51,7 @@ export const AdminSkillsSection = () => {
       });
     } else {
       console.error("❌ Failed to fetch skills:", result.error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch skills. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to fetch skills. Please try again.");
     }
 
     setLoading(false);
@@ -70,11 +65,7 @@ export const AdminSkillsSection = () => {
 
   const addSkill = async () => {
     if (!newSkill.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a skill name",
-        variant: "destructive",
-      });
+      toast.error("Please enter a skill name");
       return;
     }
 
@@ -96,14 +87,10 @@ export const AdminSkillsSection = () => {
 
     if (addResult.success) {
       console.log("✅ Skill added successfully:", addResult.data);
-
+      toast.success("Skill added successfully");
       // Add the new skill to the local state
       fetchSkills(); // Re-fetch skills to update pagination and list
-      setNewSkill(''); // Clear the input
-      toast({
-        title: "Success",
-        description: "Skill added successfully",
-      });
+      setNewSkill(''); 
     } 
     setIsAdding(false);
   };
@@ -117,10 +104,7 @@ export const AdminSkillsSection = () => {
         prevSkills.filter((skill) => skill.id !== (skillToRemove.id || skillToRemove))
       );
 
-      toast({
-        title: "Success",
-        description: "Skill removed successfully",
-      });
+        toast.success("Skill removed successfully");
     } else {
       console.error("❌ Failed to remove skill:", deleteResult.error);
       toast({
@@ -152,12 +136,11 @@ export const AdminSkillsSection = () => {
 
   return (
     <div className="space-y-6 w-full p-6">
-      <h2 className="text-2xl font-bold">Skills Master</h2>
+      <h2 className="text-2xl font-bold">Skills Master ({pagination.total})</h2>
 
       <Card>
         <CardHeader>
           <CardTitle>Add New Skill</CardTitle>
-          <CardDescription>Add a new skill to the system</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
@@ -195,8 +178,7 @@ export const AdminSkillsSection = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Existing Skills ({pagination.total})</CardTitle>
-          <CardDescription>All skills available in the system</CardDescription>
+          <CardTitle>Existing Skills</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
@@ -205,9 +187,9 @@ export const AdminSkillsSection = () => {
                 key={skill.id}
                 variant="outline"
                 className="cursor-pointer hover:bg-red-50 hover:border-red-200 transition-colors"
-                onClick={() => removeSkill(skill)}
+                // onClick={() => removeSkill(skill)}
               >
-                {skill.name} ×
+                {skill.name} 
               </Badge>
             ))}
           </div>
@@ -218,7 +200,7 @@ export const AdminSkillsSection = () => {
           )}
           
           {/* Pagination */}
-          {pagination.total > 0 && (
+          {/* {pagination.total > 0 && (
             <div className="flex items-center justify-between mt-6">
               <div className="text-sm text-gray-500">
                 Showing {((pagination.current_page - 1) * pagination.per_page) + 1} to{' '}
@@ -259,7 +241,7 @@ export const AdminSkillsSection = () => {
                 </Button>
               </div>
             </div>
-          )}
+          )} */}
         </CardContent>
       </Card>
     </div>

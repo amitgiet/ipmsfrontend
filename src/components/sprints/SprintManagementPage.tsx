@@ -9,16 +9,17 @@ import { SprintHeader } from './management/SprintHeader';
 import { SprintSummaryCards } from './management/SprintSummaryCards';
 import { SprintDetailsCard } from './management/SprintDetailsCard';
 import { SprintTabs } from './management/SprintTabs';
-import { supabase } from '@/integrations/supabase/client';
+import { apiCall } from '@/services/apiCall';
 import { useToast } from '@/hooks/use-toast';
+import { allRoutes } from '@/services/routes';
 
-export const SprintManagementPage = () => {
+  const SprintManagementPage = () => {
   const { sprintId } = useParams();
   const [activeTab, setActiveTab] = useState('overview');
   const { toast } = useToast();
 
   const {
-    sprint,
+    // sprint,
     stories,
     targetStoryPoints,
     completedStoryPoints,
@@ -29,19 +30,26 @@ export const SprintManagementPage = () => {
     fetchSprintData
   } = useSprintManagement(sprintId);
 
+  const sprint  ={
+    id: '1',
+    name: 'Sprint 1',
+    start_date: '2021-01-01',
+    end_date: '2021-01-15',
+    status: 'active',
+    stories: [
+      { id: '1', name: 'Story 1', status: 'active', start_date: '2021-01-01', end_date: '2021-01-15' },
+      { id: '2', name: 'Story 2', status: 'active', start_date: '2021-01-01', end_date: '2021-01-15' },
+      { id: '3', name: 'Story 3', status: 'active', start_date: '2021-01-01', end_date: '2021-01-15' },
+    ]
+  }
+  console.log(sprint);
+  
   const moveStoriesToBacklog = async (storyIds: string[]) => {
     try {
-      console.log('🔄 Moving stories to backlog:', storyIds);
-
       // Remove stories from sprint backlog
-      const { error: removeError } = await supabase
-        .from('sprint_backlog')
-        .delete()
-        .in('story_id', storyIds)
-        .eq('sprint_id', sprintId!);
+      const { error: removeError } = await apiCall(allRoutes.sprints.removeTask(sprintId!, storyIds), 'DELETE');
 
       if (removeError) {
-        console.error('❌ Error removing stories from sprint:', removeError);
         toast({
           title: "Error",
           description: "Failed to move stories to backlog",
@@ -51,13 +59,9 @@ export const SprintManagementPage = () => {
       }
 
       // Update story status back to 'ready' (backlog status)
-      const { error: updateError } = await supabase
-        .from('user_stories')
-        .update({ status: 'ready' })
-        .in('id', storyIds);
+      const { error: updateError } = await apiCall(allRoutes.stories.update(storyIds), 'PUT', { status: 'ready' });
 
       if (updateError) {
-        console.error('❌ Error updating story status:', updateError);
         toast({
           title: "Warning",
           description: "Stories removed from sprint but status may need manual update",
@@ -65,7 +69,6 @@ export const SprintManagementPage = () => {
         });
       }
 
-      console.log('✅ Successfully moved stories to backlog');
       toast({
         title: "Success",
         description: `${storyIds.length} story(ies) moved back to backlog`,
@@ -74,7 +77,6 @@ export const SprintManagementPage = () => {
       // Refresh sprint data
       await fetchSprintData();
     } catch (error) {
-      console.error('❌ Error in moveStoriesToBacklog:', error);
       toast({
         title: "Error",
         description: "Failed to move stories to backlog",
@@ -152,3 +154,5 @@ export const SprintManagementPage = () => {
     </div>
   );
 };
+
+export default SprintManagementPage;

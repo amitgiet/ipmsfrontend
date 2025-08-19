@@ -14,7 +14,7 @@ const AppLayout = () => {
   const { logout } = useAuth();
   const handleLogout = async () => {
     try {
-        await logout();
+      await logout();
     } catch (error) {
       console.error('❌ Error during admin logout:', error);
     }
@@ -45,6 +45,7 @@ const MainContentAdminDashboard = () => {
   const handleProjectSubmit = async (projectData) => {
     setAddProjectOpen(false);
   };
+
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -70,7 +71,8 @@ const MainContentAdminDashboard = () => {
         open={editProjectOpen}
         onOpenChange={setEditProjectOpen}
         project={editingProject}
-      /></>
+      />
+    </>
   )
 }
 

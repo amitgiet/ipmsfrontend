@@ -15,7 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover';
-import { Check, ChevronsUpDown, Loader2, Eye, EyeOff, CloudCog } from 'lucide-react';
+import { Check, ChevronsUpDown, Loader2, Eye, EyeOff } from 'lucide-react';
 import { UserRole } from '@/components/types/auth';
 import { TeamMember } from '@/components/types/team';
 import { skillsService } from '@/services/skillsService';
@@ -72,8 +72,6 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
 
 
 
-  console.log(editingMember);
-  
   const fetchSkills = async (searchTerm: string, pageNum: number) => {
     setLoadingSkills(true);
     try {
@@ -94,7 +92,6 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
         setHasMore(false);
       }
     } catch (error) {
-      console.error('Error fetching skills:', error);
       setAvailableSkills([]);
       setHasMore(false);
     } finally {
@@ -173,7 +170,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             placeholder="+1 (555) 123-4567"
           />
         </div>
-        <div>
+        {/* <div>
           <Label htmlFor="emergency_contact">Emergency Contact</Label>
           <Input
             id="emergency_contact"
@@ -186,7 +183,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             }
             placeholder="Name and phone number"
           />
-        </div>
+        </div> */}
       </div>
 
       {/* Password + Role */}

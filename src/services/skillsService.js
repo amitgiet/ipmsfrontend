@@ -5,7 +5,7 @@ export const skillsService = {
   // Get all skills
   getSkills: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `${allRoutes.skills.list}?${queryString}` : allRoutes.skills.list;
+    const url = queryString ? `${allRoutes.skills.list}?${queryString}&per_page=10000` : allRoutes.skills.list;
     return await apiCall(url, 'get');
   },
 

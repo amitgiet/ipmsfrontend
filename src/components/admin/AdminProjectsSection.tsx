@@ -68,6 +68,7 @@ export const AdminProjectsSection = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [addProjectModalOpen, setAddProjectModalOpen] = useState(false);
   const [editProjectModalOpen, setEditProjectModalOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [pagination, setPagination] = useState({
     current_page: 1,
@@ -384,7 +385,7 @@ export const AdminProjectsSection = () => {
   };
 
   const handleAddProject = () => {
-      setAddProjectModalOpen(true);
+    setAddProjectModalOpen(true);
   };
 
   const handleProjectSubmit = async (newProject) => {
@@ -564,6 +565,10 @@ export const AdminProjectsSection = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Projects Management</h2>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            {showFilters ? 'Hide Filters' : 'Show Filters'}
+          </Button>
           <Button onClick={handleAddProject} disabled={loading} className="flex items-center gap-2">
             {loading ? (
               <>
@@ -576,15 +581,17 @@ export const AdminProjectsSection = () => {
                 Add Project
               </>
             )}
+
           </Button>
+
         </div>
       </div>
 
       {/* Collapsible Filters Section */}
-      <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
+      {showFilters && <Collapsible open={true} onOpenChange={setFiltersOpen}>
         <Card>
           <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+            {/* <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Filter className="h-4 w-4" />
@@ -592,9 +599,9 @@ export const AdminProjectsSection = () => {
                 </div>
                 <ChevronDown className={`h-4 w-4 transition-transform ${filtersOpen ? 'rotate-180' : ''}`} />
               </CardTitle>
-            </CardHeader>
+            </CardHeader> */}
           </CollapsibleTrigger>
-          <CollapsibleContent>
+          <CollapsibleContent style={{marginTop: '20px'}}>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Search by Project Name */}
@@ -670,7 +677,7 @@ export const AdminProjectsSection = () => {
                 </div>
 
                 {/* Search Button */}
-                <div className="flex items-end">
+                <div className="flex items-end gap-2">
                   <Button
                     onClick={handleRefreshProjects}
                     className="w-full flex items-center gap-2"
@@ -679,10 +686,6 @@ export const AdminProjectsSection = () => {
                     <Search className="h-4 w-4" />
                     {loading ? 'Searching...' : 'Search'}
                   </Button>
-                </div>
-
-                {/* Clear Filters Button */}
-                <div className="flex items-end">
                   <Button variant="outline" onClick={handleClearFilters} className="w-full">
                     Clear Filters
                   </Button>
@@ -691,7 +694,7 @@ export const AdminProjectsSection = () => {
             </CardContent>
           </CollapsibleContent>
         </Card>
-      </Collapsible>
+      </Collapsible>}
 
       <div className="flex gap-2 mb-4">
         <Button onClick={handleRefreshProjects} variant="outline">
@@ -737,14 +740,14 @@ export const AdminProjectsSection = () => {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button
+                      {/* <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleManageProject(project)}
                       >
                         <ExternalLink className="h-4 w-4 mr-1" />
                         Manage
-                      </Button>
+                      </Button> */}
                       <Button
                         variant="outline"
                         size="sm"
@@ -806,7 +809,7 @@ export const AdminProjectsSection = () => {
                   {/* Footer */}
                   <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-xs text-gray-500">
                     <span>Created: {new Date(project.created_at).toLocaleDateString()}</span>
-                    {project.tags_labels && (
+                    {/* {project.tags_labels && (
                       <div className="flex gap-1">
                         {project.tags_labels.split(',').slice(0, 3).map((tag, index) => (
                           <Badge key={index} variant="outline" className="text-xs">
@@ -819,7 +822,7 @@ export const AdminProjectsSection = () => {
                           </Badge>
                         )}
                       </div>
-                    )}
+                    )} */}
                   </div>
                 </div>
               </CardContent>

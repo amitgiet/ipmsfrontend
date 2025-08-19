@@ -29,6 +29,7 @@ export const MindmapContent = ({
   onDeleteNode,
   readOnly = false
 }: MindmapContentProps) => {
+  console.log(nodes);
   return (
     <div className="border rounded-lg p-4 min-h-[300px] overflow-x-auto">
       {nodes.length === 0 ? (

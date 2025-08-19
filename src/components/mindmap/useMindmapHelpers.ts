@@ -30,7 +30,7 @@ export const useMindmapHelpers = () => {
   const addNodeToParent = (nodeList: MindmapNode[], parentId: string, newNode: MindmapNode): MindmapNode[] => {
     return nodeList.map(node => {
       if (node.id === parentId) {
-        return { ...node, children: [...node.children, newNode] };
+        return { ...node, children: [...node.children, newNode], isExpanded: true };
       }
       return { ...node, children: addNodeToParent(node.children, parentId, newNode) };
     });

@@ -6,12 +6,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Bug, AlertTriangle, CheckCircle, Clock, Edit, Trash2, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { apiCall } from '@/services/apiCall';
 
 import { useUserRole } from '@/hooks/useUserRole';
 import { BugReportDialog } from './BugReportDialog';
 import { BugDetailsDialog } from './BugDetailsDialog';
 import { toast } from 'react-toastify';
+import { allRoutes } from '@/services/routes';
 
 interface Bug {
   id: string;
@@ -54,20 +55,10 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
   const fetchBugs = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching bugs for sprint:', sprintId);
 
-      const { data: bugsData, error } = await supabase
-        .from('bugs')
-        .select('*')
-        .eq('sprint_id', sprintId)
-        .order('created_at', { ascending: false });
+      const { data: bugsData, error } = await apiCall(allRoutes.sprints.getBugs(sprintId), 'GET');
 
-      if (error) {
-        console.error('❌ Error fetching bugs:', error);
-        throw error;
-      }
 
-      console.log('✅ Bugs fetched:', bugsData?.length || 0);
       
       // Enrich bugs with story titles and ensure proper typing
       const enrichedBugs: Bug[] = bugsData?.map(bug => {
@@ -92,7 +83,6 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
 
       setBugs(enrichedBugs);
     } catch (error) {
-      console.error('❌ Error in fetchBugs:', error);
       toast.error("Failed to fetch bugs");
     } finally {
       setLoading(false);
@@ -101,56 +91,43 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
 
   const handleResolveBug = async (bugId: string) => {
     try {
-      console.log('🔄 Resolving bug:', bugId);
 
-      const { error } = await supabase
-        .from('bugs')
-        .update({
+      const { error } = await apiCall(allRoutes.sprints.updateBug(bugId), 'PUT', {
           status: 'resolved',
           resolved_by: 'Current User', // You can enhance this to get actual user info
           resolved_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        })
-        .eq('id', bugId);
+      });
 
       if (error) {
-        console.error('❌ Error resolving bug:', error);
-        throw error;
+        toast.error("Failed to resolve bug");
       }
-
       toast.success("Bug marked as resolved");
 
       fetchBugs(); // Refresh the list
     } catch (error) {
-      console.error('❌ Error in handleResolveBug:', error);
       toast.error("Failed to resolve bug");
     }
   };
 
   const handleReopenBug = async (bugId: string) => {
     try {
-      console.log('🔄 Reopening bug:', bugId);
 
-      const { error } = await supabase
-        .from('bugs')
-        .update({
+      const { error } = await apiCall(allRoutes.sprints.updateBug(bugId), 'PUT', {
           status: 'reopened',
           resolved_by: null,
           resolved_at: null,
           updated_at: new Date().toISOString()
-        })
-        .eq('id', bugId);
+        });
 
       if (error) {
-        console.error('❌ Error reopening bug:', error);
-        throw error;
+        toast.error("Failed to reopen bug");
       }
 
       toast.success("Bug reopened");
 
       fetchBugs(); // Refresh the list
     } catch (error) {
-      console.error('❌ Error in handleReopenBug:', error);
       toast.error("Failed to reopen bug");
     }
   };

@@ -3,8 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { differenceInDays, format, addDays } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { apiCall } from '@/services/apiCall';
+import { toast } from 'react-toastify';
+import { allRoutes } from '@/services/routes';
 
 interface Sprint {
   id: string;
@@ -49,7 +50,7 @@ const chartConfig = {
 export const SprintBurndownChart = ({ sprint, stories, targetStoryPoints }: SprintBurndownChartProps) => {
   const [completionData, setCompletionData] = useState<CompletionData[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+
 
   const fetchCompletionData = async () => {
     if (stories.length === 0) {
@@ -61,27 +62,11 @@ export const SprintBurndownChart = ({ sprint, stories, targetStoryPoints }: Spri
       const storyIds = stories.map(story => story.id);
 
       // Fetch completion dates from status change log
-      const { data, error } = await supabase
-        .from('story_status_changes')
-        .select(`
-          story_id,
-          changed_at,
-          new_status,
-          user_stories (
-            story_points
-          )
-        `)
-        .in('story_id', storyIds)
-        .eq('new_status', 'done')
-        .order('changed_at', { ascending: true });
+      const { data, error } = await apiCall(allRoutes.sprints.getStoryStatusChanges(storyIds), 'GET');
+
 
       if (error) {
-        console.error('❌ Error fetching completion data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch story completion data",
-          variant: "destructive",
-        });
+        toast.error("Failed to fetch story completion data");
         return;
       }
 
@@ -93,15 +78,9 @@ export const SprintBurndownChart = ({ sprint, stories, targetStoryPoints }: Spri
           completion_date: new Date(change.changed_at)
         }));
 
-      console.log('✅ Fetched completion data:', completions);
       setCompletionData(completions);
     } catch (error) {
-      console.error('❌ Error in fetchCompletionData:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch completion data",
-        variant: "destructive",
-      });
+      toast.error("Failed to fetch completion data");
     } finally {
       setLoading(false);
     }
@@ -119,8 +98,6 @@ export const SprintBurndownChart = ({ sprint, stories, targetStoryPoints }: Spri
     const totalDays = differenceInDays(endDate, startDate) + 1;
     
     const data = [];
-    
-    console.log('📊 Using real completion data for burndown:', completionData);
     
     // Group completions by date to handle multiple completions on same day
     const completionsByDate = new Map<string, number>();
@@ -151,7 +128,6 @@ export const SprintBurndownChart = ({ sprint, stories, targetStoryPoints }: Spri
         if (pointsCompletedToday > 0) {
           currentRemaining -= pointsCompletedToday;
           actualRemaining = currentRemaining;
-          console.log(`📅 Day ${dayNumber} (${currentDateString}): ${pointsCompletedToday} points completed, remaining=${currentRemaining}`);
         }
         
         data.push({

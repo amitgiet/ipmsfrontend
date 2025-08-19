@@ -2,13 +2,14 @@ import React from 'react';
 import { DropResult } from 'react-beautiful-dnd';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { apiCall } from '@/services/apiCall';
+import { toast } from 'react-toastify';
 import { useUserRole } from '@/hooks/useUserRole';
 import { canMoveCard } from './kanban/KanbanPermissions';
 import { useProjectStatus } from '@/hooks/useProjectStatus';
 import { SprintStatusWarning } from './kanban/SprintStatusWarning';
 import { SprintBoardContent } from './kanban/SprintBoardContent';
+import { allRoutes } from '@/services/routes';
 
 interface Story {
   id: string;
@@ -37,7 +38,6 @@ interface SprintKanbanViewProps {
 
 export const SprintKanbanView = ({ stories, sprintId, sprintStatus, onStoryUpdate, sprint }: SprintKanbanViewProps) => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { userRole } = useUserRole();
   const { projectStatus, isLoadingStatus, isProjectInProgress } = useProjectStatus(stories, sprint);
 
@@ -47,37 +47,19 @@ export const SprintKanbanView = ({ stories, sprintId, sprintStatus, onStoryUpdat
 
   const updateStoryStatus = async (storyId: string, newStatus: 'to_do' | 'in_progress' | 'qa' | 'done') => {
     try {
-      console.log('🔄 Updating story status:', { storyId, newStatus });
       
-      const { error } = await supabase
-        .from('user_stories')
-        .update({ status: newStatus })
-        .eq('id', storyId);
+      const { error } = await apiCall(allRoutes.stories.update(storyId), 'PUT', { status: newStatus });
 
       if (error) {
-        console.error('❌ Error updating story status:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update story status",
-          variant: "destructive",
-        });
+        toast.error("Failed to update story status");
         return false;
       }
 
-      console.log('✅ Story status updated successfully');
-      toast({
-        title: "Success",
-        description: "Story status updated successfully",
-      });
+      toast.success("Story status updated successfully");
       
       return true;
     } catch (error) {
-      console.error('❌ Error in updateStoryStatus:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update story status",
-        variant: "destructive",
-      });
+      toast.error("Failed to update story status");
       return false;
     }
   };
@@ -135,9 +117,6 @@ export const SprintKanbanView = ({ stories, sprintId, sprintStatus, onStoryUpdat
       onStoryUpdate(stories); // Revert to original state
     }
   };
-
-  console.log('🎯 SprintKanbanView - Total stories:', stories.length);
-  console.log('🎯 SprintKanbanView - Project status:', projectStatus, 'Loading:', isLoadingStatus);
 
   return (
     <Card className="mt-6">

@@ -13,9 +13,10 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { MessageCircle, User, Calendar } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { apiCall } from '@/services/apiCall';
+import { toast } from 'react-toastify';
 import { useUserRole } from '@/hooks/useUserRole';
+import { allRoutes } from '@/services/routes';
 
 interface Bug {
   id: string;
@@ -57,7 +58,6 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(true);
-  const { toast } = useToast();
   const { userRole } = useUserRole();
 
   const fetchComments = async () => {
@@ -65,26 +65,12 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
       setCommentsLoading(true);
       console.log('🔄 Fetching comments for bug:', bug.id);
 
-      const { data: commentsData, error } = await supabase
-        .from('bug_comments')
-        .select('*')
-        .eq('bug_id', bug.id)
-        .order('created_at', { ascending: true });
+      const { data: commentsData, error } = await apiCall(allRoutes.sprints.getBugComments(bug.id), 'GET');
 
-      if (error) {
-        console.error('❌ Error fetching comments:', error);
-        throw error;
-      }
 
-      console.log('✅ Comments fetched:', commentsData?.length || 0);
       setComments(commentsData || []);
     } catch (error) {
-      console.error('❌ Error in fetchComments:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch comments",
-        variant: "destructive",
-      });
+      toast.error("Failed to fetch comments");
     } finally {
       setCommentsLoading(false);
     }
@@ -94,11 +80,7 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
     e.preventDefault();
     
     if (!newComment.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a comment",
-        variant: "destructive",
-      });
+        toast.error("Please enter a comment");
       return;
     }
 
@@ -106,34 +88,19 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
       setLoading(true);
       console.log('🔄 Adding comment to bug:', bug.id);
 
-      const { error } = await supabase
-        .from('bug_comments')
-        .insert({
+      const { error } = await apiCall(allRoutes.sprints.createBugComment(bug.id), 'POST', {
           bug_id: bug.id,
           content: newComment.trim(),
           author_name: 'Current User', // You can enhance this to get actual user info
           author_role: userRole || 'unknown'
-        });
-
-      if (error) {
-        console.error('❌ Error adding comment:', error);
-        throw error;
-      }
-
-      toast({
-        title: "Success",
-        description: "Comment added successfully",
       });
+
+      toast.success("Comment added successfully");
 
       setNewComment('');
       fetchComments(); // Refresh comments
     } catch (error) {
-      console.error('❌ Error in handleAddComment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add comment",
-        variant: "destructive",
-      });
+      toast.error("Failed to add comment");
     } finally {
       setLoading(false);
     }

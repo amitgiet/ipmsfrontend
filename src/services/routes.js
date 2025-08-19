@@ -55,7 +55,11 @@ export const allRoutes = {
     get: (id) => `/sprints/${id}`,
     delete: (id) => `/sprints/${id}`,
     addTask: (id) => `/sprints/${id}/tasks`,
-    removeTask: (sprintId, taskId) => `/sprints/${sprintId}/tasks/${taskId}`
+    removeTask: (sprintId, taskId) => `/sprints/${sprintId}/tasks/${taskId}`,
+    getSprintById: (id) => `/sprints/${id}`,
+    getSprintBacklog: (id) => `/sprints/${id}/backlog`,
+    uploadImage: (fileName, file) => `/sprints/upload-image?fileName=${fileName}&file=${file}`,
+    createBug: '/bugs'
   },
   stories: {
     list: '/stories',

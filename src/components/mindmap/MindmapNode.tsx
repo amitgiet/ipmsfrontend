@@ -135,7 +135,7 @@ export const MindmapNodeComponent = ({
             )}
 
             <Badge className={`${typeColors[node?.type]} flex-shrink-0`}>
-              {node?.type === 'user_story' ? 'user story' : node?.type === 'user' ? 'user' : node?.type === 'epic' ? 'epic' : node?.type === 'feature' ? 'feature' : node?.type === 'task' && 'task'}
+              {node?.type === 'user_story' ? 'user story' : node?.type === 'user' ? 'user' : node?.type === 'epic' ? 'epic' : node?.type === 'feature' ? 'feature' : node?.type === 'task' ? 'task' : 'child'}
             </Badge>
 
             <div className="opacity-0 group-hover:opacity-100 flex gap-1 flex-shrink-0">

@@ -1,16 +1,11 @@
-
-import { supabase } from '@/integrations/supabase/client';
+import { apiCall } from '@/services/apiCall';
+import { allRoutes } from '@/services/routes';
 
 export const isProjectInProgress = async (projectId: string): Promise<boolean> => {
   try {
     console.log('🔄 Checking if project is in progress:', projectId);
 
-    const { data: project, error } = await supabase
-      .from('projects')
-      .select('project_status')
-      .eq('id', projectId)
-      .single();
-
+    const { data: project, error } = await apiCall(allRoutes.projects.getById(projectId), 'GET');
     if (error) {
       console.error('❌ Error fetching project status:', error);
       return false;
@@ -40,11 +35,7 @@ export const getProjectStatus = async (projectId: string): Promise<string> => {
       return 'unknown';
     }
 
-    const { data: project, error } = await supabase
-      .from('projects')
-      .select('project_status')
-      .eq('id', projectId)
-      .single();
+    const { data: project, error } = await apiCall(allRoutes.projects.getById(projectId), 'GET');
 
     if (error) {
       console.error('❌ Error fetching project status:', error);

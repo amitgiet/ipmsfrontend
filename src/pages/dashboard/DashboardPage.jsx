@@ -4,6 +4,7 @@ import { fetchProjects } from "../../features/projects/projectSlice";
 import { fetchTasks } from "../../features/tasks/taskSlice";
 import RoleGuard from "../../guards/RoleGuard";
 import { AdminDashboard } from "./AdminDashboard/AdminDashboard";
+import { TeamLeadDashboard } from "./TeamLeadDashboard/TeamLeadDashboard";
 import { ProductOwnerDashboard } from "./ProductOwner/ProductOwnerDashboard";
 import { Routes, Route } from 'react-router-dom';
 import { AdminProjectsSection } from '@/components/admin/AdminProjectsSection';
@@ -37,22 +38,6 @@ const DashboardPage = () => {
     };
     return roleComponents[role] || <DefaultDashboard />;
   };
-
-  const TeamLeadDashboard = () => (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Team Lead Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-2">Team Tasks</h3>
-          <p className="text-3xl font-bold text-primary-600">{tasks.length}</p>
-        </div>
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-2">Sprint Progress</h3>
-          <p className="text-3xl font-bold text-green-600">75%</p>
-        </div>
-      </div>
-    </div>
-  );
 
   const DeveloperDashboard = () => (
     <div className="space-y-6">

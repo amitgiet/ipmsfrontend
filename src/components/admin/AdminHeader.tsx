@@ -40,13 +40,13 @@ export const AdminHeader = ({
 
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">Welcome, {userName}</span>
-          <Button variant="ghost" size="sm">
+          <Button variant="outline" size="sm">
             <Bell className="h-4 w-4" />
           </Button>
 
           <DropdownMenu open={mainMenuOpen} onOpenChange={setMainMenuOpen}>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
+              <Button variant="outline" size="sm">
                 <Settings className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -71,9 +71,9 @@ export const AdminHeader = ({
               >
                 <FolderOpen className="h-4 w-4" />
                 Projects
-                <Badge variant="secondary" className="ml-auto">
+                {/* <Badge variant="secondary" className="ml-auto">
                   {projectsCount}
-                </Badge>
+                </Badge> */}
               </DropdownMenuItem>
 
               <DropdownMenuItem
@@ -84,9 +84,9 @@ export const AdminHeader = ({
               >
                 <Users className="h-4 w-4" />
                 Team Management
-                <Badge variant="secondary" className="ml-auto">
-                  {teamMembersCount}
-                </Badge>
+                  {/* <Badge variant="secondary" className="ml-auto">
+                    {teamMembersCount}
+                  </Badge> */}
               </DropdownMenuItem>
 
               <DropdownMenuItem

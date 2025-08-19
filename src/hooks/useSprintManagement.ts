@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { apiCall } from '@/services/apiCall';
 import { useToast } from '@/hooks/use-toast';
+import { allRoutes } from '@/services/routes';
 
 interface Sprint {
   id: string;
@@ -43,11 +44,7 @@ export const useSprintManagement = (sprintId?: string) => {
       console.log('🔄 Fetching sprint data for:', sprintId);
 
       // Fetch sprint details
-      const { data: sprintData, error: sprintError } = await supabase
-        .from('sprints')
-        .select('*')
-        .eq('id', sprintId)
-        .single();
+      const { data: sprintData, error: sprintError } = await apiCall(allRoutes.sprints.getSprintById(sprintId), 'GET');
 
       if (sprintError) {
         console.error('❌ Error fetching sprint:', sprintError);
@@ -67,23 +64,8 @@ export const useSprintManagement = (sprintId?: string) => {
       setSprint(typedSprint);
 
       // Fetch stories assigned to this sprint through sprint_backlog
-      const { data: sprintBacklogData, error: backlogError } = await supabase
-        .from('sprint_backlog')
-        .select(`
-          story_id,
-          user_stories (
-            id,
-            title,
-            description,
-            priority,
-            status,
-            story_points,
-            project_id,
-            created_at,
-            updated_at
-          )
-        `)
-        .eq('sprint_id', sprintId);
+      const { data: sprintBacklogData, error: backlogError } = await apiCall(allRoutes.sprints.getSprintBacklog(sprintId), 'GET');
+      
 
       if (backlogError) {
         console.error('❌ Error fetching sprint stories:', backlogError);
@@ -128,15 +110,10 @@ export const useSprintManagement = (sprintId?: string) => {
     if (!sprint) return;
 
     try {
-      console.log('🔄 Updating sprint status to:', newStatus);
 
-      const { error } = await supabase
-        .from('sprints')
-        .update({ status: newStatus })
-        .eq('id', sprint.id);
+        const { error } = await apiCall(allRoutes.sprints.update(sprint.id), 'PUT', { status: newStatus });
 
       if (error) {
-        console.error('❌ Error updating sprint status:', error);
         toast({
           title: "Error",
           description: "Failed to update sprint status",

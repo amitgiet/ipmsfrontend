@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 interface MindmapNode {
   id: string;
   title: string;
-  type: 'user' | 'epic' | 'feature' | 'task' | 'user_story';
+  type: 'user' | 'epic' | 'feature' | 'task' | 'user_story' | 'child';
   children: MindmapNode[];
   isExpanded: boolean;
   hasUserStory?: boolean;
@@ -95,8 +95,15 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
     };
 
     try {
-      await saveMindmapNode(newNode);
-      setNodes(prev => [...prev, newNode]);
+      const response = await saveMindmapNode(newNode);
+      if (response.success) {
+        const newMindmapNode: MindmapNode = {
+          ...response.data.data,
+          type: 'user',
+          children: []
+        };
+        setNodes(prev => [...prev, newMindmapNode]);
+      }
       toast.success("User added successfully");
     } catch (error) {
       console.error('Failed to add user:', error);
@@ -108,21 +115,27 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
     if (!epicTitle.trim() || selectedUserIds.length === 0) return;
 
     try {
+      let isAllSuccess = true;
       for (const userId of selectedUserIds) {
         const newNode: MindmapNode = {
           id: `node_${Date.now()}_${userId}`,
           title: epicTitle,
-          type: 'epic',
+          type: 'child',
           children: [],
           isExpanded: true,
           hasUserStory: false,
         };
 
-        await saveMindmapNode(newNode, userId);
+        const response = await saveMindmapNode(newNode, userId);
+        if (!response.success) {
+          isAllSuccess = false;
+        }
         setNodes(prev => addNodeToParent(prev, userId, newNode));
       }
 
-      toast.success(`Epic added to ${selectedUserIds.length} user(s)`);
+      if (isAllSuccess) {
+        toast.success(`Epic added to ${selectedUserIds.length} user(s)`);
+      }
     } catch (error) {
       console.error('Failed to add epic:', error);
       toast.error("Failed to add epic");
@@ -135,7 +148,7 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
     const newNode: MindmapNode = {
       id: `node_${Date.now()}`,
       title,
-      type: 'task',
+      type: 'child',
       children: [],
       isExpanded: true,
       hasUserStory: false,
@@ -143,15 +156,16 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
 
     try {
       const response = await saveMindmapNode(newNode, selectedParentNode.id);
+      if (response.success) {
+        const newMindmapNode: MindmapNode = {
+          ...response.data.data,
+          type: 'child',
+          children: []
+        };
+        setNodes(prev => addNodeToParent(prev, selectedParentNode.id, newMindmapNode));
+        toast.success("Item added successfully");
+      }
 
-      const newMindmapNode: MindmapNode = {
-        ...response.data.data,
-        children: []
-      };
-
-      setNodes(prev => addNodeToParent(prev, selectedParentNode.id, newMindmapNode));
-
-      toast.success("Item added successfully");
     } catch (error) {
       console.error('Failed to add child item:', error);
       toast.error("Failed to add item");

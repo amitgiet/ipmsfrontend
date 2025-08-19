@@ -170,7 +170,7 @@ export const AdminDashboardStats = ({ metrics, loading, onProjectsClick }: Admin
           <span className={`text-2xl font-bold bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
             {value}
           </span>
-          <div className={`p-2 rounded-lg bg-gradient-to-r ${color} opacity-10 group-hover:opacity-20 transition-opacity`}>
+          <div className={`p-2 rounded-lg bg-gradient-to-r ${color} opacity-30 group-hover:opacity-20 transition-opacity`}>
             <Icon className="h-5 w-5" />
           </div>
         </div>

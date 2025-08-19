@@ -164,7 +164,7 @@ export const TeamMembersTable = ({
                 </Button>
               </div>
             </TableCell>
-            <TableCell>{member.mobile_no || '-'}</TableCell>
+            <TableCell>{member.phone || '-'}</TableCell>
             <TableCell>
               <Badge className={roleColors[member.role] || 'bg-gray-100 text-gray-800 border-gray-200'}>
                 {member.role?.replace('_', ' ').toUpperCase() || 'N/A'}
@@ -207,14 +207,14 @@ export const TeamMembersTable = ({
                 >
                   <Edit className="h-3 w-3" />
                 </Button>
-                <Button
+                {/* <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onDelete(member.id)}
                   className="text-red-600 hover:text-red-700"
                 >
                   <Trash2 className="h-3 w-3" />
-                </Button>
+                </Button> */}
               </div>
             </TableCell>
           </TableRow>

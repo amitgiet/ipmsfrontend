@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send } from 'lucide-react';
+import { Badge, Send } from 'lucide-react';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 
@@ -10,7 +10,10 @@ interface StoryComment {
   id: string;
   content: string;
   created_at: string;
-  author_name: string;
+  user: {
+    name: string;
+    role: string;
+  };
 }
 
 interface CommentsSectionProps {
@@ -30,6 +33,24 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({
   canAddComments = true,
   readOnly = false
 }) => {
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-red-100 text-red-800';
+      case 'team_lead':
+        return 'bg-blue-100 text-blue-800';
+      case 'product_owner':
+        return 'bg-green-100 text-green-800';
+      case 'developer':
+        return 'bg-purple-100 text-purple-800';
+      case 'qa':
+        return 'bg-orange-100 text-orange-800';
+      case 'client':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -40,7 +61,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({
           {comments.map((comment) => (
             <div key={comment.id} className="border-l-4 border-blue-200 pl-4">
               <div className="flex items-center gap-2 mb-1">
-                <span className="font-medium text-sm">{comment.author_name}</span>
+                  <span className="font-medium text-sm">{comment.user.name} ({comment.user.role.replace('_', ' ').toUpperCase()})</span>
                 <span className="text-xs text-gray-500">
                   {new Date(comment.created_at).toLocaleString()}
                 </span>

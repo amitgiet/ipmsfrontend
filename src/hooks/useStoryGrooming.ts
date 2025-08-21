@@ -5,12 +5,13 @@ import { useStoryActionHandlers } from '@/hooks/useStoryActionHandlers';
 import { convertToUserStory } from '@/utils/storyTypeConversion.ts';
 import { useStoryDetailsData } from '@/hooks/useStoryDetailsData';
 import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
 
 export const useStoryGrooming = () => {
-  const { storyId } = useParams();
+  const { storyId, projectId } = useParams();
   
   // Use the useStoryDetailsData hook to get the story with acceptance_criteria
-  const { story: detailedStory, loading: detailedLoading, refetch } = useStoryDetailsData(storyId);
+  const { story1, loading: detailedLoading } = useStoryDetailsData(storyId, projectId);
   
   const {
     story,
@@ -24,13 +25,15 @@ export const useStoryGrooming = () => {
     setNewComment,
     loadDocuments,
     loadComments,
-    updateStoryStatus
+    updateStoryStatus,
+    refetch: refetchStory
   } = useStoryState();
 
   // Use the detailed story if available, otherwise fall back to the basic story
-  const storyToUse = detailedStory || story;
+  const storyToUse = story|| story1;
   const loadingToUse = detailedLoading || loading;
 
+  console.log(story1, 'story1cxccccchangeeeeeeeee', story)
   // Safe access to story points - handle both property names
   const storyPoints = storyToUse ? 
     ('story_points' in storyToUse ? storyToUse.story_points : 
@@ -57,7 +60,8 @@ export const useStoryGrooming = () => {
     handleMarkAsReady,
     handleMarkReadyForEstimate,
     handleFileUpload,
-    downloadDocument
+    downloadDocument,
+    refetch
   } = useStoryActionHandlers(
     story, // Use the original story from useStoryState which has the correct DatabaseStory format
     setStory,
@@ -66,14 +70,14 @@ export const useStoryGrooming = () => {
     loadComments,
     description,
     newComment,
-    setNewComment
+    setNewComment, 
   );
 
   // Convert story to the format expected by components with real-time updates
-  const storyForComponents = convertToUserStory(storyToUse);  
+  const storyForComponents = convertToUserStory(story1);  
 
   return {
-    story: storyToUse, // Return the detailed story for display
+    story: story1, // Return the detailed story for display
     storyForComponents,
     documents,
     comments,
@@ -96,7 +100,7 @@ export const useStoryGrooming = () => {
     handleMarkAsReady,
     handleMarkReadyForEstimate,
     handleFileUpload,
-    downloadDocument,
-    refetch
+    downloadDocument, 
+    refetch: refetchStory
   };
 };

@@ -1,5 +1,7 @@
 
+import { apiCall } from '@/services/apiCall';
 import { useState, useEffect } from 'react';
+import { allRoutes } from '@/services/routes';
 
 interface UserStory {
   id: string;
@@ -20,70 +22,15 @@ export const useBacklogData = (projectId: string) => {
     if (!projectId) return;
 
     try {
-      console.log('🔄 Loading demo user stories for project:', projectId);
       setLoading(true);
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Demo data
-      const demoStories: UserStory[] = [
-        {
-          id: '1',
-          storyId: 'US-001',
-          title: 'User Authentication System',
-          description: 'Implement secure user login and registration with JWT tokens',
-          priority: 'high',
-          status: 'ready',
-          storyPoints: 8,
-          projectId: projectId,
-        },
-        {
-          id: '2',
-          storyId: 'US-002',
-          title: 'Dashboard Analytics',
-          description: 'Create comprehensive dashboard with charts and metrics',
-          priority: 'medium',
-          status: 'in_grooming',
-          storyPoints: 13,
-          projectId: projectId,
-        },
-        {
-          id: '3',
-          storyId: 'US-003',
-          title: 'File Upload Feature',
-          description: 'Allow users to upload and manage project documents',
-          priority: 'low',
-          status: 'to_do',
-          storyPoints: 5,
-          projectId: projectId,
-        },
-        {
-          id: '4',
-          storyId: 'US-004',
-          title: 'Real-time Notifications',
-          description: 'Implement push notifications for project updates',
-          priority: 'urgent',
-          status: 'ready_for_estimate',
-          storyPoints: 10,
-          projectId: projectId,
-        },
-        {
-          id: '5',
-          storyId: 'US-005',
-          title: 'Team Collaboration Tools',
-          description: 'Add chat, comments, and task assignment features',
-          priority: 'medium',
-          status: 'to_do',
-          storyPoints: 15,
-          projectId: projectId,
-        }
-      ];
-
-      console.log('✅ Loaded demo user stories:', demoStories.length);
-      setUserStories(demoStories);
+      const { data, error } = await apiCall(allRoutes.stories.list(projectId), 'get');  
+      if (error) {
+        console.error('❌ Error loading user stories:', error);
+        return;
+      }
+      setUserStories(data?.data || []);
     } catch (error) {
-      console.error('❌ Error loading demo user stories:', error);
+      console.error('❌ Error loading user stories:', error);
     } finally {
       setLoading(false);
     }

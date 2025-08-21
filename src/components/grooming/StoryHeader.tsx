@@ -61,10 +61,10 @@ export const StoryHeader: React.FC<StoryHeaderProps> = ({ story }) => {
                 </Badge>
               )}
               <Badge className={getPriorityColor(story.priority)}>
-                {story.priority.toUpperCase()}
+                {story?.priority?.toUpperCase()}
               </Badge>
               <Badge className={getStatusColor(story.status)}>
-                {story.status.replace('_', ' ').toUpperCase()}
+                {story?.status?.replace('_', ' ')?.toUpperCase()}
               </Badge>
             </div>
             <CardTitle className="text-2xl">{story.title}</CardTitle>

@@ -67,7 +67,6 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
   refetch
 }) => {
   const handleEstimationComplete = () => {
-    console.log('🔄 Estimation completed, refetching story data...');
     if (refetch) {
       refetch();
     }
@@ -78,17 +77,6 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
   
   // Get story points from either story or storyForComponents
   const storyPoints = story?.story_points || storyForComponents?.storyPoints;
-  
-  // Debug logging
-  console.log('🔍 StoryGroomingContent Debug:', {
-    storyStatus: story?.status,
-    userRole,
-    isEstimated,
-    isReadyForEstimate,
-    storyPoints: storyPoints,
-    hasStoryPoints: !!storyPoints,
-    acceptanceCriteria: story?.acceptanceCriteria || story?.acceptance_criteria
-  });
 
   return (
     <>
@@ -185,7 +173,7 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
 
       {canEditContent ? (
         <DocumentsSection
-          documents={documents}
+          documents={story.media}
           uploading={uploading}
           onFileUpload={handleFileUpload}
           onDownloadDocument={downloadDocument}
@@ -197,20 +185,20 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
             <CardDescription>Flow documents, wireframes, and reference materials</CardDescription>
           </CardHeader>
           <CardContent>
-            {documents.length > 0 ? (
+            {story.media.length > 0 ? (
               <div className="space-y-2">
-                {documents.map((doc) => (
+                {story.media.map((doc) => (
                   <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center gap-3">
-                      {doc.file_type.startsWith('image/') ? (
+                      {doc.url.includes('image') ? (
                         <Image className="h-5 w-5 text-blue-500" />
                       ) : (
                         <FileText className="h-5 w-5 text-blue-500" />
                       )}
                       <div>
-                        <p className="font-medium">{doc.filename}</p>
+                        <p className="font-medium">{doc.name}</p>
                         <p className="text-sm text-gray-500">
-                          {(doc.file_size / 1024).toFixed(1)} KB • {new Date(doc.uploaded_at).toLocaleDateString()}
+                          {new Date(doc.uploaded_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>

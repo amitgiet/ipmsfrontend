@@ -7,11 +7,8 @@ import { FileText, Image, Download } from 'lucide-react';
 
 interface StoryDocument {
   id: string;
-  filename: string;
-  file_type: string;
-  file_size: number;
-  file_path: string;
-  uploaded_at: string;
+  name: string;
+  url: string;
 }
 
 interface DocumentsSectionProps {
@@ -53,16 +50,16 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
             {documents.map((doc) => (
               <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">
-                  {doc.file_type.startsWith('image/') ? (
+                  {doc.url.includes('image') ? (
                     <Image className="h-5 w-5 text-blue-500" />
                   ) : (
                     <FileText className="h-5 w-5 text-blue-500" />
                   )}
                   <div>
-                    <p className="font-medium">{doc.filename}</p>
-                    <p className="text-sm text-gray-500">
-                      {(doc.file_size / 1024).toFixed(1)} KB • {new Date(doc.uploaded_at).toLocaleDateString()}
-                    </p>
+                    <p className="font-medium">{doc.name}</p>
+                    {/* <p className="text-sm text-gray-500">
+                      {new Date(doc?.uploaded_at).toLocaleDateString()}
+                    </p> */}
                   </div>
                 </div>
                 <Button

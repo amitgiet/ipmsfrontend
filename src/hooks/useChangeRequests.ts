@@ -236,34 +236,31 @@ export const useChangeRequests = (projectId: string) => {
   };
 
   // Load last viewed timestamps from localStorage on mount
-  useEffect(() => {
-    const loadLastViewedFromStorage = () => {
-      const stored: Record<string, string> = {};
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key?.startsWith('lastViewed_')) {
-          const actualKey = key.replace('lastViewed_', '');
-          const value = localStorage.getItem(key);
-          if (value) {
-            stored[actualKey] = value;
-          }
-        }
-      }
-      setLastViewedComments(stored);
-    };
+  // useEffect(() => {
+  //   const loadLastViewedFromStorage = () => {
+  //     const stored: Record<string, string> = {};
+  //     for (let i = 0; i < localStorage.length; i++) {
+  //       const key = localStorage.key(i);
+  //       if (key?.startsWith('lastViewed_')) {
+  //         const actualKey = key.replace('lastViewed_', '');
+  //         const value = localStorage.getItem(key);
+  //         if (value) {
+  //           stored[actualKey] = value;
+  //         }
+  //       }
+  //     }
+  //     setLastViewedComments(stored);
+  //   };
 
-    loadLastViewedFromStorage();
-  }, []);
+  //   loadLastViewedFromStorage();
+  // }, []);
 
-  useEffect(() => {
-    loadChangeRequests();
-
-   
-
-    return () => {
-      apiCall(allRoutes.comments.get(projectId, 'change_request'), 'get');
-    };
-  }, [projectId]);
+  // useEffect(() => {
+  //   loadChangeRequests();
+  //   return () => {
+  //     apiCall(allRoutes.comments.get(projectId, 'change_request'), 'get');
+  //   };
+  // }, [projectId]);
 
   return {
     changeRequests,

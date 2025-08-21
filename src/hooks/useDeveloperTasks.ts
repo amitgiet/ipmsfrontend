@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { apiCall } from '@/services/apiCall';
+import { allRoutes } from '@/services/routes';
+import { toast } from 'react-toastify';
 
 interface Task {
   id: string;
@@ -16,7 +17,6 @@ interface Task {
 }
 
 export const useDeveloperTasks = (currentUserEmail: string) => {
-  const { toast } = useToast();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,10 +31,7 @@ export const useDeveloperTasks = (currentUserEmail: string) => {
       console.log('🔄 Fetching tasks for developer:', currentUserEmail);
 
       // First, let's see all tasks in the table
-      const { data: allTasks, error: allTasksError } = await supabase
-        .from('story_tasks')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data: allTasks, error: allTasksError } = await apiCall(allRoutes.tasks.list, 'get');
 
       if (allTasksError) {
         console.error('❌ Error fetching all tasks:', allTasksError);
@@ -46,19 +43,11 @@ export const useDeveloperTasks = (currentUserEmail: string) => {
       }
 
       // Now try the original filtered query
-      const { data, error } = await supabase
-        .from('story_tasks')
-        .select('*')
-        .eq('assigned_to', currentUserEmail)
-        .order('created_at', { ascending: false });
+      const { data, error } = await apiCall(allRoutes.tasks.list, 'get');
 
       if (error) {
         console.error('❌ Error fetching developer tasks:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load your tasks",
-          variant: "destructive",
-        });
+        toast.error("Failed to load your tasks");
         return;
       }
 
@@ -82,11 +71,7 @@ export const useDeveloperTasks = (currentUserEmail: string) => {
       }
     } catch (error) {
       console.error('❌ Error in fetchTasks:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load tasks",
-        variant: "destructive",
-      });
+      toast.error("Failed to load tasks");
     } finally {
       setLoading(false);
     }
@@ -96,21 +81,14 @@ export const useDeveloperTasks = (currentUserEmail: string) => {
     try {
       console.log('🔄 Updating task status:', taskId, newStatus);
 
-      const { error } = await supabase
-        .from('story_tasks')
-        .update({
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', taskId);
+      const { error } = await apiCall(allRoutes.tasks.update(taskId), 'put', {
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      });
 
       if (error) {
         console.error('❌ Error updating task status:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update task status",
-          variant: "destructive",
-        });
+        toast.error("Failed to update task status");
         return;
       }
 
@@ -123,17 +101,10 @@ export const useDeveloperTasks = (currentUserEmail: string) => {
 
       console.log('✅ Task status updated successfully');
       
-      toast({
-        title: "Success",
-        description: "Task status updated successfully",
-      });
+      toast.success("Task status updated successfully");
     } catch (error) {
       console.error('❌ Error in updateTaskStatus:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update task status",
-        variant: "destructive",
-      });
+      toast.error("Failed to update task status");
     }
   };
 

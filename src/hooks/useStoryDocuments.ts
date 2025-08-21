@@ -2,7 +2,10 @@
 import { useState } from 'react';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
+import { useParams } from 'react-router-dom';
+import { useStoryDetailsData } from './useStoryDetailsData';
+import { useStoryFetching } from './useStoryFetching';
 
 interface UserStory {
   id: string;
@@ -26,9 +29,11 @@ interface StoryDocument {
 export const useStoryDocuments = (
   story: UserStory | null,
   updateStoryStatus: (status: UserStory['status']) => Promise<void>,
-  loadDocuments: () => Promise<void>
+  loadDocuments: () => Promise<void>,
 ) => {
-  const { toast } = useToast();
+  const { projectId, storyId } = useParams();
+    const { fetchStory } = useStoryFetching();
+
   const [uploading, setUploading] = useState(false);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,50 +51,36 @@ export const useStoryDocuments = (
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: "Invalid File Type",
-        description: "Please upload PDF, Word documents, or images only",
-        variant: "destructive",
-      });
+      toast.error("Invalid File Type");
       return;
     }
-
+    console.log(story, file, projectId, 'story')
     setUploading(true);
 
+    let formData = new FormData();
+    formData.append('flow_document', file);
+    formData.append('_method', 'patch');
+    formData.append('project_id', projectId || '');
+
     try {
-      const fileName = `${story.id}/${Date.now()}-${file.name}`;
-      
-      const { error: uploadError } = await apiCall(allRoutes.stories.upload(fileName), 'post', {
-        file: file
-      });
+      const { error: uploadError } = await apiCall(allRoutes.stories.update(story.id), 'post',
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
       if (uploadError) {
         throw uploadError;
       }
 
-      const { error: dbError } = await apiCall(allRoutes.stories.upload(fileName), 'post', {
-        file: file
-      });
 
-      if (dbError) {
-        throw dbError;
-      }
+      // await updateStoryStatus('in_grooming');
 
-      await updateStoryStatus('in_grooming');
+      toast.success("Document uploaded successfully");
 
-      toast({
-        title: "Success",
-        description: "Document uploaded successfully",
-      });
-
-      loadDocuments();
+      fetchStory(storyId, projectId);
     } catch (error) {
       console.error('Error uploading file:', error);
-      toast({
-        title: "Error",
-        description: "Failed to upload document",
-        variant: "destructive",
-      });
+      toast.error("Failed to upload document");
     } finally {
       setUploading(false);
       event.target.value = '';
@@ -114,11 +105,7 @@ export const useStoryDocuments = (
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading document:', error);
-      toast({
-        title: "Error",
-        description: "Failed to download document",
-        variant: "destructive",
-      });
+      toast.error("Failed to download document");
     }
   };
 

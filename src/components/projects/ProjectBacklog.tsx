@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { User, Eye, FileEdit, Download } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { BacklogControls } from '@/components/backlog/BacklogControls.tsx';
 import { UserStoryCard } from '@/components/backlog/UserStoryCard.tsx';
 import { ChangeRequestDialog } from '@/components/backlog/ChangeRequestDialog.tsx';
@@ -14,6 +13,9 @@ import { useBacklogData } from '@/components/backlog/useBacklogData.ts';
 // import { useUserRole } from '@/hooks/useUserRole.tsx';
 import { useAuth } from '@/hooks/useAuth.jsx';
 // import { useSRSDownload } from '@/hooks/useSRSDownload.tsx';
+import { apiCall } from '@/services/apiCall';
+import { allRoutes } from '@/services/routes';
+import { toast } from 'react-toastify';
 
 interface UserStory {
   id: string;
@@ -39,7 +41,6 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
   const [newStoryTitle, setNewStoryTitle] = useState('');
   const [showChangeRequestDialog, setShowChangeRequestDialog] = useState(false);
   const [showChangeRequests, setShowChangeRequests] = useState(false);
-  const { toast } = useToast();
   const { user, teamUser } = useAuth();
   const currentUser = user || teamUser;
 
@@ -54,12 +55,11 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
   // Listen for user stories added from mindmap
   useEffect(() => {
     const handleUserStoryAdded = (event: CustomEvent) => {
-      console.log('🔔 Backlog: Received userStoryAdded event:', event.detail);
       loadUserStories();
     };
 
     window.addEventListener('userStoryAdded', handleUserStoryAdded as EventListener);
-    
+
     return () => {
       window.removeEventListener('userStoryAdded', handleUserStoryAdded as EventListener);
     };
@@ -69,55 +69,41 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
     if (!newStoryTitle.trim() || !canEdit) return;
 
     try {
-      const { data, error } = await supabase
-        .from('user_stories')
-        .insert({
-          title: newStoryTitle,
-          priority: 'medium',
-          status: 'to_do',
-          project_id: projectId,
-        })
-        .select()
-        .single();
+      const { data, error } = await apiCall(allRoutes.stories.create, 'post', {
+        title: newStoryTitle,
+        priority: 'medium',
+        status: 'to_do',
+        type: 'project-backlog',
+        project_id: projectId,
+      });
 
       if (error) {
         console.error('❌ Error adding user story:', error);
-        toast({
-          title: "Error",
-          description: "Failed to add user story",
-          variant: "destructive",
-        });
+        toast.error("Failed to add user story");
         return;
       }
 
       const newStory: UserStory = {
-        id: data.id,
-        title: data.title,
-        description: data.description || undefined,
-        priority: data.priority as 'low' | 'medium' | 'high' | 'urgent',
-        status: data.status as 'to_do' | 'in_grooming' | 'ready' | 'ready_for_estimate',
-        storyPoints: data.story_points || undefined,
-        projectId: data.project_id,
+        id: data?.data?.id,
+        title: data?.data?.title,
+        description: data?.data?.description || undefined,
+        priority: data?.data?.priority as 'low' | 'medium' | 'high' | 'urgent',
+        status: data?.data?.status as 'to_do' | 'in_grooming' | 'ready' | 'ready_for_estimate',
+        storyPoints: data?.data?.story_points || undefined,
+        projectId: data?.data?.project_id,
       };
 
       setUserStories(prev => [newStory, ...prev]);
       setNewStoryTitle('');
-      
+
       if (onUserStoryAdded) {
         onUserStoryAdded(newStory);
       }
 
-      toast({
-        title: "Success",
-        description: "User story added successfully",
-      });
+      toast.success("User story added successfully");
     } catch (error) {
       console.error('❌ Error adding user story:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add user story",
-        variant: "destructive",
-      });
+      toast.error("Failed to add user story");
     }
   };
 
@@ -130,80 +116,41 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
     if (!canEdit) return;
 
     try {
-      const { error } = await supabase
-        .from('user_stories')
-        .update({ 
-          priority: newPriority,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', storyId);
+      const { error } = await apiCall(allRoutes.stories.update(storyId), 'post', {
+        priority: newPriority,
+        project_id: projectId,
+        _method: 'patch'
+      });
 
       if (error) {
         console.error('❌ Error updating story priority:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update story priority",
-          variant: "destructive",
-        });
+        toast.error("Failed to update story priority");
         return;
       }
 
-      setUserStories(prev => prev.map(story => 
+      setUserStories(prev => prev.map(story =>
         story.id === storyId ? { ...story, priority: newPriority } : story
       ));
 
-      toast({
-        title: "Success",
-        description: "Story priority updated",
-      });
+      toast.success("Story priority updated");
     } catch (error) {
       console.error('❌ Error updating story priority:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update story priority",
-        variant: "destructive",
-      });
+      toast.error("Failed to update story priority");
     }
   };
 
   const deleteStory = async (storyId: string) => {
     if (!canEdit) return;
-
-    try {
-      const { error } = await supabase
-        .from('user_stories')
-        .delete()
-        .eq('id', storyId);
-
-      if (error) {
-        console.error('❌ Error deleting story:', error);
-        toast({
-          title: "Error",
-          description: "Failed to delete story",
-          variant: "destructive",
-        });
-        return;
-      }
-
+    const { success } = await apiCall(allRoutes.stories.delete(storyId, projectId), 'delete');
+    if (success) {
       setUserStories(prev => prev.filter(story => story.id !== storyId));
-
-      toast({
-        title: "Success",
-        description: "Story deleted successfully",
-      });
-    } catch (error) {
-      console.error('❌ Error deleting story:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete story",
-        variant: "destructive",
-      });
+      toast.success("Story deleted successfully");
     }
   };
 
   const handleDownloadSRS = async () => {
     if (!canEdit || userStories.length === 0) return;
-    
+
     // await downloadSRS(projectId, projectName, userStories);
   };
 
@@ -243,13 +190,13 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
                 {readOnly && <Eye className="h-4 w-4 text-gray-500" />}
               </CardTitle>
               <CardDescription>
-                {readOnly 
+                {readOnly
                   ? "View user stories - Admin view (read-only)"
                   : canEdit
-                  ? "Manage user stories and track their progress"
-                  : canSubmitChangeRequests
-                  ? "View user stories - you can request changes using the change request feature"
-                  : "View user stories"
+                    ? "Manage user stories and track their progress"
+                    : canSubmitChangeRequests
+                      ? "View user stories - you can request changes using the change request feature"
+                      : "View user stories"
                 }
               </CardDescription>
             </div>
@@ -262,7 +209,7 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
               >
                 <Download className="h-4 w-4" />
                 Download SRS
-                {/* {isGenerating ? 'Generating...' : 'Download SRS'} */} 
+                {/* {isGenerating ? 'Generating...' : 'Download SRS'} */}
               </Button>
             )}
           </div>
@@ -307,7 +254,7 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
                   </Select>
                 </div>
                 {canSubmitChangeRequests && currentUser && (
-                  <Button 
+                  <Button
                     onClick={() => setShowChangeRequestDialog(true)}
                     className="flex items-center gap-2"
                   >
@@ -368,7 +315,7 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
         </CardContent>
       </Card>
 
-        {(canReviewChangeRequests || canSubmitChangeRequests) && (
+      {(canReviewChangeRequests || canSubmitChangeRequests) && (
         <ChangeRequestsSection
           projectId={projectId}
           currentUserEmail={currentUser?.email || ''}

@@ -1,6 +1,7 @@
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
+import { useParams } from 'react-router-dom';
 
 interface UserStory {
   id: string;
@@ -12,94 +13,67 @@ interface UserStory {
   projectId: string;
 }
 
-export const useStoryUpdates = (  
+export const useStoryUpdates = (
   story: UserStory | null,
   updateStoryStatus: (status: UserStory['status']) => Promise<void>
 ) => {
-  const { toast } = useToast();
+  const { projectId, storyId } = useParams();
 
   const updateDescription = async (description: string, setStory: (story: UserStory | null) => void) => {
     if (!story) return;
 
     const trimmedDescription = description.trim();
-    
+
     // Don't update if description is empty or hasn't changed
     if (!trimmedDescription || trimmedDescription === story.description) {
       return;
     }
 
     try {
-      const { error } = await apiCall(allRoutes.stories.update(story.id), 'put', { 
+      const { error } = await apiCall(allRoutes.stories.update(story.id), 'post', {
+        project_id: projectId,
         description: trimmedDescription,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        _method: "patch"
       });
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update description",
-          variant: "destructive",
-        });
+        toast.error("Failed to update description");
         return;
       }
 
       setStory({ ...story, description: trimmedDescription });
-      
-      await updateStoryStatus('in_grooming');
-      
-      toast({
-        title: "Success",
-        description: "Description updated successfully",
-      });
+
+      // await updateStoryStatus('in_grooming');
+
+      toast.success("Description updated successfully");
     } catch (error) {
       console.error('Error updating description:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update description",
-        variant: "destructive",
-      });
+      toast.error("Failed to update description");
     }
   };
 
   const updateStoryPoints = async (storyPoints: number, setStory: (story: UserStory | null) => void) => {
-    if (!story) return;
+    if (!storyId || !projectId) return;
 
     try {
-      console.log('🔄 Updating story points in database:', storyPoints);
-      
-      const { error } = await apiCall(allRoutes.stories.update(story.id), 'put', { 
-        story_points: storyPoints,
-        updated_at: new Date().toISOString()
-      });
+      const { error } = await apiCall(allRoutes.stories.updateStoryPoints(storyId), 'post', { project_id: projectId, story_point: storyPoints });
 
       if (error) {
         console.error('❌ Error updating story points:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update story points",
-          variant: "destructive",
-        });
+        toast.error("Failed to update story points");
         return;
       }
 
-      console.log('✅ Story points updated in database successfully');
-      
       // Don't call setStory here since it's already been updated in the parent component
-      // setStory({ ...story, storyPoints });
-      
+      setStory({ ...story, storyPoints });
+
       // Don't change status when updating story points - removed this line:
       // await updateStoryStatus('in_grooming');
-      
-      toast({
-        title: "Success",
-        description: "Story points updated successfully",
-      });
+
+      toast.success("Story points updated successfully");
     } catch (error) {
       console.error('Error updating story points:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update story points",
-        variant: "destructive",
-      });
+      toast.error("Failed to update story points");
     }
   };
 

@@ -13,6 +13,8 @@ import { useMindmapOperations } from '@/components/mindmap/useMindmapOperations'
 import { useMindmapActions } from '@/components/mindmap/useMindmapActions';
 import { useMindmapHelpers } from '@/components/mindmap/useMindmapHelpers';
 import { toast } from "react-toastify";
+import { allRoutes } from '@/services/routes';
+import { apiCall } from '@/services/apiCall';
 interface MindmapNode {
   id: string;
   title: string;
@@ -206,31 +208,23 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
     const userStoryText = `As a ${userStoryData.asA} I should be able to ${userStoryData.iShouldBeAbleTo} so that I can ${userStoryData.soThatICan}`;
 
     const userStory = {
-      ...selectedNode,
       title: userStoryText,
-      type: 'user_story' as const,
-      description: userStoryText
+      type: 'mindmap',
+      mindmap_id: selectedNode.id,
+      project_id: projectId
     };
 
-    try {
-      if (window && (window as any).addStoryToBacklog) {
-        const success = await (window as any).addStoryToBacklog(userStory);
-        if (success) {
-          await markNodeAsHavingUserStory(selectedNode.id);
-          setNodes(prev => updateNodeUserStoryStatus(prev, selectedNode.id, true));
+    const success = await apiCall(allRoutes.stories.create, 'post', userStory);
+    if (success) {
+      await markNodeAsHavingUserStory(selectedNode.id);
+      setNodes(prev => updateNodeUserStoryStatus(prev, selectedNode.id, true));
 
-          setShowUserStoryDialog(false);
-          setSelectedNode(null);
-          resetUserStoryData();
+      setShowUserStoryDialog(false);
+      setSelectedNode(null);
+      resetUserStoryData();
 
-          toast.success("User story created and added to backlog");
-        } else {
-          toast.error("Failed to add user story to backlog");
-        }
-      } else {
-        toast.error("Backlog function not available. Please try switching to the backlog tab and back.");
-      }
-    } catch (error) {
+      toast.success("User story created and added to backlog");
+    } else {
       toast.error("Failed to add user story to backlog");
     }
   };

@@ -3,18 +3,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { useStoryData } from '@/hooks/useStoryData';
 
-interface UserStory {
-  id: string;
-  title: string;
-  description?: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'to_do' | 'in_grooming' | 'ready' | 'ready_for_estimate';
-  storyPoints?: number;
-  projectId: string;
-}
-
 export const useStoryState = () => {
-  const { storyId } = useParams();
+  const { storyId, projectId } = useParams();
   const location = useLocation();
   
   const [description, setDescription] = useState('');
@@ -28,8 +18,9 @@ export const useStoryState = () => {
     loading,
     loadDocuments,
     loadComments,
-    updateStoryStatus
-  } = useStoryData(storyId, location.state?.story);
+    updateStoryStatus,
+    refetch
+  } = useStoryData(storyId, projectId, location.state?.story);
 
   // Update description when story data changes
   useEffect(() => {
@@ -65,6 +56,7 @@ export const useStoryState = () => {
     setNewComment,
     loadDocuments,
     loadComments,
-    updateStoryStatus
+    updateStoryStatus,
+    refetch
   };
 };

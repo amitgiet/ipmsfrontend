@@ -6,7 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Edit, Save, X } from 'lucide-react';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
-import { useToast } from '@/hooks/use-toast';
+import { useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 interface AcceptanceCriteriaSectionProps {
   storyId: string;
@@ -26,41 +27,31 @@ export const AcceptanceCriteriaSection: React.FC<AcceptanceCriteriaSectionProps>
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(acceptanceCriteria || '');
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-
+  const { projectId } = useParams();
   const handleSave = async () => {
     if (!canEdit) return;
     
     setIsLoading(true);
     try {
-      const { error } = await apiCall(allRoutes.stories.update(storyId), 'put', { 
+      const { error } = await apiCall(allRoutes.stories.update(storyId), 'post', { 
+        project_id: projectId,
         acceptance_criteria: editValue.trim() || null,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        _method:"patch"
       });
 
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update acceptance criteria",
-          variant: "destructive",
-        });
+        toast.error("Failed to update acceptance criteria");
         return;
       }
 
-      toast({
-        title: "Success",
-        description: "Acceptance criteria updated successfully",
-      });
+      toast.success("Acceptance criteria updated successfully");
       
       setIsEditing(false);
       onUpdate();
     } catch (error) {
       console.error('Error updating acceptance criteria:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update acceptance criteria",
-        variant: "destructive",
-      });
+      toast.error("Failed to update acceptance criteria");
     } finally {
       setIsLoading(false);
     }

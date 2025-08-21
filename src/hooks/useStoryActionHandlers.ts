@@ -33,7 +33,7 @@ export const useStoryActionHandlers = (
   loadComments: () => Promise<void>,
   description: string,
   newComment: string,
-  setNewComment: (comment: string) => void
+  setNewComment: (comment: string) => void,
 ) => {
   const navigate = useNavigate();
   const userStory = convertToUserStory(story);
@@ -102,6 +102,6 @@ export const useStoryActionHandlers = (
     handleMarkAsReady,
     handleMarkReadyForEstimate,
     handleFileUpload,
-    downloadDocument
+    downloadDocument, 
   };
 };

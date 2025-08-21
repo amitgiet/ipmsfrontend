@@ -6,6 +6,7 @@ import { AdminProjectsSection } from '@/components/admin/AdminProjectsSection';
 import { AdminTimesheetSection } from '@/components/admin/AdminTimesheetSection'; 
 import { TeamManagement } from './TeamManagement';
 import { useAdminDashboardMetrics } from '@/hooks/useAdminDashboardMetrics';
+import { useNavigate } from 'react-router-dom';
 
 export const AdminMainContent = ({
   activeSection,
@@ -34,7 +35,7 @@ export const AdminMainContent = ({
   onClearFilters
 }) => {
   const { metrics, loading: metricsLoading } = useAdminDashboardMetrics();
-
+  const navigate = useNavigate();
   switch (activeSection) {
     case 'projects':
       return (
@@ -84,7 +85,7 @@ export const AdminMainContent = ({
           <AdminDashboardStats
             metrics={metrics}
             loading={false}
-            onProjectsClick={() => setActiveSection('projects')}
+            onProjectsClick={() => navigate('/dashboard/all-projects')}
           />
 
           <AdminRecentActivity projects={projects} />

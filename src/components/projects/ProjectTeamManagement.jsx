@@ -9,8 +9,10 @@ import { Plus, X, Users } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
-
+import { useAuth } from '@/hooks/useAuth';
+  
 export const ProjectTeamManagement = ({ projectId }) => {
+  const { user } = useAuth();
   const [assignedMembers, setAssignedMembers] = useState([]);
   const [availableMembers, setAvailableMembers] = useState([]);
   const [selectedMemberId, setSelectedMemberId] = useState('');
@@ -95,23 +97,11 @@ export const ProjectTeamManagement = ({ projectId }) => {
 
   const removeTeamMember = async (teamMemberId) => {
     try {
-      console.log('Removing team member:', { projectId, teamMemberId });
-
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      // Remove assignment from demo data
-      const assignmentIndex = demoProjectAssignments.findIndex(
-        assignment => assignment.project_id === projectId && assignment.team_member_id === teamMemberId
-      );
-
-      if (assignmentIndex !== -1) {
-        demoProjectAssignments.splice(assignmentIndex, 1);
+      const { error } = await apiCall(allRoutes.projects.removeTeamMember(projectId, teamMemberId), 'delete');
+      if (!error) {
+        toast.success("Team member removed from project successfully");
+        fetchProjectTeamMembers();
       }
-
-      toast.success("Team member removed from project successfully");
-
-      fetchProjectTeamMembers();
     } catch (error) {
       console.error('Error removing team member:', error);
       toast.error("Failed to remove team member from project");
@@ -243,14 +233,14 @@ export const ProjectTeamManagement = ({ projectId }) => {
                     Assigned: {new Date(member.assigned_at).toLocaleDateString()}
                   </p>
                 </div>
-                <Button
+                {member.id !== user.id && <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => removeTeamMember(member.id)}
                   className="ml-2 text-red-600 hover:text-red-800 hover:bg-red-50"
                 >
                   <X className="h-4 w-4" />
-                </Button>
+                </Button>}
               </div>
             ))}
           </div>

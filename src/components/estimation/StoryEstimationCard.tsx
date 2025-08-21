@@ -5,9 +5,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calculator, Check } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
+import { useParams } from 'react-router-dom';
 
 interface StoryEstimationCardProps {
   storyId: string;
@@ -24,54 +25,31 @@ export const StoryEstimationCard: React.FC<StoryEstimationCardProps> = ({
 }) => {
   const [selectedPoints, setSelectedPoints] = React.useState<number | null>(currentStoryPoints || null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const { toast } = useToast();
+  const { projectId } = useParams();
 
   const handleSubmitEstimation = async () => {
     if (!selectedPoints) {
-      toast({
-        title: "Error",
-        description: "Please select story points before submitting",
-        variant: "destructive",
-      });
+      toast.error("Please select story points before submitting");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      console.log('🔄 Submitting estimation:', selectedPoints, 'for story:', storyId);
-      
-      // Update story with estimation and change status to 'estimated'
-        const { error } = await apiCall(allRoutes.stories.update(storyId), 'put', { 
-        story_points: selectedPoints,
-        status: 'estimated', // Change status to estimated after estimation
-        updated_at: new Date().toISOString()
+        const { error } = await apiCall(allRoutes.stories.updateStoryPoints(storyId), 'post', { 
+        project_id: projectId,
+        story_point: selectedPoints,
       });
 
       if (error) {
-        console.error('❌ Error updating story points and status:', error);
-        toast({
-          title: "Error",
-          description: "Failed to submit estimation",
-          variant: "destructive",
-        });
+        toast.error("Failed to submit estimation");
         return;
       }
 
-      console.log('✅ Story estimation and status updated successfully');
-      
-      toast({
-        title: "Success",
-        description: "Story estimation submitted for review",
-      });
+      toast.success("Story estimation submitted for review");
 
       onEstimationComplete();
     } catch (error) {
-      console.error('❌ Error submitting estimation:', error);
-      toast({
-        title: "Error",
-        description: "Failed to submit estimation",
-        variant: "destructive",
-      });
+      toast.error("Failed to submit estimation");
     } finally {
       setIsSubmitting(false);
     }

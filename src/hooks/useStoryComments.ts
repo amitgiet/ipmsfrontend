@@ -1,7 +1,8 @@
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { useAuth } from '@/hooks/useAuth';
+import { useParams } from 'react-router-dom';
 
 interface UserStory {
   id: string;
@@ -15,44 +16,32 @@ interface UserStory {
 
 export const useStoryComments = (
   story: UserStory | null,
-  updateStoryStatus: (status: UserStory['status']) => Promise<void>,
   loadComments: () => Promise<void>
 ) => {
-  const { toast } = useToast();
+  const {storyId, projectId} = useParams();
   const { user, teamUser } = useAuth();
   const currentUser = user || teamUser;
-  const userRole = currentUser?.role || null;
 
   const addComment = async (newComment: string, setNewComment: (comment: string) => void) => {
     if (!newComment.trim() || !story || !currentUser) return;
 
-    const authorName = `${currentUser.name} (${userRole?.replace('_', ' ').toUpperCase()})`;
-
     try {
         const { error } = await apiCall(allRoutes.comments.store, 'post', {
-        story_id: story.id,
-        content: newComment.trim(),
-        author_name: authorName
+          user_story_id: storyId,
+          type: 'user_story',
+          content: newComment.trim(),
+          project_id: projectId
       });
       if (error) {
         throw error;
       }
 
-      await updateStoryStatus('in_grooming');
-
       setNewComment('');
       loadComments();
-      toast({
-        title: "Success",
-        description: "Comment added successfully",
-      });
+      toast.success("Comment added successfully");
     } catch (error) {
       console.error('Error adding comment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add comment",
-        variant: "destructive",
-      });
+      toast.error("Failed to add comment");
     }
   };
 

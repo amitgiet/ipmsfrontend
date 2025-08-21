@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
 
@@ -19,7 +19,6 @@ interface Sprint {
 export const useSprintsData = (projectId: string) => {
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
   const user = JSON.parse(localStorage.getItem('ipms_user') || '{}');
 
   const fetchSprints = async () => {
@@ -27,15 +26,11 @@ export const useSprintsData = (projectId: string) => {
       setLoading(true);
       console.log('🔄 Fetching sprints for project:', projectId);
       
-      const { data, error } = await apiCall(allRoutes.sprints.get(projectId), 'get');
+      const { data, error } = await apiCall(allRoutes.sprints.list(projectId), 'get');
 
       if (error) {
         console.error('❌ Error fetching sprints:', error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch sprints",
-          variant: "destructive",
-        });
+        toast.error("Failed to fetch sprints");
         return;
       }
 
@@ -50,11 +45,7 @@ export const useSprintsData = (projectId: string) => {
       setSprints(typedSprints);
     } catch (error) {
       console.error('❌ Error fetching sprints:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch sprints",
-        variant: "destructive",
-      });
+      toast.error("Failed to fetch sprints");
     } finally {
       setLoading(false);
     }
@@ -62,73 +53,47 @@ export const useSprintsData = (projectId: string) => {
 
   const createSprint = async (sprintData: Omit<Sprint, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      console.log('🔄 Creating sprint with data:', sprintData);
-      console.log('🔄 Current user:', user);
-      
       // Check if user has permission to create sprints
       if (!user) {
-        toast({
-          title: "Authentication Error",
-          description: "Please log in to create sprints",
-          variant: "destructive",
-        });
+        toast.error("Please log in to create sprints");
         return null;
       }
 
       // Check user role
       const allowedRoles = ['product_owner', 'project_manager', 'admin'];
       if (!allowedRoles.includes(user.role)) {
-        toast({
-          title: "Permission Error",
-          description: `Only product owners, project managers, and admins can create sprints. Your role: ${user.role}`,
-          variant: "destructive",
-        });
+        toast.error(`Only product owners, project managers, and admins can create sprints. Your role: ${user.role}`);
         return null;
       }
 
-      const { data, error } = await apiCall(allRoutes.sprints.store, 'post', sprintData);
+      const { data, error } = await apiCall(allRoutes.sprints.create(projectId), 'post', sprintData);
 
       if (error) {
         console.error('❌ Error creating sprint:', error);
-        toast({
-          title: "Error",
-          description: "Failed to create sprint: " + error.message,
-          variant: "destructive",
-        });
+        toast.error("Failed to create sprint: " + error.message);
         return null;
       }
 
       console.log('✅ Sprint created successfully:', data);
       
-      toast({
-        title: "Success",
-        description: "Sprint created successfully",
-      });
+      toast.success("Sprint created successfully");
 
       fetchSprints(); // Refresh the list
       return data;
     } catch (error) {
       console.error('❌ Error creating sprint:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create sprint",
-        variant: "destructive",
-      });
+      toast.error("Failed to create sprint");
       return null;
     }
   };
 
   const updateSprint = async (sprintId: string, updates: Partial<Sprint>) => {
     try {
-        const { error } = await apiCall(allRoutes.sprints.update(sprintId), 'put', updates);
+        const { error } = await apiCall(allRoutes.sprints.update(sprintId), 'post', updates);
 
       if (error) {
         console.error('Error updating sprint:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update sprint",
-          variant: "destructive",
-        });
+        toast.error("Failed to update sprint");
         return false;
       }
 

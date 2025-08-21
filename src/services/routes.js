@@ -22,12 +22,14 @@ export const allRoutes = {
     getById: (id) => `/projects/dashboard/${id}`,
     addTeamMember: '/user-project/assign-user',
     getAssignedUsers: (id) => `/user-project/assigned-users?project_id=${id}`,
-    getTeamMembersDropdown: (id) => `/teams/dropdown?project_id=${id}`
+    getTeamMembersDropdown: (id) => `/teams/dropdown?project_id=${id}`,
+    removeTeamMember: (id, userId) => `/user-project/remove-user?project_id=${id}&user_id=${userId}`,
+    get_assigned_projects: '/user-project/assigned-projects'
   },
   productOwner: {
     time_logs_list: '/time-logs',
     add_time_log: '/time-logs',
-    dashboard: '/dashboard',
+    dashboard: '/dashboard',  
     get_assigned_projects: '/user-project/assigned-projects'
   },
   mindmap: {
@@ -37,7 +39,13 @@ export const allRoutes = {
   },
   comments: {
     store: '/comments',
-    get: (projectId, type) => `comments?project_id=${projectId}&type=${type}`
+    get: (projectId, type, storyId) => {
+      if(type === 'user_story'){
+        return `comments?project_id=${projectId}&type=${type}&user_story_id=${storyId}`
+      }
+      return `comments?project_id=${projectId}&type=${type}`
+    },
+    getByStoryId: (storyId, projectId) => `comments?story_id=${storyId}&project_id=${projectId}`
   },
   tasks: {
     list: '/tasks',
@@ -62,12 +70,15 @@ export const allRoutes = {
     createBug: '/bugs'
   },
   stories: {
-    list: '/stories',
-    create: '/stories',
-    update: (id) => `/stories/${id}`,
-    get: (id) => `/stories/${id}`,
-    delete: (id) => `/stories/${id}`,
-    addTask: (id) => `/stories/${id}/tasks`
+    list: (projectId) => `/user-stories?project_id=${projectId}&per_page=1000`,
+    create: '/user-stories',
+    update: (id) => `/user-stories/${id}`,
+    get: (id, projectId) => `/user-stories/${id}?project_id=${projectId}`,
+    delete: (id, projectId) => `/user-stories/${id}?project_id=${projectId}`,
+    addTask: (id) => `/user-stories/${id}/tasks`,
+    markAsReady: (id, projectId) => `/user-stories/${id}/ready?project_id=${projectId}`,
+    updateStoryPoints: (id) => `/user-stories/${id}/update-story-points`,
+    markReadyForEstimate: (id, projectId) => `/user-stories/${id}/ready-for-estimate?project_id=${projectId}`
   },
   timesheets: {
     list: '/timesheets',

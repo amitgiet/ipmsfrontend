@@ -12,7 +12,7 @@ import { useStoryGrooming } from '@/hooks/useStoryGrooming';
 import { useSprintStatus } from '@/hooks/useSprintStatus';
 
 const UserStoryGrooming = () => {
-  
+
   const {
     story,
     storyForComponents,
@@ -41,10 +41,10 @@ const UserStoryGrooming = () => {
     refetch
   } = useStoryGrooming();
 
-  const { 
-    sprintStatus, 
-    canEditStory, 
-    isInRunningSprint, 
+  const {
+    sprintStatus,
+    canEditStory,
+    isInRunningSprint,
     isInCompletedSprint,
     loading: sprintLoading
   } = useSprintStatus(story?.id);
@@ -76,17 +76,17 @@ const UserStoryGrooming = () => {
     );
   }
 
-
+  console.log(story, 'story')
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-6 py-8">
         <GroomingHeader onBack={goBack} />
 
-        <StoryHeader story={storyForComponents} />  
+        <StoryHeader story={story} />
 
         {/* Sprint Edit Restriction Alert - Removed as per user request */}
 
-        <StoryStatusCards 
+        <StoryStatusCards
           isStoryReady={isStoryReady}
           isReadyForEstimate={isReadyForEstimate}
         />

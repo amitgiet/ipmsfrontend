@@ -1,8 +1,7 @@
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
 import { useToast } from '@/hooks/use-toast';
-import { apiCall } from '@/services/apiCall';
-import { allRoutes } from '@/services/routes';
+import { useParams } from 'react-router-dom';
 
 interface UserStory {
   id: string;
@@ -19,15 +18,13 @@ export const useStoryStatusActions = (
   updateStoryStatus: (status: UserStory['status']) => Promise<void>
 ) => {
   const { toast } = useToast();
+  const { projectId, storyId } = useParams();
 
   const markAsReady = async () => {
     if (!story) return;
 
     try {
-      const { error } = await apiCall(allRoutes.stories.update(story.id), 'put', { 
-        status: 'ready',
-        updated_at: new Date().toISOString()
-      });
+      const { error } = await apiCall(allRoutes.stories.markAsReady(storyId, projectId), 'post');
       if (error) {
         toast({
           title: "Error",
@@ -38,7 +35,7 @@ export const useStoryStatusActions = (
       }
 
       await updateStoryStatus('ready');
-      
+
       toast({
         title: "Success",
         description: "Story marked as ready",
@@ -57,10 +54,7 @@ export const useStoryStatusActions = (
     if (!story) return;
 
     try {
-      const { error } = await apiCall(allRoutes.stories.update(story.id), 'put', { 
-        status: 'ready_for_estimate',
-        updated_at: new Date().toISOString()
-      });
+      const { error } = await apiCall(allRoutes.stories.markReadyForEstimate(storyId, projectId), 'post');
       if (error) {
         toast({
           title: "Error",
@@ -71,7 +65,7 @@ export const useStoryStatusActions = (
       }
 
       await updateStoryStatus('ready_for_estimate');
-      
+
       toast({
         title: "Success",
         description: "Story marked as ready for estimate",

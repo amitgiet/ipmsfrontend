@@ -1,13 +1,11 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchProjects } from "../../features/projects/projectSlice";
 import { fetchTasks } from "../../features/tasks/taskSlice";
 import RoleGuard from "../../guards/RoleGuard";
 import { AdminDashboard } from "./AdminDashboard/AdminDashboard";
 import { TeamLeadDashboard } from "./TeamLeadDashboard/TeamLeadDashboard";
 import { ProductOwnerDashboard } from "./ProductOwner/ProductOwnerDashboard";
-import { Routes, Route } from 'react-router-dom';
-import { AdminProjectsSection } from '@/components/admin/AdminProjectsSection';
+import { DeveloperDashboard } from "./DeveloperDashboard/DeveloperDashboard";
 
 const DashboardPage = () => {
   const dispatch = useDispatch();
@@ -38,24 +36,6 @@ const DashboardPage = () => {
     };
     return roleComponents[role] || <DefaultDashboard />;
   };
-
-  const DeveloperDashboard = () => (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Developer Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-2">My Tasks</h3>
-          <p className="text-3xl font-bold text-primary-600">
-            {tasks.filter((t) => t.assignee === currentUser?.id).length}
-          </p>
-        </div>
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-2">Hours Logged</h3>
-          <p className="text-3xl font-bold text-blue-600">32</p>
-        </div>
-      </div>
-    </div>
-  );
 
   const QADashboard = () => (
     <div className="space-y-6">
@@ -112,6 +92,7 @@ const DashboardPage = () => {
     <RoleGuard
       allowedRoles={[
         "super-admin",
+        "admin",
         "product_owner",
         "team_lead",
         "developer",

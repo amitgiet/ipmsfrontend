@@ -13,20 +13,19 @@ interface StoryComment {
 export const useStoryCommentsData = () => {
   const [comments, setComments] = useState<StoryComment[]>([]);
 
-  const loadComments = async (storyId: string) => {
-    if (!storyId) return;
+  const loadComments = async (storyId: string, projectId: string) => {
+    if (!storyId || !projectId) return;
 
     try {
-      const { data, error } = await apiCall(allRoutes.stories.get(storyId), 'get');
-
+      const { data, error } = await apiCall(allRoutes.comments.get(projectId, 'user_story', storyId), 'get');
+      
       if (error) {
         console.error('❌ Error loading comments:', error);
         return;
       }
 
       if (data) {
-        setComments(data as StoryComment[]);
-        console.log('✅ Loaded comments:', data.length);
+        setComments(data.data);
       }
     } catch (error) {
       console.error('❌ Error loading comments:', error);

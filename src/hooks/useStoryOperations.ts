@@ -18,11 +18,11 @@ export const useStoryOperations = (
   story: UserStory | null,
   updateStoryStatus: (status: UserStory['status']) => Promise<void>,
   loadDocuments: () => Promise<void>,
-  loadComments: () => Promise<void>
+  loadComments: () => Promise<void>,
 ) => {
   const { updateDescription, updateStoryPoints } = useStoryUpdates(story, updateStoryStatus);
   const { uploading, handleFileUpload, downloadDocument } = useStoryDocuments(story, updateStoryStatus, loadDocuments);
-  const { addComment } = useStoryComments(story, updateStoryStatus, loadComments);
+  const { addComment } = useStoryComments(story, loadComments);
   const { markAsReady, markReadyForEstimate } = useStoryStatusActions(story, updateStoryStatus);
 
   return {

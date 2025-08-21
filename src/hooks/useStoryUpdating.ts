@@ -1,6 +1,6 @@
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 
 interface Story {
   id: string;
@@ -15,7 +15,6 @@ interface Story {
 }
 
 export const useStoryUpdating = () => {
-  const { toast } = useToast();
 
   const updateStory = async (story: Story, updates: Partial<Story>, setStory: (story: Story | null) => void) => {
     if (!story) return;
@@ -29,11 +28,7 @@ export const useStoryUpdating = () => {
       });
       if (error) {
         console.error('❌ Error updating story:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update story",
-          variant: "destructive",
-        });
+        toast.error("Failed to update story");
         return;
       }
 
@@ -42,17 +37,10 @@ export const useStoryUpdating = () => {
       setStory(updatedStory);
       console.log('✅ Story updated successfully');
       
-      toast({
-        title: "Success",
-        description: "Story updated successfully",
-      });
+      toast.success("Story updated successfully");  
     } catch (error) {
       console.error('❌ Error in updateStory:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update story",
-        variant: "destructive",
-      });
+      toast.error("Failed to update story");
     }
   };
 
@@ -68,11 +56,7 @@ export const useStoryUpdating = () => {
       });
       if (error) {
         console.error('❌ Error updating story status:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update story status",
-          variant: "destructive",
-        });
+        toast.error("Failed to update story status");
         return;
       }
 
@@ -82,11 +66,7 @@ export const useStoryUpdating = () => {
       console.log('✅ Story status updated successfully');
     } catch (error) {
       console.error('❌ Error in updateStoryStatus:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update story status",
-        variant: "destructive",
-      });
+      toast.error("Failed to update story status");
     }
   };
 

@@ -20,7 +20,6 @@ export const useSprintStatus = (storyId?: string) => {
       }
 
       try {
-        console.log('🔄 Checking sprint status for story:', storyId);
 
         // Check if story is in any sprint
         // const { data: sprintData, error } = await apiCall(allRoutes.sprintBacklog.get(storyId), 'get');

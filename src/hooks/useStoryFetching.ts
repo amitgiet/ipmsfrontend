@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
@@ -13,43 +12,45 @@ interface Story {
   project_id: string;
   created_at: string;
   updated_at: string;
+  media: {
+    id: string;
+    name: string;
+    url: string;
+  }[];
 }
 
 export const useStoryFetching = () => {
   const [story, setStory] = useState<Story | null>(null);
   const [loading, setLoading] = useState(true);
 
-
-  const fetchStory = async (storyId: string) => {
+  const fetchStory = async (storyId: string, projectId: string) => {
     if (!storyId) return;
 
     try {
-      console.log('🔄 Fetching story data for:', storyId);
       setLoading(true);
 
-      const { data, error } = await apiCall(allRoutes.stories.get(storyId), 'get');
+      const { data, error } = await apiCall(allRoutes.stories.get(storyId, projectId), 'get');
 
       if (error) {
         console.error('❌ Error fetching story:', error);
-
         return;
       }
 
       if (data) {
         const typedStory: Story = {
-          id: data.id,
-          title: data.title,
-          description: data.description || undefined,
-          priority: data.priority as 'low' | 'medium' | 'high' | 'urgent',
-          status: data.status as 'to_do' | 'in_progress' | 'qa' | 'done' | 'ready' | 'in_grooming' | 'ready_for_estimate',
-          story_points: data.story_points || undefined,
-          project_id: data.project_id,
-          created_at: data.created_at,
-          updated_at: data.updated_at
+          id: data.data.id,
+          title: data.data.title,
+          description: data.data.description || undefined,
+          priority: data.data.priority as 'low' | 'medium' | 'high' | 'urgent',
+          status: data.data.status as 'to_do' | 'in_progress' | 'qa' | 'done' | 'ready' | 'in_grooming' | 'ready_for_estimate',
+          story_points: data.data.story_points || undefined,
+          project_id: data.data.project_id,
+          created_at: data.data.created_at,
+          updated_at: data.data.updated_at,
+          media: data.data.media || []
         };
-
+          console.log(typedStory, 'typedStory!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
         setStory(typedStory);
-        console.log('✅ Story data fetched successfully:', typedStory);
       }
     } catch (error) {
       console.error('❌ Error in fetchStory:', error);
@@ -64,6 +65,6 @@ export const useStoryFetching = () => {
     setStory,
     loading,
     setLoading,
-    fetchStory
+    fetchStory,
   };
 };

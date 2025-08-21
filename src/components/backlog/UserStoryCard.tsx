@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Eye, Edit, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 interface UserStory {
   id: string;
@@ -64,10 +64,11 @@ export const UserStoryCard: React.FC<UserStoryCardProps> = ({
   onDelete,
   readOnly = false
 }) => {
+  const {projectId} = useParams();
   const navigate = useNavigate();
 
   const handleViewStory = () => {
-    navigate(`/project/${story.projectId}/story/${story.id}/groom`);
+    navigate(`/project/${projectId}/story/${story.id}/groom`);
   };
 
   return (

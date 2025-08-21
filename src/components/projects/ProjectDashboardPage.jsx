@@ -24,6 +24,7 @@ const ProjectDashboardPage = () => {
     const result = await projectService.getProjectDetails(projectId);
     setProject(result.data.data);
   };
+  
   useEffect(() => {
     if (projectId) {
       fetchProjectDetails();

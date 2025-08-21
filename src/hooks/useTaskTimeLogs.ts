@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { useUserRole } from '@/hooks/useUserRole';
+import { apiCall } from '@/services/apiCall';
+import { allRoutes } from '@/services/routes';
 
 interface TimeLog {
   id: string;
@@ -16,7 +17,6 @@ interface TimeLog {
 }
 
 export const useTaskTimeLogs = (storyId: string) => {
-  const { toast } = useToast();
   const { currentUser } = useUserRole();
   const [timeLogs, setTimeLogs] = useState<TimeLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,10 +28,7 @@ export const useTaskTimeLogs = (storyId: string) => {
       console.log('🔄 Loading time logs for story:', storyId);
 
       // Get all tasks for this story first, then get time logs
-      const { data: tasks, error: tasksError } = await supabase
-        .from('story_tasks')
-        .select('id')
-        .eq('story_id', storyId);
+      const { data: tasks, error: tasksError } = await apiCall(allRoutes.tasks.list, 'get');
 
       if (tasksError) {
         console.error('❌ Error loading tasks for time logs:', tasksError);
@@ -45,19 +42,11 @@ export const useTaskTimeLogs = (storyId: string) => {
 
       const taskIds = tasks.map(task => task.id);
 
-      const { data, error } = await supabase
-        .from('task_time_logs')
-        .select('*')
-        .in('task_id', taskIds)
-        .order('logged_at', { ascending: false });
+      const { data, error } = await apiCall(allRoutes.tasks.list, 'get');
 
       if (error) {
         console.error('❌ Error loading time logs:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load time logs",
-          variant: "destructive",
-        });
+        toast.error("Failed to load time logs");
         return;
       }
 
@@ -67,11 +56,7 @@ export const useTaskTimeLogs = (storyId: string) => {
       }
     } catch (error) {
       console.error('❌ Error in loadTimeLogs:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load time logs",
-        variant: "destructive",
-      });
+      toast.error("Failed to load time logs");
     }
   };
 
@@ -85,25 +70,17 @@ export const useTaskTimeLogs = (storyId: string) => {
 
       const loggedBy = currentUser?.email || currentUser?.name || 'Current User';
 
-      const { data, error } = await supabase
-        .from('task_time_logs')
-        .insert({
-          task_id: taskId,
-          start_time: startDateTime,
-          end_time: endDateTime,
-          time_spent_minutes: timeData.timeSpentMinutes,
-          logged_by: loggedBy
-        })
-        .select()
-        .single();
+      const { data, error } = await apiCall(allRoutes.tasks.list, 'post', {
+        task_id: taskId,
+        start_time: startDateTime,
+        end_time: endDateTime,
+        time_spent_minutes: timeData.timeSpentMinutes,
+        logged_by: loggedBy
+      });
 
       if (error) {
         console.error('❌ Error logging time:', error);
-        toast({
-          title: "Error",
-          description: "Failed to log time",
-          variant: "destructive",
-        });
+        toast.error("Failed to log time");
         return;
       }
 
@@ -121,17 +98,10 @@ export const useTaskTimeLogs = (storyId: string) => {
       setTimeLogs(prev => [newTimeLog, ...prev]);
       console.log('✅ Time logged successfully');
       
-      toast({
-        title: "Success",
-        description: "Time logged successfully",
-      });
+      toast.success("Time logged successfully");
     } catch (error) {
       console.error('❌ Error in logTime:', error);
-      toast({
-        title: "Error",
-        description: "Failed to log time",
-        variant: "destructive",
-      });
+      toast.error("Failed to log time");
     }
   };
 

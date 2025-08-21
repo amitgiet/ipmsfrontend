@@ -13,9 +13,9 @@ export const ProjectOverviewCards = ({ project }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Project Metrics Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center">
@@ -64,7 +64,7 @@ export const ProjectOverviewCards = ({ project }) => {
           </CardContent>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardContent className="pt-6">
             <div className="flex items-center">
               <Calendar className="h-8 w-8 text-purple-600" />
@@ -89,7 +89,7 @@ export const ProjectOverviewCards = ({ project }) => {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {/* Other overview cards can be added here in the future */}

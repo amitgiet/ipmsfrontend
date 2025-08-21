@@ -17,8 +17,9 @@ import {
   FolderOpen,
   Clock,
   BookOpen,
+  ArrowLeft,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 export const AdminHeader = ({
   userName,
@@ -28,14 +29,20 @@ export const AdminHeader = ({
   teamMembersCount
 }) => {
   const navigate = useNavigate();
+  const {pathname} = useLocation();
   const [mainMenuOpen, setMainMenuOpen] = useState(false);
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-50">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
-          <Home className="h-8 w-8 text-blue-600" />
-          <h1 className="text-xl font-semibold">Admin Dashboard</h1>
+          { pathname !== '/dashboard' &&   <Button variant="outline" size="sm" onClick={() => navigate('/dashboard')}>
+            <ArrowLeft className="h-8 w-8" />
+          </Button>}
+          <Link to="/dashboard" className={`flex items-center gap-2 ${pathname === '/dashboard' ? 'text-blue-600' : ''}`}>
+            <Home className="h-8 w-8 text-blue-600" />
+            <h1 className="text-xl font-semibold">Admin Dashboard</h1>
+          </Link>
         </div>
 
         <div className="flex items-center gap-4">

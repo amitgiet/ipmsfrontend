@@ -17,6 +17,11 @@ interface UserStory {
   total_logged_minutes?: number;
   estimated_minutes?: number;
   acceptanceCriteria?: string;
+  media?: {
+    id: string;
+    name: string;
+    url: string;
+  }[];
 }
 
 interface StoryDocument {
@@ -35,69 +40,38 @@ interface StoryComment {
   author_name: string;
 }
 
-export const useStoryDetailsData = (storyId?: string) => {
+export const useStoryDetailsData = (storyId?: string, projectId?: string) => {
   const { toast } = useToast();
   const { user, teamUser } = useAuth();
   const currentUser = user || teamUser;
   const userRole = currentUser?.role || null;
-  const [story, setStory] = useState<UserStory | null>(null);
+  const [story1, setStory] = useState<UserStory | null>(null);
   const [documents, setDocuments] = useState<StoryDocument[]>([]);
   const [comments, setComments] = useState<StoryComment[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadStoryData = async () => {
-    if (!storyId) return;
+    if (!storyId || !projectId) return;
 
     try {
-      console.log('🔄 Loading story details for:', storyId);
-
-      // const { data, error } = await apiCall(allRoutes.stories.get(storyId), 'get');
-      const demoData = {
-        id: '1',
-        story_id: '1',
-        title: 'Story 1',
-        description: 'Description 1',
-        priority: 'high',
-        status: 'ready',
-        story_points: 10,
-        project_id: '1',
-        is_overworked: false,
-        total_logged_minutes: 0,
-        estimated_minutes: 0,
-        acceptance_criteria: 'Acceptance Criteria 1',
-        created_at: '2021-01-01',
-        updated_at: '2021-01-01',
-      }
-      const error = null;
-      if (error) {
-        console.error('❌ Error loading story:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load user story",
-          variant: "destructive",
-        });
-        return;
-      }
-
+      const { data, error } = await apiCall(allRoutes.stories.get(storyId, projectId), 'get');
       // Type assertion to handle the acceptance_criteria field that may not be in the generated types yet
-      const storyData = demoData as any;
-
+      const storyData = data.data
       const mappedStory: UserStory = {
         id: storyData.id,
-        storyId: storyData.story_id,
+        storyId: storyId,
         title: storyData.title,
         description: storyData.description || undefined,
         priority: storyData.priority as 'low' | 'medium' | 'high' | 'urgent',
         status: storyData.status as 'to_do' | 'in_grooming' | 'ready' | 'in_progress' | 'qa' | 'done',
-        storyPoints: storyData.story_points || undefined,
-        projectId: storyData.project_id,
+        storyPoints: storyData.story_point || undefined,
+        projectId: projectId,
         is_overworked: storyData.is_overworked || false,
         total_logged_minutes: storyData.total_logged_minutes || 0,
         estimated_minutes: storyData.estimated_minutes || 0,
         acceptanceCriteria: storyData.acceptance_criteria || undefined,
+        media:storyData.media || []
       };
-
-      console.log('✅ Loaded story:', mappedStory);
       setStory(mappedStory);
     } catch (error) {
       console.error('❌ Error in loadStoryData:', error);
@@ -123,7 +97,7 @@ export const useStoryDetailsData = (storyId?: string) => {
         uploaded_at: '2021-01-01',
       }]
       const error = null;
-      if (error) {  
+      if (error) {
         console.error('❌ Error loading documents:', error);
         return;
       }
@@ -201,7 +175,7 @@ export const useStoryDetailsData = (storyId?: string) => {
       setLoading(true);
       Promise.all([
         loadStoryData(),
-        loadDocuments(),
+        // loadDocuments(),
         loadComments()
       ]).finally(() => {
         setLoading(false);
@@ -214,11 +188,12 @@ export const useStoryDetailsData = (storyId?: string) => {
   }, [storyId]);
 
   return {
-    story,
+    story1,
     documents,
     comments,
     loading,
     downloadDocument,
-    refetch
+    refetch,
+    loadStoryData
   };
 };

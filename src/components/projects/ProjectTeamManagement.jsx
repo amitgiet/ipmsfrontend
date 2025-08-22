@@ -19,13 +19,9 @@ export const ProjectTeamManagement = ({ projectId }) => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  useEffect(() => {
-    fetchProjectTeamMembers();
-    fetchAvailableTeamMembers();
-  }, [projectId]);
-
   const fetchProjectTeamMembers = async () => {
     try {
+      setLoading(true);
       const { data, error } = await apiCall(allRoutes.projects.getAssignedUsers(projectId), 'get');
       if (error) {
         console.error('Error fetching project team members:', error);
@@ -47,6 +43,8 @@ export const ProjectTeamManagement = ({ projectId }) => {
     } catch (error) {
       console.error('Error fetching project team members:', error);
       toast.error("Failed to fetch project team members");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -117,7 +115,9 @@ export const ProjectTeamManagement = ({ projectId }) => {
 
   useEffect(() => {
     fetchProjectTeamMembers();
-    fetchAvailableTeamMembers();
+    if (user.role === 'admin' || user.role === 'team_lead' || user.role === 'product_owner') {
+      fetchAvailableTeamMembers();
+    }
   }, [projectId]);
 
   return (
@@ -133,7 +133,7 @@ export const ProjectTeamManagement = ({ projectId }) => {
               Manage team members assigned to this project
             </p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+       { (user.role === 'admin' || user.role === 'team_lead'|| user.role === 'product_owner') && <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button className="self-start sm:self-auto">
                 <Plus className="h-4 w-4 mr-2" />
@@ -194,7 +194,7 @@ export const ProjectTeamManagement = ({ projectId }) => {
                 </div>
               </div>
             </DialogContent>
-          </Dialog>
+          </Dialog>}
         </div>
       </CardHeader>
       <CardContent>
@@ -233,7 +233,7 @@ export const ProjectTeamManagement = ({ projectId }) => {
                     Assigned: {new Date(member.assigned_at).toLocaleDateString()}
                   </p>
                 </div>
-                {member.id !== user.id && <Button
+                {member.id !== user.id && (user.role === 'admin' || user.role === 'team_lead' || user.role === 'product_owner') && <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => removeTeamMember(member.id)}

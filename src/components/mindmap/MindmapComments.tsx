@@ -30,7 +30,7 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<MindmapComment[]>([]);
   const [loading, setLoading] = useState(false);
-
+  console.log(currentUser);
   const handleDeleteComment = async (commentId: string) => {
     // Remove comment from local state
     setComments(prev => prev.filter(comment => comment.id !== commentId));
@@ -38,7 +38,7 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
 
   const canDeleteComment = (comment: MindmapComment) => {
     if (!currentUser) return false;
-    return currentUser.user_id === comment.user.id;
+    return currentUser.id === comment.user_id;
   };
 
   const getTimestamp = (dateString: string) => {

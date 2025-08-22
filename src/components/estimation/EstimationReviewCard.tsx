@@ -89,7 +89,7 @@ export const EstimationReviewCard: React.FC<EstimationReviewCardProps> = ({
           </div>
         </div>
 
-        <div className="flex gap-2 pt-2">
+        {/* <div className="flex gap-2 pt-2">
           <Button
             onClick={handleApproveEstimation}
             disabled={isSubmitting}
@@ -102,7 +102,7 @@ export const EstimationReviewCard: React.FC<EstimationReviewCardProps> = ({
 
         <p className="text-sm text-green-600">
           Approving this estimation will mark the story as ready for sprint planning.
-        </p>
+        </p> */}
       </CardContent>
     </Card>
   );

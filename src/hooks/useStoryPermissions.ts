@@ -12,7 +12,7 @@ export const useStoryPermissions = (isStoryReady: boolean) => {
   
   // Check if user can edit story points (only team_lead or developer and only if story is not ready)
   const canEditStoryPoints = userRole && (userRole === 'team_lead' || userRole === 'developer') && !isStoryReady;
-
+  
   return {
     userRole,
     canAddComments,

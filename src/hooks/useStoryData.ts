@@ -21,6 +21,11 @@ interface Story {
   project_id: string;
   created_at: string;
   updated_at: string;
+  media: {
+    id: string;
+    name: string;
+    url: string;
+  }[];
 }
 
 export const useStoryData = (
@@ -30,8 +35,8 @@ export const useStoryData = (
 ) => {
   const { story, setStory, loading, setLoading, fetchStory, refetch: refetchStory } =
     useStoryFetching();
-  const { documents, loadDocuments } = useStoryDocumentsData();
-  const { comments, loadComments } = useStoryCommentsData();
+  const { documents, loadDocuments, refetchDocuments } = useStoryDocumentsData();
+  const { comments, loadComments, refetchComments } = useStoryCommentsData();
   const {
     updateStory: updateStoryData,
     updateStoryStatus: updateStoryStatusData,
@@ -44,15 +49,46 @@ export const useStoryData = (
     }
   }, [initialStory, story, setStory]);
 
+  // Create wrapper functions that handle type conversion
   const updateStory = async (updates: Partial<Story>) => {
     if (story) {
-      await updateStoryData(story, updates, setStory);
+      const setStoryWrapper = (updatedStory: Story | null) => {
+        setStory(updatedStory);
+      };
+      await updateStoryData(story, updates, setStoryWrapper);
     }
   };
 
   const updateStoryStatus = async (status: Story["status"]) => {
     if (story) {
-      await updateStoryStatusData(story, status, setStory);
+      const setStoryWrapper = (updatedStory: Story | null) => {
+        setStory(updatedStory);
+      };
+      await updateStoryStatusData(story, status, setStoryWrapper);
+    }
+  };
+
+  // Comprehensive refetch function that updates all data
+  const refetch = async () => {
+    console.log('🔄 useStoryData refetch called with:', { storyId, projectId, story: story?.id });
+    
+    if (storyId && projectId) {
+      setLoading(true);
+      try {
+        console.log('✅ Starting refetch with IDs:', { storyId, projectId });
+        await Promise.all([
+          refetchStory(), // This will also refresh the documents since they're in story.media
+          // refetchDocuments(), // Not needed - documents are refreshed with story
+          refetchComments()
+        ]);
+        console.log('✅ Refetch completed successfully');
+      } catch (error) {
+        console.error('❌ Error during refetch:', error);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      console.error('❌ Cannot refetch: Missing storyId or projectId', { storyId, projectId });
     }
   };
 
@@ -61,6 +97,7 @@ export const useStoryData = (
       setLoading(true);
       Promise.all([
         fetchStory(storyId, projectId),
+        // loadDocuments(storyId), // Documents are fetched in the same API call as story
         loadComments(storyId, projectId),
       ]).finally(() => {
         setLoading(false);
@@ -80,6 +117,6 @@ export const useStoryData = (
     updateStoryStatus,
     fetchStory: () =>
       storyId && projectId ? fetchStory(storyId, projectId) : Promise.resolve(),
-    refetch: refetchStory
+    refetch
   };
 };

@@ -5,7 +5,7 @@ export const isProjectInProgress = async (projectId: string): Promise<boolean> =
   try {
     console.log('🔄 Checking if project is in progress:', projectId);
 
-    const { data: project, error } = await apiCall(allRoutes.projects.getById(projectId), 'GET');
+    const { data: project, error } = await apiCall(allRoutes.projects.getById(projectId), 'get');
     if (error) {
       console.error('❌ Error fetching project status:', error);
       return false;
@@ -28,14 +28,13 @@ export const isProjectInProgress = async (projectId: string): Promise<boolean> =
 
 export const getProjectStatus = async (projectId: string): Promise<string> => {
   try {
-    console.log('🔄 Fetching project status for project ID:', projectId);
 
     if (!projectId) {
       console.warn('⚠️ No project ID provided');
       return 'unknown';
     }
 
-    const { data: project, error } = await apiCall(allRoutes.projects.getById(projectId), 'GET');
+    const { data: project, error } = await apiCall(allRoutes.projects.getById(projectId), 'get');
 
     if (error) {
       console.error('❌ Error fetching project status:', error);
@@ -47,19 +46,7 @@ export const getProjectStatus = async (projectId: string): Promise<string> => {
       return 'not-found';
     }
 
-    const status = project.project_status;
-    console.log(`📊 Raw project status from DB: "${status}"`);
-    
-    // Handle various status formats and null/undefined cases
-    if (!status || status.trim() === '') {
-      console.warn('⚠️ Project status is empty or null, defaulting to not-started');
-      return 'not-started';
-    }
-
-    const normalizedStatus = status.toLowerCase().trim();
-    console.log(`📊 Normalized project status: "${normalizedStatus}"`);
-    
-    return normalizedStatus;
+    return project.data.status;
   } catch (error) {
     console.error('❌ Error in getProjectStatus:', error);
     return 'unknown';

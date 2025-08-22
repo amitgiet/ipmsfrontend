@@ -7,11 +7,11 @@ import { Eye, AlertTriangle } from 'lucide-react';
 import { Draggable } from 'react-beautiful-dnd';
 
 interface Story {
-  id: string;
+  id: number;
   title: string;
   description?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'to_do' | 'in_progress' | 'qa' | 'done';
+  status: 'ready' | 'in_progress' | 'qa' | 'done';
   story_points?: number;
   project_id: string;
   is_overworked?: boolean;
@@ -42,11 +42,10 @@ export const StoryCard: React.FC<StoryCardProps> = ({
   onViewStory
 }) => {
   const isDragDisabled = sprintStatus !== 'running' || !userRole || !['team_lead', 'developer', 'qa'].includes(userRole);
-
   return (
     <Draggable 
-      key={story.id} 
-      draggableId={story.id} 
+      key={story.code} 
+      draggableId={story.code} 
       index={index}
       isDragDisabled={isDragDisabled}
     >

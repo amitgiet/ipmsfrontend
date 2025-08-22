@@ -5,11 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, FileText, MessageSquare, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { useUserRole } from '@/hooks/useUserRole';
 import { TestCaseUploadDialog } from './TestCaseUploadDialog';
 import { TestCaseCommentDialog } from './TestCaseCommentDialog';
 import { TestCaseDetailsDialog } from './TestCaseDetailsDialog';
+import { useParams } from 'react-router-dom';
 
 interface TestCase {
   id: string;
@@ -35,42 +36,36 @@ interface TestCasesSectionProps {
   canEdit?: boolean;
 }
 
-export const TestCasesSection: React.FC<TestCasesSectionProps> = ({ 
-  storyId, 
-  storyStatus, 
+export const TestCasesSection: React.FC<TestCasesSectionProps> = ({
+  storyId,
+  storyStatus,
   onTestCasesChange,
-  canEdit = true 
+  canEdit = true
 }) => {
+  const { projectId } = useParams<{ projectId: string }>();
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [selectedTestCase, setSelectedTestCase] = useState<TestCase | null>(null);
   const [showCommentDialog, setShowCommentDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-  const { toast } = useToast();
   const { userRole } = useUserRole();
 
   const loadTestCases = async () => {
     try {
-        const { data, error } = await apiCall(allRoutes.testCases.list(storyId), 'get');
-
-      if (error) {
-        console.error('Error loading test cases:', error);
-        return;
-      }
-
+      const { data, error } = await apiCall(allRoutes.testCases.list(projectId, storyId), 'get');
       // Map database data to TestCase interface
-      const mappedTestCases: TestCase[] = (data || []).map(testCase => ({
+      const mappedTestCases: TestCase[] = (data.data || []).map(testCase => ({
         id: testCase.id,
         tc_id: testCase.tc_id,
         title: testCase.title,
-        description: testCase.description || undefined,
-        preconditions: testCase.preconditions || undefined,
+        description: testCase.description,
+        preconditions: testCase.preconditions,
         steps: testCase.steps || '',
-        expected_results: testCase.expected_results || '',
-        status: (testCase.status as 'pending' | 'passed' | 'failed') || 'pending',
-        unit_tested: testCase.unit_tested || false,
-        qc_approved: testCase.qc_approved || false,
+        expected_result: testCase.expected_result || '',
+        status: testCase.status,
+        unit_tested: testCase.unit_tested,
+        qc_approved: testCase.qa_approved,
         unit_tested_by: testCase.unit_tested_by || undefined,
         qc_approved_by: testCase.qc_approved_by || undefined,
         unit_tested_at: testCase.unit_tested_at || undefined,
@@ -106,87 +101,58 @@ export const TestCasesSection: React.FC<TestCasesSectionProps> = ({
 
   const handleUnitTest = async (testCaseId: string, passed: boolean) => {
     try {
-      const { error } = await apiCall(allRoutes.testCases.update(testCaseId), 'put', {
-          unit_tested: true,
-          unit_tested_at: new Date().toISOString(),
-          unit_tested_by: 'Current User', // This should be replaced with actual user name
-          status: passed ? 'passed' : 'failed'
-      });
 
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update test case",
-          variant: "destructive",
-        });
-        return;
+      const body = {
+        test_case_id: testCaseId,
+        user_story_id: storyId,
+        project_id: projectId,
       }
 
-      toast({
-        title: "Success",
-        description: `Test case marked as ${passed ? 'passed' : 'failed'}`,
-      });
+      if (passed) {
+        const { error } = await apiCall(allRoutes.testCases.pass_test_case(testCaseId), 'post', body);
+        if (error) {
+          toast.error("Failed to update test case");
+          return;
+        }
+      } else {
+        const { error } = await apiCall(allRoutes.testCases.fail_test_case(testCaseId), 'post', body);
+        if (error) {
+          toast.error("Failed to update test case");
+          return;
+        }
+      }
+      toast.success(`Test case marked as ${passed ? 'passed' : 'failed'}`);
 
       await loadTestCases();
       onTestCasesChange();
     } catch (error) {
       console.error('Error updating test case:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update test case",
-        variant: "destructive",
-      });
+      toast.error("Failed to update test case");
     }
   };
 
   const handleQCApproval = async (testCaseId: string, approved: boolean) => {
-    try {
-      const { error } = await apiCall(allRoutes.testCases.update(testCaseId), 'put', {
-          qc_approved: approved,
-          qc_approved_at: approved ? new Date().toISOString() : null,
-          qc_approved_by: approved ? 'Current User' : null, // This should be replaced with actual user name
-      });
 
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update QC approval",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // If test case was rejected, update story status back to in_progress
-      if (!approved) {
-        console.log('🔄 Test case rejected, updating story status back to in_progress for story:', storyId);
-        const { error: statusError } = await apiCall(allRoutes.stories.update(storyId), 'put', { 
-            status: 'in_progress',
-            updated_at: new Date().toISOString()
-        });
-
-        if (statusError) {
-          console.error('❌ Error updating story status:', statusError);
-          // Don't return here, test case update was successful
-        } else {
-          console.log('✅ Story status updated to in_progress due to test case rejection');
-        }
-      }
-
-      toast({
-        title: "Success",
-        description: `Test case ${approved ? 'approved' : 'rejected'} by QC${!approved ? '. Story moved back to In Progress.' : ''}`,
-      });
-
-      await loadTestCases();
-      onTestCasesChange();
-    } catch (error) {
-      console.error('Error updating QC approval:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update QC approval",
-        variant: "destructive",
-      });
+    const body = {
+      test_case_id: testCaseId,
+      user_story_id: storyId,
+      project_id: projectId,
     }
+    if (approved) {
+      const { success } = await apiCall(allRoutes.testCases.approve_test_case(testCaseId), 'post', body);
+      if (success) {
+        toast.success("Test case approved successfully");
+      }
+    } else {
+      const { success } = await apiCall(allRoutes.testCases.reject_test_case(testCaseId), 'post', body);
+      if (success) {
+        toast.success("Test case rejected successfully");
+
+      }
+    }
+
+    await loadTestCases();
+    onTestCasesChange();
   };
 
   const getStatusColor = (status: string) => {
@@ -252,22 +218,28 @@ export const TestCasesSection: React.FC<TestCasesSectionProps> = ({
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="font-medium text-sm">{testCase.tc_id}</span>
-                      <Badge className={getStatusColor(testCase.status)} variant="outline">
-                        {getStatusIcon(testCase.status)}
-                        {testCase.status}
+                      <Badge className={getStatusColor(testCase.unit_tested === true ? 'passed' : testCase.unit_tested === false ? 'failed' : 'pending')} variant="outline">
+                        {getStatusIcon(testCase.unit_tested === true ? 'passed' : testCase.unit_tested === false ? 'failed' : 'pending')}
+                        {testCase.unit_tested === true ? 'Passed' : testCase.unit_tested === false ? 'Failed' : 'Pending'}
                       </Badge>
-                      {testCase.unit_tested && (
+                      {testCase.unit_tested != null && (
                         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                           Unit Tested
                         </Badge>
                       )}
-                      {testCase.qc_approved && (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                          QC Approved
-                        </Badge>
+                      {testCase.qc_approved != null && (
+                        testCase.qc_approved === true ? (
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                            QC Approved
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                            QC Rejected
+                          </Badge>
+                        )
                       )}
                     </div>
-                    <h4 
+                    <h4
                       className="font-medium mb-1 cursor-pointer text-blue-600 hover:text-blue-800 hover:underline"
                       onClick={() => {
                         setSelectedTestCase(testCase);
@@ -284,7 +256,7 @@ export const TestCasesSection: React.FC<TestCasesSectionProps> = ({
 
                 <div className="flex items-center gap-2 flex-wrap">
                   {/* Developer and Team Lead actions - can mark as unit tested regardless of story edit permissions */}
-                  {(userRole === 'developer' || userRole === 'team_lead') && !testCase.unit_tested && (
+                  {(userRole === 'developer' || userRole === 'team_lead') && testCase.status === 'pending' && (
                     <>
                       <Button
                         size="sm"
@@ -308,7 +280,7 @@ export const TestCasesSection: React.FC<TestCasesSectionProps> = ({
                   )}
 
                   {/* QA actions - can approve test cases regardless of story edit permissions */}
-                  {userRole === 'qa' && testCase.unit_tested && !testCase.qc_approved && (
+                  {userRole === 'qa' && testCase.status === 'developer' && (
                     <>
                       <Button
                         size="sm"
@@ -381,6 +353,7 @@ export const TestCasesSection: React.FC<TestCasesSectionProps> = ({
         open={showUploadDialog}
         onClose={() => setShowUploadDialog(false)}
         storyId={storyId}
+        projectId={projectId || ''}
         onUploadComplete={() => {
           loadTestCases();
           onTestCasesChange();
@@ -402,7 +375,7 @@ export const TestCasesSection: React.FC<TestCasesSectionProps> = ({
               onTestCasesChange();
             }}
           />
-          
+
           <TestCaseCommentDialog
             open={showCommentDialog}
             testCase={selectedTestCase}

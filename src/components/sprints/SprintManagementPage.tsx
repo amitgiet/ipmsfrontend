@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,16 +10,14 @@ import { SprintSummaryCards } from './management/SprintSummaryCards';
 import { SprintDetailsCard } from './management/SprintDetailsCard';
 import { SprintTabs } from './management/SprintTabs';
 import { apiCall } from '@/services/apiCall';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { allRoutes } from '@/services/routes';
 
   const SprintManagementPage = () => {
-  const { sprintId } = useParams();
-  const [activeTab, setActiveTab] = useState('overview');
-  const { toast } = useToast();
+  const { sprintId, projectId } = useParams();
 
   const {
-    // sprint,
+    sprint,
     stories,
     targetStoryPoints,
     completedStoryPoints,
@@ -28,33 +26,14 @@ import { allRoutes } from '@/services/routes';
     updateStories,
     updateSprintStatus,
     fetchSprintData
-  } = useSprintManagement(sprintId);
-
-  const sprint  ={
-    id: '1',
-    name: 'Sprint 1',
-    start_date: '2021-01-01',
-    end_date: '2021-01-15',
-    status: 'active',
-    stories: [
-      { id: '1', name: 'Story 1', status: 'active', start_date: '2021-01-01', end_date: '2021-01-15' },
-      { id: '2', name: 'Story 2', status: 'active', start_date: '2021-01-01', end_date: '2021-01-15' },
-      { id: '3', name: 'Story 3', status: 'active', start_date: '2021-01-01', end_date: '2021-01-15' },
-    ]
-  }
-  console.log(sprint);
-  
+  } = useSprintManagement(sprintId, projectId);
   const moveStoriesToBacklog = async (storyIds: string[]) => {
     try {
       // Remove stories from sprint backlog
       const { error: removeError } = await apiCall(allRoutes.sprints.removeTask(sprintId!, storyIds), 'DELETE');
 
       if (removeError) {
-        toast({
-          title: "Error",
-          description: "Failed to move stories to backlog",
-          variant: "destructive",
-        });
+        toast.error("Failed to move stories to backlog");
         return;
       }
 
@@ -62,26 +41,15 @@ import { allRoutes } from '@/services/routes';
       const { error: updateError } = await apiCall(allRoutes.stories.update(storyIds), 'PUT', { status: 'ready' });
 
       if (updateError) {
-        toast({
-          title: "Warning",
-          description: "Stories removed from sprint but status may need manual update",
-          variant: "destructive",
-        });
+        toast.error("Stories removed from sprint but status may need manual update");
       }
 
-      toast({
-        title: "Success",
-        description: `${storyIds.length} story(ies) moved back to backlog`,
-      });
+      toast.success(`${storyIds.length} story(ies) moved back to backlog`);
 
       // Refresh sprint data
       await fetchSprintData();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to move stories to backlog",
-        variant: "destructive",
-      });
+      toast.error("Failed to move stories to backlog");
     }
   };
 
@@ -114,9 +82,9 @@ import { allRoutes } from '@/services/routes';
 
   const handleStatusChange = () => {
     if (sprint.status === 'created') {
-      updateSprintStatus('running');
+      updateSprintStatus('start');
     } else if (sprint.status === 'running') {
-      updateSprintStatus('completed');
+      updateSprintStatus('complete');
     }
   };
 
@@ -133,8 +101,9 @@ import { allRoutes } from '@/services/routes';
 
         <SprintSummaryCards
           duration={sprint.duration}
-          targetStoryPoints={targetStoryPoints}
-          completedStoryPoints={completedStoryPoints}
+          targetStoryPoints={sprint.user_story_story_point_sum}
+          progress={sprint.progress}
+          completedStoryPoints={sprint.user_stories_completed_story_point_sum}
         />
 
         <SprintDetailsCard
@@ -143,8 +112,6 @@ import { allRoutes } from '@/services/routes';
         />
 
         <SprintTabs
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
           sprint={sprint}
           stories={stories}
           targetStoryPoints={targetStoryPoints}

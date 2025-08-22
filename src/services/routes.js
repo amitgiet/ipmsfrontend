@@ -40,10 +40,14 @@ export const allRoutes = {
   comments: {
     store: '/comments',
     get: (projectId, type, storyId) => {
+      let url = `comments?project_id=${projectId}&type=${type}`
       if(type === 'user_story'){
-        return `comments?project_id=${projectId}&type=${type}&user_story_id=${storyId}`
+        url += `&user_story_id=${storyId}`
       }
-      return `comments?project_id=${projectId}&type=${type}`
+      if(type === 'test_case'){
+        url += `&test_case_id=${storyId}`
+      }
+      return url
     },
     getByStoryId: (storyId, projectId) => `comments?story_id=${storyId}&project_id=${projectId}`
   },
@@ -57,28 +61,49 @@ export const allRoutes = {
     updateStatus: (id) => `/tasks/${id}/status`
   },
   sprints: {
+    dashboard: (projectId) => `/sprints/dashboard?project_id=${projectId}`,
     list: '/sprints',
     create: '/sprints',
+    updateStatus: (id, status) => `/sprints/${id}/${status}`,
     update: (id) => `/sprints/${id}`,
-    get: (id) => `/sprints/${id}`,
+    get: (id) => `/sprints?project_id=${id}`,
     delete: (id) => `/sprints/${id}`,
     addTask: (id) => `/sprints/${id}/tasks`,
     removeTask: (sprintId, taskId) => `/sprints/${sprintId}/tasks/${taskId}`,
-    getSprintById: (id) => `/sprints/${id}`,
+    getSprintById: (id, projectId) => `/sprints/${id}?project_id=${projectId}`,
     getSprintBacklog: (id) => `/sprints/${id}/backlog`,
     uploadImage: (fileName, file) => `/sprints/upload-image?fileName=${fileName}&file=${file}`,
     createBug: '/bugs'
   },
   stories: {
-    list: (projectId) => `/user-stories?project_id=${projectId}&per_page=1000`,
+    list: (projectId, sprintId, motive) =>{
+      let url = `/user-stories?project_id=${projectId}&per_page=1000`
+      if(motive){
+        url += `&motive=${motive}`
+        if(sprintId){
+          url += `&sprint_id=${sprintId}`
+        }
+      }
+      return url
+    },
+    drag_drop_story: (id) => `/sprints/${id}/user-stories/drag-drop`,
     create: '/user-stories',
     update: (id) => `/user-stories/${id}`,
     get: (id, projectId) => `/user-stories/${id}?project_id=${projectId}`,
     delete: (id, projectId) => `/user-stories/${id}?project_id=${projectId}`,
     addTask: (id) => `/user-stories/${id}/tasks`,
-    markAsReady: (id, projectId) => `/user-stories/${id}/ready?project_id=${projectId}`,
+    markAsReady: (id) => `/user-stories/${id}/mark-ready`,
     updateStoryPoints: (id) => `/user-stories/${id}/update-story-points`,
     markReadyForEstimate: (id, projectId) => `/user-stories/${id}/ready-for-estimate?project_id=${projectId}`
+  },
+  testCases: {
+    list: (projectId, storyId) => `/test-cases?project_id=${projectId}&user_story_id=${storyId}`,
+    create: '/test-cases',
+    update: (id) => `/test-cases/${id}`,
+    pass_test_case: (id) => `/test-cases/${id}/pass`,
+    fail_test_case: (id) => `/test-cases/${id}/fail`,
+    approve_test_case: (id) => `/test-cases/${id}/approve`,
+    reject_test_case: (id) => `/test-cases/${id}/reject`
   },
   timesheets: {
     list: '/timesheets',

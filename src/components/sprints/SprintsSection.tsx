@@ -13,7 +13,7 @@ interface SprintsSectionProps {
 }
 
 export const SprintsSection = ({ projectId, readOnly = false }: SprintsSectionProps) => {
-  const { sprints, loading, createSprint } = useSprintsData(projectId);
+  const { sprints, sprintMetaData, loading, createSprint, sprintsDashboard } = useSprintsData(projectId);
   const navigate = useNavigate();
 
   const handleCreateSprint = async () => {
@@ -27,9 +27,6 @@ export const SprintsSection = ({ projectId, readOnly = false }: SprintsSectionPr
   const handleManageSprint = (sprintId: string) => {
     navigate(`/sprint/${sprintId}/manage`);
   };
-
-  const activeSprintsCount = sprints.filter(s => s.status === 'running').length;
-  const completedSprintsCount = sprints.filter(s => s.status === 'completed').length;
 
   if (loading) {
     return (
@@ -83,7 +80,7 @@ export const SprintsSection = ({ projectId, readOnly = false }: SprintsSectionPr
                 <Calendar className="h-5 w-5 text-blue-600" />
                 <span className="font-medium text-blue-900">Total Sprints</span>
               </div>
-              <p className="text-2xl font-bold text-blue-600">{sprints.length}</p>
+              <p className="text-2xl font-bold text-blue-600">{sprintMetaData?.total}</p>
             </div>
             
             <div className="bg-green-50 p-4 rounded-lg">
@@ -91,7 +88,7 @@ export const SprintsSection = ({ projectId, readOnly = false }: SprintsSectionPr
                 <Play className="h-5 w-5 text-green-600" />
                 <span className="font-medium text-green-900">Active</span>
               </div>
-              <p className="text-2xl font-bold text-green-600">{activeSprintsCount}</p>
+              <p className="text-2xl font-bold text-green-600">{sprintsDashboard?.running}</p>
             </div>
             
             <div className="bg-purple-50 p-4 rounded-lg">
@@ -99,7 +96,7 @@ export const SprintsSection = ({ projectId, readOnly = false }: SprintsSectionPr
                 <CheckCircle className="h-5 w-5 text-purple-600" />
                 <span className="font-medium text-purple-900">Completed</span>
               </div>
-              <p className="text-2xl font-bold text-purple-600">{completedSprintsCount}</p>
+              <p className="text-2xl font-bold text-purple-600">{sprintsDashboard?.completed}</p>
             </div>
             
             <div className="bg-orange-50 p-4 rounded-lg">
@@ -108,7 +105,7 @@ export const SprintsSection = ({ projectId, readOnly = false }: SprintsSectionPr
                 <span className="font-medium text-orange-900">Created</span>
               </div>
               <p className="text-2xl font-bold text-orange-600">
-                {sprints.filter(s => s.status === 'created').length}
+                {sprintsDashboard?.created}
               </p>
             </div>
           </div>

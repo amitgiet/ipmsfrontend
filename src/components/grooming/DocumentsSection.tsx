@@ -9,6 +9,7 @@ interface StoryDocument {
   id: string;
   name: string;
   url: string;
+  uploaded_at?: string;
 }
 
 interface DocumentsSectionProps {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -55,15 +55,24 @@ export const StoryDetailsPage: React.FC = () => {
   const location = useLocation();
   const { userRole } = useUserRole();
   const isProductOwner = userRole === 'product_owner';
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const {
-    story,
+    story1:story,
     loading,
     comments,
     documents,
     refetch,
     downloadDocument
   } = useStoryDetailsData(storyId);
+
+  // Get current tab from URL parameter, default to 'story'
+  const currentTab = searchParams.get('tab') || 'story';
+  
+  // Handle tab change and update URL parameter
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value });
+  };
 
   const handleStatusUpdate = () => {
     refetch();
@@ -74,11 +83,7 @@ export const StoryDetailsPage: React.FC = () => {
   };
 
   const goBack = () => {
-    if (location.state?.from) {
-      navigate(location.state.from);
-    } else {
       navigate(-1);
-    }
   };
 
   // Get the project ID either from story data or location state
@@ -184,7 +189,7 @@ export const StoryDetailsPage: React.FC = () => {
         </div>
 
         {/* Tabs for Story Details, Tasks, and Test Cases */}
-        <Tabs defaultValue="story" className="w-full">
+        <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="story">Story Details</TabsTrigger>
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
@@ -192,7 +197,7 @@ export const StoryDetailsPage: React.FC = () => {
           </TabsList>
 
           {/* Story Details Tab */}
-          <TabsContent value="story" className="space-y-6 mt-6">
+          <TabsContent value="story" className="space-y-6 mt-6">  
             {/* Description */}
             <Card>
               <CardHeader>

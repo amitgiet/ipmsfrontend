@@ -30,7 +30,6 @@ const typeColors = {
   epic: 'bg-purple-100 text-purple-800 border-purple-200',
   feature: 'bg-blue-100 text-blue-800 border-blue-200',
   task: 'bg-green-100 text-green-800 border-green-200',
-  child: 'bg-orange-100 text-orange-800 border-orange-200',
 };
 
 const typeIcons = {
@@ -134,12 +133,12 @@ export const MindmapNodeComponent = ({
               </div>
             )}
 
-            <Badge className={`${typeColors[node?.type]} flex-shrink-0`}>
-              {node?.type === 'user_story' ? 'user story' : node?.type === 'user' ? 'user' : node?.type === 'epic' ? 'epic' : node?.type === 'feature' ? 'feature' : node?.type === 'task' ? 'task' : 'child'}
-            </Badge>
+           {node?.type != 'child' && <Badge className={`${typeColors[node?.type]} flex-shrink-0`}>
+              {node?.type === 'user_story' ? 'user story' : node?.type === 'user' ? 'user' : node?.type === 'epic' ? 'epic' : node?.type === 'feature' ? 'feature' : node?.type === 'task' && 'task'}
+            </Badge>}
 
             <div className="opacity-0 group-hover:opacity-100 flex gap-1 flex-shrink-0">
-              <Button
+             {!readOnly &&<Button
                 variant="ghost"
                 size="sm"
                 className="h-6 w-6 p-0"
@@ -153,9 +152,9 @@ export const MindmapNodeComponent = ({
                 title="Add child item"
               >
                 <Plus className="h-3 w-3" />
-              </Button>
+              </Button>}
 
-              {node?.type != 'user' && (
+              {node?.type != 'user' && !readOnly && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -173,7 +172,7 @@ export const MindmapNodeComponent = ({
                 </Button>
               )}
 
-              <Button
+              {!readOnly && <Button
                 variant="ghost"
                 size="sm"
                 className="h-6 w-6 p-0 text-red-600"
@@ -187,7 +186,7 @@ export const MindmapNodeComponent = ({
                 title="Delete item"
               >
                 <Trash2 className="h-3 w-3" />
-              </Button>
+              </Button>}
             </div>
           </div>
 

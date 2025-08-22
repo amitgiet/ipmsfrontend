@@ -1,15 +1,14 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Droppable } from 'react-beautiful-dnd';
 import { Badge } from '@/components/ui/badge';
 import { StoryCard } from './StoryCard';
 
 interface Story {
-  id: string;
+  id: number;
   title: string;
   description?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'to_do' | 'in_progress' | 'qa' | 'done';
+  status: 'ready' | 'in_progress' | 'qa' | 'done';
   story_points?: number;
   project_id: string;
 }
@@ -17,7 +16,7 @@ interface Story {
 interface KanbanColumnProps {
   columnId: string;
   title: string;
-  status: 'to_do' | 'in_progress' | 'qa' | 'done';
+  status: 'ready' | 'in_progress' | 'qa' | 'done';
   stories: Story[];
   sprintStatus: 'created' | 'running' | 'completed';
   userRole?: string;
@@ -33,8 +32,15 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   userRole,
   onViewStory
 }) => {
+  const [random,setRandom] = useState(0);
   const totalPoints = stories.reduce((sum, story) => sum + (story.story_points || 0), 0);
 
+  console.log(status,stories);
+   useEffect(() => {
+    setTimeout(() => {
+      setRandom(Math.random());
+    }, 500);
+   }, []);
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -49,7 +55,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
         </div>
       </div>
       
-      <Droppable droppableId={status}>
+        <Droppable droppableId={status}  key={random}>
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
@@ -65,7 +71,6 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
             ) : (
               stories.map((story, index) => (
                 <StoryCard
-                  key={story.id}
                   story={story}
                   index={index}
                   sprintStatus={sprintStatus}

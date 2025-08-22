@@ -1,17 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { getProjectStatus } from '@/utils/projectStatusValidation';
+import { useParams } from 'react-router-dom';
 
-interface Story {
-  id: string;
-  project_id: string;
-}
+  
 
-interface Sprint {
-  project_id: string;
-}
-
-export const useProjectStatus = (stories: Story[], sprint?: Sprint) => {
+export const useProjectStatus = () => {
+  const { projectId } = useParams();
   const [projectStatus, setProjectStatus] = useState<string | null>(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 
@@ -21,13 +16,7 @@ export const useProjectStatus = (stories: Story[], sprint?: Sprint) => {
         setIsLoadingStatus(true);
         
         // Get project ID from sprint first, then fall back to stories
-        let projectId: string | null = null;
         
-        if (sprint?.project_id) {
-          projectId = sprint.project_id;
-        } else if (stories.length > 0) {
-          projectId = stories[0].project_id;
-        }
         
         if (!projectId) {
           console.error('❌ No project ID found in sprint or stories');
@@ -50,7 +39,7 @@ export const useProjectStatus = (stories: Story[], sprint?: Sprint) => {
     };
 
     fetchProjectStatus();
-  }, [stories, sprint]);
+  }, [projectId]);
 
   return {
     projectStatus,

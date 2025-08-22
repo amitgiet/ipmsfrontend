@@ -1,6 +1,6 @@
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { useParams } from 'react-router-dom';
 
 interface UserStory {
@@ -17,36 +17,27 @@ export const useStoryStatusActions = (
   story: UserStory | null,
   updateStoryStatus: (status: UserStory['status']) => Promise<void>
 ) => {
-  const { toast } = useToast();
   const { projectId, storyId } = useParams();
 
   const markAsReady = async () => {
     if (!story) return;
 
     try {
-      const { error } = await apiCall(allRoutes.stories.markAsReady(storyId, projectId), 'post');
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to mark story as ready",
-          variant: "destructive",
+      const { error } = await apiCall(allRoutes.stories.markAsReady(storyId), 'post',{
+        project_id: projectId,
+        story_points: story.storyPoints
         });
+      if (error) {
+        toast.error("Failed to mark story as ready");
         return;
       }
 
-      await updateStoryStatus('ready');
+      // await updateStoryStatus('ready');
 
-      toast({
-        title: "Success",
-        description: "Story marked as ready",
-      });
+      toast.success("Story marked as ready");
     } catch (error) {
       console.error('Error marking story as ready:', error);
-      toast({
-        title: "Error",
-        description: "Failed to mark story as ready",
-        variant: "destructive",
-      });
+      toast.error("Failed to mark story as ready");
     }
   };
 
@@ -56,27 +47,13 @@ export const useStoryStatusActions = (
     try {
       const { error } = await apiCall(allRoutes.stories.markReadyForEstimate(storyId, projectId), 'post');
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to mark story as ready for estimate",
-          variant: "destructive",
-        });
+        toast.error("Failed to mark story as ready for estimate");
         return;
       }
-
-      await updateStoryStatus('ready_for_estimate');
-
-      toast({
-        title: "Success",
-        description: "Story marked as ready for estimate",
-      });
+      toast.success("Story marked as ready for estimate");
     } catch (error) {
       console.error('Error marking story as ready for estimate:', error);
-      toast({
-        title: "Error",
-        description: "Failed to mark story as ready for estimate",
-        variant: "destructive",
-      });
+      toast.error("Failed to mark story as ready for estimate");
     }
   };
 

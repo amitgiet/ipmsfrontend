@@ -1,10 +1,10 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { TeamLeadHeader } from '@/components/teamLead/TeamLeadHeader';
-import { TeamLeadStats } from '@/components/teamLead/TeamLeadStats';
-import { TeamLeadProjectsTable } from '@/components/teamLead/TeamLeadProjectsTable';
-import { TeamLeadTasksSection } from '@/components/teamLead/TeamLeadTasksSection';
+import { TeamLeadHeader } from '@/components/TeamLead/TeamLeadHeader';
+import { TeamLeadStats } from '@/components/TeamLead/TeamLeadStats';
+import { TeamLeadProjectsTable } from '@/components/TeamLead/TeamLeadProjectsTable';
+import { TeamLeadTasksSection } from '@/components/TeamLead/TeamLeadTasksSection';
 import { useTeamLeadProjects } from '@/hooks/useTeamLeadProjects';
 // import { PermissionWrapper } from '@/components/common/PermissionWrapper';
 
@@ -12,7 +12,7 @@ export const TeamLeadDashboard = () => {
   const { user, teamUser, logout } = useAuth();
   const currentUser = user || teamUser;
   
-  const { projects, loading, refetch } = useTeamLeadProjects(currentUser);
+  const { projects, loading, refetch, dashboardData } = useTeamLeadProjects(currentUser);
 
   if (!currentUser) {
     return null;
@@ -31,16 +31,16 @@ export const TeamLeadDashboard = () => {
           </div>
         </div>
 
-        <TeamLeadStats projects={projects} currentUserEmail={currentUser.email} />
+        <TeamLeadStats projects={dashboardData} currentUserEmail={currentUser.email} />
         
         <div className="grid grid-cols-1 gap-8 mt-8">
-          {/* <TeamLeadProjectsTable 
+          <TeamLeadProjectsTable 
             projects={projects} 
             loading={loading} 
             currentUserEmail={currentUser.email} 
           />
           
-          <TeamLeadTasksSection currentUserEmail={currentUser.email} /> */}
+          <TeamLeadTasksSection currentUserEmail={currentUser.email} />
         </div>
       </main>
     </div>

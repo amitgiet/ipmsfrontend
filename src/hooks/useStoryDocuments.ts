@@ -87,22 +87,15 @@ export const useStoryDocuments = (
     }
   };
 
-  const downloadDocument = async (document: StoryDocument) => {
+  const downloadDocument = async (data: any) => {
     try {
-      const { data, error } = await apiCall(allRoutes.stories.download(document.file_path), 'get');
-
-      if (error) {
-        throw error;
-      }
-
-      const url = URL.createObjectURL(data);
       const a = globalThis.document.createElement('a');
-      a.href = url;
-      a.download = document.filename;
+      a.href = data.url;
+      a.download = data.name;
+      a.target = '_blank'; // Set target before clicking
       globalThis.document.body.appendChild(a);
       a.click();
       globalThis.document.body.removeChild(a);
-      URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading document:', error);
       toast.error("Failed to download document");

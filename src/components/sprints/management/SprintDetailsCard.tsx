@@ -40,10 +40,10 @@ export const SprintDetailsCard: React.FC<SprintDetailsCardProps> = ({
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Stories</h4>
             <p className="text-gray-600">
-              <strong>Total Stories:</strong> {stories.length}
+              <strong>Total Stories:</strong> {sprint.user_stories_count}
             </p>
             <p className="text-gray-600">
-              <strong>Completed:</strong> {stories.filter(s => s.status === 'done').length}
+              <strong>Completed:</strong> {sprint.user_stories_completed_count}
             </p>
           </div>
         </div>

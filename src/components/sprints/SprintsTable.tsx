@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 interface Sprint {
   id: string;
   project_id: string;
-  sprint_name: string;
+  name: string;
   start_date: string;
   end_date: string;
   duration: number;
@@ -79,7 +79,7 @@ export const SprintsTable = ({ sprints, loading = false, onManageSprint, readOnl
         <TableBody>
           {sprints.map((sprint) => (
             <TableRow key={sprint.id}>
-              <TableCell className="font-medium">{sprint.sprint_name}</TableCell>
+              <TableCell className="font-medium">{sprint.name}</TableCell>
               <TableCell>{format(new Date(sprint.start_date), 'MMM dd, yyyy')}</TableCell>
               <TableCell>{format(new Date(sprint.end_date), 'MMM dd, yyyy')}</TableCell>
               <TableCell>{sprint.duration} days</TableCell>

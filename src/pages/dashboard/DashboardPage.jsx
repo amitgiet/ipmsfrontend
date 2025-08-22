@@ -6,6 +6,8 @@ import { AdminDashboard } from "./AdminDashboard/AdminDashboard";
 import { TeamLeadDashboard } from "./TeamLeadDashboard/TeamLeadDashboard";
 import { ProductOwnerDashboard } from "./ProductOwner/ProductOwnerDashboard";
 import { DeveloperDashboard } from "./DeveloperDashboard/DeveloperDashboard";
+import { QADashboard } from "./QaDashboard/QADashboard";
+import { ClientDashboard } from "./ClientDashboard/ClientDashboard";
 
 const DashboardPage = () => {
   const dispatch = useDispatch();
@@ -37,39 +39,6 @@ const DashboardPage = () => {
     return roleComponents[role] || <DefaultDashboard />;
   };
 
-  const QADashboard = () => (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">QA Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-2">Pending Tests</h3>
-          <p className="text-3xl font-bold text-yellow-600">8</p>
-        </div>
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-2">Bugs Found</h3>
-          <p className="text-3xl font-bold text-red-600">3</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const ClientDashboard = () => (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Client Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-2">Active Projects</h3>
-          <p className="text-3xl font-bold text-primary-600">
-            {projects.length}
-          </p>
-        </div>
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-2">Project Progress</h3>
-          <p className="text-3xl font-bold text-green-600">60%</p>
-        </div>
-      </div>
-    </div>
-  );
 
   const DefaultDashboard = () => (
     <div className="space-y-6">

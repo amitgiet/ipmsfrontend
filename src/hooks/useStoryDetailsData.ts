@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { useAuth } from '@/hooks/useAuth';
+import { useParams } from 'react-router-dom';
 
 interface UserStory {
   id: string;
@@ -40,8 +41,8 @@ interface StoryComment {
   author_name: string;
 }
 
-export const useStoryDetailsData = (storyId?: string, projectId?: string) => {
-  const { toast } = useToast();
+export const useStoryDetailsData = (storyId?: string) => {  
+  const { projectId } = useParams();
   const { user, teamUser } = useAuth();
   const currentUser = user || teamUser;
   const userRole = currentUser?.role || null;
@@ -51,10 +52,10 @@ export const useStoryDetailsData = (storyId?: string, projectId?: string) => {
   const [loading, setLoading] = useState(true);
 
   const loadStoryData = async () => {
-    if (!storyId || !projectId) return;
+    if (!storyId||!projectId) return;
 
     try {
-      const { data, error } = await apiCall(allRoutes.stories.get(storyId, projectId), 'get');
+      const { data, error } = await apiCall(allRoutes.stories.get(storyId,projectId), 'get');
       // Type assertion to handle the acceptance_criteria field that may not be in the generated types yet
       const storyData = data.data
       const mappedStory: UserStory = {
@@ -75,43 +76,12 @@ export const useStoryDetailsData = (storyId?: string, projectId?: string) => {
       setStory(mappedStory);
     } catch (error) {
       console.error('❌ Error in loadStoryData:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load user story",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const loadDocuments = async () => {
-    if (!storyId) return;
-
-    try {
-      // const { data, error } = await apiCall(allRoutes.stories.get(storyId), 'get');
-      const demoData = [{
-        id: '1',
-        filename: 'Document 1',
-        file_type: 'pdf',
-        file_size: 100,
-        file_path: 'https://example.com/document.pdf',
-        uploaded_at: '2021-01-01',
-      }]
-      const error = null;
-      if (error) {
-        console.error('❌ Error loading documents:', error);
-        return;
-      }
-
-      if (demoData) {
-        setDocuments(demoData as StoryDocument[]);
-      }
-    } catch (error) {
-      console.error('❌ Error loading documents:', error);
+      toast.error("Failed to load user story");
     }
   };
 
   const loadComments = async () => {
-    if (!storyId) return;
+    if (!storyId||!projectId  ) return;
 
     try {
       // const { data, error } = await apiCall(allRoutes.stories.get(storyId), 'get');  
@@ -162,11 +132,7 @@ export const useStoryDetailsData = (storyId?: string, projectId?: string) => {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('❌ Error downloading document:', error);
-      toast({
-        title: "Error",
-        description: "Failed to download document",
-        variant: "destructive",
-      });
+      toast.error("Failed to download document");
     }
   };
 
@@ -175,7 +141,6 @@ export const useStoryDetailsData = (storyId?: string, projectId?: string) => {
       setLoading(true);
       Promise.all([
         loadStoryData(),
-        // loadDocuments(),
         loadComments()
       ]).finally(() => {
         setLoading(false);

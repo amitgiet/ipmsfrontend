@@ -46,37 +46,12 @@ export const apiCall = async (
     return { success: true, data: response.data };
   } catch (error) {
     const axiosError = error;
-
-    // Handle 401/403 errors - but only if we're not already on login page
-    if ((axiosError.response?.status === 401 || axiosError.response?.status === 403) &&
-      !window.location.pathname.includes('/login')) {
-
-      // Clear ipms_ authentication data
-      localStorage.removeItem('ipms_token');
-      localStorage.removeItem('ipms_user');
-      localStorage.removeItem('ipms_teamUser');
-      localStorage.removeItem('ipms_isAuthenticated');
-
-      // Also clear legacy keys for backward compatibility
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
-      localStorage.removeItem('teamUser');
-      localStorage.removeItem('isAuthenticated');
-
-      // Only redirect if we're not already on login page
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
-        toast.error("Unauthorized");
-      }
-      return { success: false };
-    }
-
     const errors = axiosError?.response?.data?.errors;
     const message = axiosError?.response?.data?.message || axiosError.message;
 
     if (errors && Object.keys(errors).length > 0) {
       const firstKey = Object.keys(errors)[0];
-      const firstErrorMessage = errors[firstKey][0];
+      const firstErrorMessage = errors[firstKey];
       toast.error(firstErrorMessage);
     } else if (message) {
       toast.error(message);

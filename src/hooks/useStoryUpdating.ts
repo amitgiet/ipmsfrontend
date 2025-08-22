@@ -12,6 +12,11 @@ interface Story {
   project_id: string;
   created_at: string;
   updated_at: string;
+  media: {
+    id: string;
+    name: string;
+    url: string;
+  }[];
 }
 
 export const useStoryUpdating = () => {

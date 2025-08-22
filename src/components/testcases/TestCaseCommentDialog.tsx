@@ -10,8 +10,9 @@ import { MessageSquare, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useParams } from 'react-router-dom';
 
 interface TestCase {
   id: string;
@@ -58,9 +59,8 @@ export const TestCaseCommentDialog: React.FC<TestCaseCommentDialogProps> = ({
   const [commentType, setCommentType] = useState<'general' | 'reopen'>('general');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { toast } = useToast();
   const { userRole, currentUser } = useUserRole();
-
+  const { projectId } = useParams();
   const canReopen = userRole === 'qa';
 
   useEffect(() => {
@@ -76,27 +76,19 @@ export const TestCaseCommentDialog: React.FC<TestCaseCommentDialogProps> = ({
     try {
       console.log('🔄 Loading test case comments for:', testCase.id);
 
-      const { data, error } = await apiCall(allRoutes.testCases.getComments(testCase.id), 'get');
+      const { data, error } = await apiCall(allRoutes.comments.get(projectId, 'test_case', testCase.id), 'get');
 
       if (error) {
         console.error('❌ Error loading test case comments:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load comments",
-          variant: "destructive",
-        });
+        toast.error("Failed to load comments");
         return;
       }
 
       console.log('✅ Loaded test case comments:', data?.length || 0, data);
-      setComments(data || []);
+      setComments(data.data || []);
     } catch (error) {
       console.error('❌ Error in loadComments:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load comments",
-        variant: "destructive",
-      });
+      toast.error("Failed to load comments");
     } finally {
       setLoading(false);
     }
@@ -104,50 +96,31 @@ export const TestCaseCommentDialog: React.FC<TestCaseCommentDialogProps> = ({
 
   const handleSubmitComment = async () => {
     if (!newComment.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a comment",
-        variant: "destructive",
-      });
+      toast.error("Please enter a comment");
       return;
     }
 
     if (!currentUser) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to add comments",
-        variant: "destructive",
-      });
+      toast.error("You must be logged in to add comments");
       return;
     }
 
     setSubmitting(true);
     try {
-      console.log('🔄 Adding test case comment:', {
-        testCaseId: testCase.id,
-        commentType,
-        comment: newComment.trim(),
-        user: currentUser
-      });
 
       const commentData = {
+        content: newComment.trim(),
+        project_id: projectId,
+        type: 'test_case',
         test_case_id: testCase.id,
-        comment: newComment.trim(),
-        comment_type: commentType,
-        author_name: currentUser.name || currentUser.email,
-        author_email: currentUser.email,
-        author_role: userRole || 'unknown'
+        test_case_comment_type: commentType
       };
 
-      const { data, error } = await apiCall(allRoutes.testCases.addComment(testCase.id), 'post', commentData);
+      const { data, error } = await apiCall(allRoutes.comments.store, 'post', commentData);
 
       if (error) {
         console.error('❌ Error adding test case comment:', error);
-        toast({
-          title: "Error",
-          description: `Failed to add comment: ${error.message}`,
-          variant: "destructive",
-        });
+        toast.error(`Failed to add comment: ${error.message}`);
         return;
       }
 
@@ -163,22 +136,12 @@ export const TestCaseCommentDialog: React.FC<TestCaseCommentDialogProps> = ({
 
         if (updateError) {
           console.error('❌ Error reopening test case:', updateError);
-          toast({
-            title: "Warning",
-            description: "Comment added but failed to update test case status",
-            variant: "destructive",
-          });
+          toast.error("Comment added but failed to update test case status");
         } else {
-          toast({
-            title: "Success",
-            description: "Test case reopened and comment added successfully",
-          });
+          toast.success("Test case reopened and comment added successfully");
         }
       } else {
-        toast({
-          title: "Success",
-          description: "Comment added successfully",
-        });
+        toast.success("Comment added successfully");
       }
 
       setNewComment('');
@@ -187,11 +150,7 @@ export const TestCaseCommentDialog: React.FC<TestCaseCommentDialogProps> = ({
       onCommentAdded(); // Refresh the parent component
     } catch (error) {
       console.error('❌ Error in handleSubmitComment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add comment. Please try again.",
-        variant: "destructive",
-      });
+        toast.error("Failed to add comment. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -272,18 +231,18 @@ export const TestCaseCommentDialog: React.FC<TestCaseCommentDialogProps> = ({
                     {comments.map((comment) => (
                       <div key={comment.id} className="border-l-4 border-blue-200 pl-4 py-3 bg-gray-50 rounded-r-lg">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="font-medium text-sm">{comment.author_name}</span>
+                          <span className="font-medium text-sm">{comment.user.name}</span>
                           <Badge 
                             variant="outline" 
-                            className={`text-xs ${getCommentTypeColor(comment.comment_type)}`}
+                            className={`text-xs ${getCommentTypeColor(comment.metadata.type)}`}
                           >
-                            {getCommentTypeLabel(comment.comment_type)}
+                            {getCommentTypeLabel(comment.metadata.type)}
                           </Badge>
                           <span className="text-xs text-gray-500">
                             {format(new Date(comment.created_at), 'MMM dd, yyyy HH:mm')}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{comment.comment}</p>
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{comment.content}</p>
                       </div>
                     ))}
                   </div>

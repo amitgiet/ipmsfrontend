@@ -28,13 +28,8 @@ export const UnifiedHeader = ({ title, showNotifications = true }: UnifiedHeader
   
   const handleLogout = async () => {
     try {
-      console.log('🔄 Starting logout process...');
       await logout();
-      console.log('✅ Logout completed, navigating to home');
-      // The logout function now handles navigation, so we don't need to navigate here
     } catch (error) {
-      console.error('❌ Error during logout:', error);
-      // Fallback navigation
       navigate('/');
     }
   };

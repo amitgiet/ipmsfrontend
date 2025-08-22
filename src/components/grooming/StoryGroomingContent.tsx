@@ -39,6 +39,7 @@ interface StoryGroomingContentProps {
   handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   downloadDocument: (document: any) => void;
   refetch?: () => void;
+  setStory?: (story: any) => void; // Add setStory prop for state updates
 }
 
 export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
@@ -64,19 +65,69 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
   handleMarkReadyForEstimate,
   handleFileUpload,
   downloadDocument,
-  refetch
+  refetch,
+  setStory
 }) => {
-  const handleEstimationComplete = () => {
+  // Unified refetch function that handles both refetch and state updates
+  const handleDataRefresh = () => {
     if (refetch) {
       refetch();
     }
+    // If no refetch function, we can still update local state if setStory is available
+    // This provides a fallback for immediate UI updates
+  };
+
+  // Enhanced estimation complete handler
+  const handleEstimationComplete = () => {
+    handleDataRefresh();
+  };
+
+  // Enhanced document upload handler with refetch
+  const handleFileUploadWithRefresh = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Call the original upload handler
+    await handleFileUpload(event);
+    // Refetch data after successful upload
+    handleDataRefresh();
+  };
+
+  // Enhanced story points change handler with refetch
+  const handleStoryPointsChangeWithRefresh = async (points: number) => {
+    await handleStoryPointsChange(points);
+    // Refetch data after story points update
+    handleDataRefresh();
+  };
+
+  // Enhanced mark as ready handler with refetch
+  const handleMarkAsReadyWithRefresh = async () => {
+    await handleMarkAsReady();
+    // Refetch data after status update
+    handleDataRefresh();
+  };
+
+  // Enhanced mark ready for estimate handler with refetch
+  const handleMarkReadyForEstimateWithRefresh = async () => {
+    await handleMarkReadyForEstimate();
+    // Refetch data after status update
+    handleDataRefresh();
+  };
+
+  // Enhanced add comment handler with refetch
+  const handleAddCommentWithRefresh = async () => {
+    await handleAddComment();
+    // Refetch data after comment addition
+    handleDataRefresh();
+  };
+
+  // Enhanced update description handler with refetch
+  const handleUpdateDescriptionWithRefresh = async () => {
+    await handleUpdateDescription();
+    // Refetch data after description update
+    handleDataRefresh();
   };
 
   // Check if story is estimated (has been estimated by developers)
   const isEstimated = story?.status === 'estimated';
-  
-  // Get story points from either story or storyForComponents
-  const storyPoints = story?.story_points || storyForComponents?.storyPoints;
+  const storyPoints = story?.storyPoints || storyForComponents?.storyPoints;
 
   return (
     <>
@@ -106,7 +157,7 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
         <DescriptionSection
           description={description}
           onDescriptionChange={setDescription}
-          onUpdateDescription={handleUpdateDescription}
+          onUpdateDescription={handleUpdateDescriptionWithRefresh}
         />
       ) : (
         <Card className="mb-6">
@@ -121,14 +172,14 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
         </Card>
       )}
 
-      {/* Acceptance Criteria Section - Fixed to use correct property */}
-      {story.id && (
+      {/* Acceptance Criteria Section */}
+      { story.id && canEditContent && (
         <div className="mb-6">
           <AcceptanceCriteriaSection
             storyId={story.id}
             acceptanceCriteria={story.acceptanceCriteria || story.acceptance_criteria}
             storyStatus={story.status}
-            onUpdate={handleEstimationComplete}
+            onUpdate={handleDataRefresh}
           />
         </div>
       )}
@@ -139,7 +190,7 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
           <TestCasesSection
             storyId={story.id}
             storyStatus={story.status}
-            onTestCasesChange={handleEstimationComplete}
+            onTestCasesChange={handleDataRefresh}
           />
         </div>
       )}
@@ -147,8 +198,8 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
       {canEditStoryPoints ? (
         <PermissionWrapper action="groomStory">
           <StoryPointsSection
-            storyPoints={storyForComponents.storyPoints}
-            onStoryPointsChange={handleStoryPointsChange}
+            storyPoints={storyPoints}
+            onStoryPointsChange={handleStoryPointsChangeWithRefresh}
           />
         </PermissionWrapper>
       ) : (
@@ -163,7 +214,7 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
                   Estimated complexity
                 </p>
                 <div className="w-full p-3 bg-gray-50 border rounded-md">
-                  {storyForComponents.storyPoints ? `${storyForComponents.storyPoints} points` : 'Not estimated'}
+                  {storyPoints ? `${storyPoints} points` : 'Not estimated'}
                 </div>
               </div>
             </div>
@@ -175,7 +226,7 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
         <DocumentsSection
           documents={story.media}
           uploading={uploading}
-          onFileUpload={handleFileUpload}
+          onFileUpload={handleFileUploadWithRefresh}
           onDownloadDocument={downloadDocument}
         />
       ) : (
@@ -185,7 +236,7 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
             <CardDescription>Flow documents, wireframes, and reference materials</CardDescription>
           </CardHeader>
           <CardContent>
-            {story.media.length > 0 ? (
+            {story.media && story.media.length > 0 ? (
               <div className="space-y-2">
                 {story.media.map((doc) => (
                   <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
@@ -219,7 +270,7 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
         </Card>
       )}
 
-      {/* Updated TasksSection with proper permission check for developers */}
+      {/* TasksSection with proper permission check */}
       {userRole === 'developer' ? (
         <PermissionWrapper action="viewOwnTasks">
           {story.id && story.project_id && (
@@ -248,18 +299,18 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
         comments={comments}
         newComment={newComment}
         onNewCommentChange={setNewComment}
-        onAddComment={handleAddComment}
+        onAddComment={handleAddCommentWithRefresh}
         canAddComments={canAddComments}
         readOnly={!canAddComments || isStoryReady}
       />
 
       {canEditContent && (
         <GroomingActions
-          onMarkAsReady={handleMarkAsReady}
-          onMarkReadyForEstimate={handleMarkReadyForEstimate}
+          onMarkAsReady={handleMarkAsReadyWithRefresh}
+          onMarkReadyForEstimate={handleMarkReadyForEstimateWithRefresh}
           isReady={story?.status === 'ready'}
           isReadyForEstimate={story?.status === 'ready_for_estimate'}
-          hasStoryPoints={!!story?.story_points}
+          hasStoryPoints={!!storyPoints}
         />
       )}
     </>

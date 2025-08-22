@@ -8,12 +8,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, FileText, AlertTriangle } from 'lucide-react';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 
 interface TestCaseUploadDialogProps {
   open: boolean;
   onClose: () => void;
   storyId: string;
+  projectId: string;
   onUploadComplete: () => void;
 }
 
@@ -23,19 +24,19 @@ interface ParsedTestCase {
   description?: string;
   preconditions?: string;
   steps: string;
-  expected_results: string;
+  expected_result: string;
 }
 
 export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
   open,
   onClose,
   storyId,
+  projectId,
   onUploadComplete
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
-  const { toast } = useToast();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -43,11 +44,7 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
       setFile(selectedFile);
       setErrors([]);
     } else {
-      toast({
-        title: "Invalid File",
-        description: "Please select a CSV file",
-        variant: "destructive",
-      });
+      toast.error("Please select a CSV file");
     }
   };
 
@@ -62,7 +59,7 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
     }
 
     const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-    const requiredHeaders = ['tc_id', 'title', 'steps', 'expected_results'];
+    const requiredHeaders = ['tc_id', 'title', 'steps', 'expected_result'];
     const optionalHeaders = ['description', 'preconditions'];
     
     // Check for required headers
@@ -90,7 +87,7 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
         tc_id: '',
         title: '',
         steps: '',
-        expected_results: ''
+        expected_result: ''
       };
 
       headers.forEach((header, index) => {
@@ -112,8 +109,8 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
           case 'steps':
             testCase.steps = value;
             break;
-          case 'expected_results':
-            testCase.expected_results = value;
+          case 'expected_result':
+              testCase.expected_result = value;
             break;
         }
       });
@@ -128,11 +125,11 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
       if (!testCase.steps) {
         validationErrors.push(`Row ${i + 1}: Steps are required`);
       }
-      if (!testCase.expected_results) {
+      if (!testCase.expected_result) {
         validationErrors.push(`Row ${i + 1}: Expected Results are required`);
       }
 
-      if (testCase.tc_id && testCase.title && testCase.steps && testCase.expected_results) {
+      if (testCase.tc_id && testCase.title && testCase.steps && testCase.expected_result) {
         testCases.push(testCase);
       }
     }
@@ -152,49 +149,29 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
       if (errors.length > 0 || testCases.length === 0) {
         return;
       }
-
-      console.log('🔄 Uploading test cases:', testCases.length);
-
       // Insert test cases
-      const testCaseData = testCases.map(tc => ({
-        story_id: storyId,
-        tc_id: tc.tc_id,
-        title: tc.title,
-        description: tc.description,
-        preconditions: tc.preconditions,
-        steps: tc.steps,
-        expected_results: tc.expected_results,
-        status: 'pending'
-      }));
+      const formData = new FormData();
+      formData.append('user_story_id', storyId);
+      formData.append('project_id', projectId);
+      formData.append('file', file);
 
-        const { error } = await apiCall(allRoutes.testCases.upload(storyId), 'post', testCaseData);
+        const { error } = await apiCall(allRoutes.testCases.create, 'post', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
 
       if (error) {
-        console.error('❌ Error uploading test cases:', error);
-        toast({
-          title: "Upload Error",
-          description: error.message.includes('unique') 
-            ? "Some test case IDs already exist for this story"
-            : "Failed to upload test cases",
-          variant: "destructive",
-        });
+        toast.error("Failed to upload test cases");
         return;
       }
 
-      toast({
-        title: "Success",
-        description: `Successfully uploaded ${testCases.length} test cases`,
-      });
+      toast.success(`Successfully uploaded ${testCases.length} test cases`);
 
       onUploadComplete();
       onClose();
     } catch (error) {
-      console.error('❌ Error in handleUpload:', error);
-      toast({
-        title: "Error",
-        description: "Failed to process CSV file",
-        variant: "destructive",
-      });
+      toast.error("Failed to process CSV file");
     } finally {
       setUploading(false);
     }
@@ -220,7 +197,7 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
           <Alert>
             <FileText className="h-4 w-4" />
             <AlertDescription>
-              CSV should have columns: TC_ID, Title, Steps, Expected_Results, Description (optional), Preconditions (optional)
+              CSV should have columns: TC_ID, Title, Steps, Expected_Result, Description (optional), Preconditions (optional)
             </AlertDescription>
           </Alert>
 

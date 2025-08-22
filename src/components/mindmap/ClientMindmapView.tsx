@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { ProjectMindmap } from '@/components/ProjectMindmap';
-import { ProjectBacklog } from '@/components/ProjectBacklog';
+import { ProjectMindmap } from '@/components/projects/ProjectMindmap';
+import { ProjectBacklog } from '@/components/projects/ProjectBacklog';
 import { SprintsSection } from '@/components/sprints/SprintsSection';
 import { MindmapComments } from '@/components/mindmap/MindmapComments';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

@@ -38,24 +38,9 @@ const UserStoryGrooming = () => {
     handleMarkReadyForEstimate,
     handleFileUpload,
     downloadDocument,
-    refetch
+    refetch,
+    setStory
   } = useStoryGrooming();
-
-  const {
-    sprintStatus,
-    canEditStory,
-    isInRunningSprint,
-    isInCompletedSprint,
-    loading: sprintLoading
-  } = useSprintStatus(story?.id);
-
-  if (loading || sprintLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   if (!story || !storyForComponents) {
     return (
@@ -76,7 +61,6 @@ const UserStoryGrooming = () => {
     );
   }
 
-  console.log(story, 'story')
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-6 py-8">
@@ -115,6 +99,7 @@ const UserStoryGrooming = () => {
           handleFileUpload={handleFileUpload}
           downloadDocument={downloadDocument}
           refetch={refetch}
+          setStory={setStory}
         />
       </div>
     </div>

@@ -32,17 +32,17 @@ export const useStoryState = () => {
   }, [story?.description, location.state?.story?.description]);
 
   // Scroll to top when component mounts and when loading is complete
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  // useEffect(() => {
+  //   window.scrollTo(0, 0);
+  // }, []);
 
-  useEffect(() => {
-    if (!loading) {
-      setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 100);
-    }
-  }, [loading]);
+  // useEffect(() => {
+  //   if (!loading) {
+  //     setTimeout(() => {
+  //       window.scrollTo({ top: 0, behavior: 'smooth' });
+  //     }, 100);
+  //   }
+  // }, [loading]);
 
   return {
     story,

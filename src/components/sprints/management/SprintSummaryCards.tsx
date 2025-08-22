@@ -12,7 +12,8 @@ interface SprintSummaryCardsProps {
 export const SprintSummaryCards: React.FC<SprintSummaryCardsProps> = ({
   duration,
   targetStoryPoints,
-  completedStoryPoints
+  completedStoryPoints,
+  progress
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -57,13 +58,13 @@ export const SprintSummaryCards: React.FC<SprintSummaryCardsProps> = ({
           <div className="ml-4">
             <p className="text-sm font-medium text-gray-600">Progress</p>
             <div className="text-2xl font-bold">
-              {targetStoryPoints > 0 ? Math.round((completedStoryPoints / targetStoryPoints) * 100) : 0}%
+              {progress}%
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
               <div 
                 className="bg-blue-600 h-2 rounded-full" 
                 style={{ 
-                  width: `${targetStoryPoints > 0 ? (completedStoryPoints / targetStoryPoints) * 100 : 0}%` 
+                  width: `${progress}%` 
                 }}
               ></div>
             </div>

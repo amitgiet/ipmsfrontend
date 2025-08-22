@@ -36,7 +36,6 @@ export const AcceptanceCriteriaSection: React.FC<AcceptanceCriteriaSectionProps>
       const { error } = await apiCall(allRoutes.stories.update(storyId), 'post', { 
         project_id: projectId,
         acceptance_criteria: editValue.trim() || null,
-        updated_at: new Date().toISOString(),
         _method:"patch"
       });
 

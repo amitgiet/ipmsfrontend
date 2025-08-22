@@ -12,11 +12,15 @@ interface StoryComment {
 
 export const useStoryCommentsData = () => {
   const [comments, setComments] = useState<StoryComment[]>([]);
+  const [currentStoryId, setCurrentStoryId] = useState<string | null>(null);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
 
   const loadComments = async (storyId: string, projectId: string) => {
     if (!storyId || !projectId) return;
 
     try {
+      setCurrentStoryId(storyId);
+      setCurrentProjectId(projectId);
       const { data, error } = await apiCall(allRoutes.comments.get(projectId, 'user_story', storyId), 'get');
       
       if (error) {
@@ -32,9 +36,17 @@ export const useStoryCommentsData = () => {
     }
   };
 
+  // Refetch function to reload comments
+  const refetchComments = async () => {
+    if (currentStoryId && currentProjectId) {
+      await loadComments(currentStoryId, currentProjectId);
+    }
+  };
+
   return {
     comments,
     setComments,
-    loadComments
+    loadComments,
+    refetchComments
   };
 };

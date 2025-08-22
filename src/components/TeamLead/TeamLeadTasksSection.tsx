@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTeamLeadCreatedTasks } from '@/hooks/useTeamLeadCreatedTasks';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { apiCall } from '@/services/apiCall';
+import { toast } from 'react-toastify';
+import { allRoutes } from '@/services/routes';
 import { formatDistanceToNow } from 'date-fns';
 import { Play, CheckSquare, ArrowRight, Clock } from 'lucide-react';
 
@@ -41,7 +42,6 @@ const getStatusLabel = (status: string) => {
 
 export const TeamLeadTasksSection = ({ currentUserEmail }: TeamLeadTasksSectionProps) => {
   const { tasks, loading, refetch } = useTeamLeadCreatedTasks(currentUserEmail);
-  const { toast } = useToast();
 
   const handleStatusChange = async (taskId: string, newStatus: 'to_do' | 'in_progress' | 'completed') => {
     const task = tasks.find(t => t.id === taskId);
@@ -49,11 +49,7 @@ export const TeamLeadTasksSection = ({ currentUserEmail }: TeamLeadTasksSectionP
 
     // Check if user is assigned to this task
     if (task.assigned_to && task.assigned_to !== currentUserEmail) {
-      toast({
-        title: "Permission Denied",
-        description: "You can only change the status of tasks assigned to you",
-        variant: "destructive",
-      });
+      toast.error("You can only change the status of tasks assigned to you");
       return;
     }
 
@@ -66,40 +62,23 @@ export const TeamLeadTasksSection = ({ currentUserEmail }: TeamLeadTasksSectionP
     try {
       console.log('🔄 Updating task status:', taskId, newStatus);
 
-      const { error } = await supabase
-        .from('story_tasks')
-        .update({
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', taskId);
+      const { error } = await apiCall(allRoutes.tasks.updateTaskStatus(taskId, newStatus), 'put');
 
       if (error) {
         console.error('❌ Error updating task status:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update task status",
-          variant: "destructive",
-        });
+        toast.error("Failed to update task status");
         return;
       }
 
       console.log('✅ Task status updated successfully');
       
-      toast({
-        title: "Success",
-        description: "Task status updated successfully",
-      });
+      toast.success("Task status updated successfully");
 
       // Refresh the tasks
       refetch();
     } catch (error) {
       console.error('❌ Error in handleStatusChange:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update task status",
-        variant: "destructive",
-      });
+      toast.error("Failed to update task status");
     }
   };
 

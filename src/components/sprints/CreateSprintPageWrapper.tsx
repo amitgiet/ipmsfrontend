@@ -4,7 +4,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { CreateSprintPage } from './CreateSprintPage.tsx';   
 
 const CreateSprintPageWrapper = () => {
-  console.log('CreateSprintPageWrapper');
   const params = useParams();
   const projectId = params?.projectId;
   const navigate = useNavigate();
@@ -19,7 +18,7 @@ const CreateSprintPageWrapper = () => {
   };
 
   const handleSprintCreated = () => {
-    navigate(`/project/${projectId}`);
+    navigate(`/project/${projectId}?tab=sprints`);
   };
 
   return (

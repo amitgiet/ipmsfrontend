@@ -30,8 +30,8 @@ api.interceptors.response.use(
   },
   (error) => {
     // Handle 401/403 errors globally - but only if we're not already on login page
-    if ((error.response?.status === 401 || error.response?.status === 403) && 
-        !window.location.pathname.includes('/login')) {
+    if ((error.response?.data?.message === "Unauthenticated" || error.response?.data?.message === "Unauthorized") && 
+      !window.location.pathname.includes('/login')) {
       // Clear authentication data
       localStorage.removeItem('ipms_token');
       localStorage.removeItem('ipms_user');

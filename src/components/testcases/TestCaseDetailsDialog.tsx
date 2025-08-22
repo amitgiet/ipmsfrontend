@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { useUserRole } from '@/hooks/useUserRole';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
-
+import { useParams } from 'react-router-dom';
+  
 interface TestCase {
   id: string;
   tc_id: string;
@@ -16,7 +17,7 @@ interface TestCase {
   description?: string;
   preconditions?: string;
   steps: string;
-  expected_results: string;
+  expected_result: string;
   status: 'pending' | 'passed' | 'failed';
   unit_tested: boolean;
   qc_approved: boolean;
@@ -44,13 +45,12 @@ export const TestCaseDetailsDialog: React.FC<TestCaseDetailsDialogProps> = ({
     description: '',
     preconditions: '',
     steps: '',
-    expected_results: ''
+    expected_result: ''
   });
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
   const { userRole } = useUserRole();
-
+  const { projectId, storyId } = useParams<{ projectId: string, storyId: string }>();
   // Check if user can edit test case details (QA only, but all roles can view)
   const canEdit = userRole === 'qa';
 
@@ -61,7 +61,7 @@ export const TestCaseDetailsDialog: React.FC<TestCaseDetailsDialogProps> = ({
         description: testCase.description || '',
         preconditions: testCase.preconditions || '',
         steps: testCase.steps || '',
-        expected_results: testCase.expected_results || ''
+        expected_result: testCase.expected_result || ''
       });
       setIsEditing(false);
     }
@@ -73,38 +73,28 @@ export const TestCaseDetailsDialog: React.FC<TestCaseDetailsDialogProps> = ({
     setLoading(true);
     try {
       const { error } = await apiCall(allRoutes.testCases.update(testCase.id), 'put', {
-          title: formData.title,
-          description: formData.description || null,
-          preconditions: formData.preconditions || null,
-          steps: formData.steps,
-          expected_results: formData.expected_results,
-          updated_at: new Date().toISOString()
+        project_id: projectId,
+        user_story_id: storyId,
+        _method: 'put',
+        title: formData.title,
+        description: formData.description,
+        preconditions: formData.preconditions,
+        expected_result: formData.expected_result
       });
 
       if (error) {
         console.error('Error updating test case:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update test case details",
-          variant: "destructive",
-        });
+        toast.error("Failed to update test case details");
         return;
       }
 
-      toast({
-        title: "Success",
-        description: "Test case details updated successfully",
-      });
+      toast.success("Test case details updated successfully");
 
       setIsEditing(false);
       onUpdate();
     } catch (error) {
       console.error('Error updating test case:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update test case details",
-        variant: "destructive",
-      });
+      toast.error("Failed to update test case details");
     } finally {
       setLoading(false);
     }
@@ -116,7 +106,7 @@ export const TestCaseDetailsDialog: React.FC<TestCaseDetailsDialogProps> = ({
       description: testCase.description || '',
       preconditions: testCase.preconditions || '',
       steps: testCase.steps || '',
-      expected_results: testCase.expected_results || ''
+      expected_result: testCase.expected_result || ''
     });
     setIsEditing(false);
   };
@@ -206,18 +196,18 @@ export const TestCaseDetailsDialog: React.FC<TestCaseDetailsDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="expected_results">Expected Results *</Label>
+            <Label htmlFor="expected_result">Expected Result *</Label>
             {isEditing ? (
               <Textarea
-                id="expected_results"
-                value={formData.expected_results}
-                onChange={(e) => setFormData({ ...formData, expected_results: e.target.value })}
-                placeholder="Enter expected results"
+                id="expected_result"
+                value={formData.expected_result}
+                onChange={(e) => setFormData({ ...formData, expected_result: e.target.value })}
+                placeholder="Enter expected result"
                 rows={4}
               />
             ) : (
               <div className="p-3 bg-gray-50 rounded-md min-h-[100px] whitespace-pre-wrap">
-                {formData.expected_results || 'No expected results provided'}
+                {formData.expected_result || 'No expected result provided'}
               </div>
             )}
           </div>
@@ -233,7 +223,7 @@ export const TestCaseDetailsDialog: React.FC<TestCaseDetailsDialogProps> = ({
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={loading || !formData.title || !formData.steps || !formData.expected_results}
+                disabled={loading || !formData.title || !formData.steps || !formData.expected_result}
               >
                 {loading ? 'Saving...' : 'Save Changes'}
               </Button>

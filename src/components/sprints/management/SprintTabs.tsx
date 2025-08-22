@@ -5,13 +5,14 @@ import { SprintKanbanView } from '../SprintKanbanView';
 import { SprintBurndownChart } from '../SprintBurndownChart';
 import { SprintIssuesView } from '../issues/SprintIssuesView';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useSearchParams } from 'react-router-dom';
 
 interface Story {
   id: string;
   title: string;
   description?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'to_do' | 'in_progress' | 'qa' | 'done';
+  status: 'ready' | 'in_progress' | 'qa' | 'done';
   story_points?: number;
   project_id: string;
   created_at: string;
@@ -31,8 +32,6 @@ interface Sprint {
 }
 
 interface SprintTabsProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
   sprint: Sprint;
   stories: Story[];
   targetStoryPoints: number;
@@ -40,17 +39,24 @@ interface SprintTabsProps {
 }
 
 export const SprintTabs: React.FC<SprintTabsProps> = ({
-  activeTab,
-  onTabChange,
   sprint,
   stories,
-  targetStoryPoints,
+  targetStoryPoints,        
   onStoryUpdate
 }) => {
   const { isClient } = useUserRole();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Get current tab from URL parameter, default to 'overview'
+  const currentTab = searchParams.get('tab') || 'overview';
+  
+  // Handle tab change and update URL parameter
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value });
+  };
 
   return (
-    <Tabs value={activeTab} onValueChange={onTabChange} className="mt-6">
+    <Tabs value={currentTab} onValueChange={handleTabChange} className="mt-6">
       <TabsList className={`grid w-full ${isClient ? 'grid-cols-3' : 'grid-cols-4'}`}>
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="kanban">Kanban Board</TabsTrigger>

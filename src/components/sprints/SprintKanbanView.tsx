@@ -1,7 +1,7 @@
 import React from 'react';
 import { DropResult } from 'react-beautiful-dnd';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { apiCall } from '@/services/apiCall';
 import { toast } from 'react-toastify';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -12,13 +12,14 @@ import { SprintBoardContent } from './kanban/SprintBoardContent';
 import { allRoutes } from '@/services/routes';
 
 interface Story {
-  id: string;
+  id: number;
   title: string;
   description?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'to_do' | 'in_progress' | 'qa' | 'done';
+  status: 'ready' | 'in_progress' | 'qa' | 'done';
   story_points?: number;
   project_id: string;
+  sequence_number: number;
 }
 
 interface Sprint {
@@ -36,85 +37,100 @@ interface SprintKanbanViewProps {
   sprint?: Sprint;
 }
 
-export const SprintKanbanView = ({ stories, sprintId, sprintStatus, onStoryUpdate, sprint }: SprintKanbanViewProps) => {
+export const SprintKanbanView = ({ stories, sprintStatus, onStoryUpdate, sprint }: SprintKanbanViewProps) => {
+  const { projectId, sprintId } = useParams();
   const navigate = useNavigate();
   const { userRole } = useUserRole();
-  const { projectStatus, isLoadingStatus, isProjectInProgress } = useProjectStatus(stories, sprint);
+  // const { projectStatus, isLoadingStatus, isProjectInProgress } = useProjectStatus();
 
   const handleViewStory = (story: Story) => {
-    navigate(`/project/${story.project_id}/story/${story.id}/details`);
+    navigate(`/project/${projectId}/story/${story.id}/details`);
   };
 
-  const updateStoryStatus = async (storyId: string, newStatus: 'to_do' | 'in_progress' | 'qa' | 'done') => {
-    try {
-      
-      const { error } = await apiCall(allRoutes.stories.update(storyId), 'PUT', { status: newStatus });
+  const updateStoryStatus = async (data: FormData, storyId: number) => {
 
-      if (error) {
-        toast.error("Failed to update story status");
-        return false;
-      }
-
+    const { success } = await apiCall(allRoutes.stories.drag_drop_story(storyId), 'post', data);
+    if (success) {
       toast.success("Story status updated successfully");
-      
       return true;
-    } catch (error) {
-      toast.error("Failed to update story status");
-      return false;
     }
+    return false;
+
   };
+
+  const getNewSequenceNumber = (destinationIndex: number, stories: any[]) => {
+    // Edge case: no stories
+    if (!stories || stories.length === 0) return 1;
+
+    if (destinationIndex === 0) {
+      // Dropped at first → smaller than first
+      return stories[0].sequence_number / 2;
+    }
+
+    if (destinationIndex === stories.length) {
+      // Dropped at last → larger than last
+      const lastSeq = stories[stories.length - 1].sequence_number;
+      return lastSeq + lastSeq / 2;
+    }
+
+    // Dropped in between → average of neighbors
+    const prevSeq = stories[destinationIndex - 1].sequence_number;
+    const nextSeq = stories[destinationIndex].sequence_number;
+    return (prevSeq + nextSeq) / 2;
+  };
+
 
   const onDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
 
-    // If there's no destination, do nothing
     if (!destination) {
       return;
     }
 
-    // If the story is dropped in the same position, do nothing
     if (destination.droppableId === source.droppableId && destination.index === source.index) {
       return;
     }
 
-    // Get the new status from the destination column
-    const newStatus = destination.droppableId as 'to_do' | 'in_progress' | 'qa' | 'done';
+    const newStatus = destination.droppableId as 'ready' | 'in_progress' | 'qa' | 'done';
     const sourceStatus = source.droppableId;
-    
-    // Get project ID from the story
-    const story = stories.find(s => s.id === draggableId);
-    const projectId = story?.project_id;
-    
-    // Check if the user has permission to move the card (now async)
-    const permissionResult = await canMoveCard(sourceStatus, newStatus, sprintStatus, userRole, draggableId, projectId);
-    
-    if (!permissionResult.canMove) {
-      toast({
-        title: "Permission Denied",
-        description: permissionResult.reason || "You don't have permission to perform this action.",
-        variant: "destructive",
-      });
+
+
+    const story = stories.find(s => s.code === draggableId);
+
+    if (!story) {
+      toast.error("Story not found");
       return;
     }
-    
-    // Optimistically update the local state first
-    const updatedStories = stories.map(story => 
-      story.id === draggableId 
+
+    const permissionResult = await canMoveCard(sourceStatus, newStatus, sprintStatus, userRole, projectId);
+
+
+    if (!permissionResult.canMove) {
+      toast.error(permissionResult.reason || "You don't have permission to perform this action.");
+      return;
+    }
+
+    const updatedStories = stories.map(story =>
+      story.code === draggableId
         ? { ...story, status: newStatus }
         : story
     );
 
-    // Update the parent component's state immediately for smooth UI
+    const newSequenceNumber = getNewSequenceNumber(destination.index, stories);
+
+    const data = new FormData();
+    data.append('project_id', projectId);
+    data.append('sprint_id', sprintId);
+    data.append('sequence_number', newSequenceNumber);
+    data.append('status', newStatus);
     if (onStoryUpdate) {
       onStoryUpdate(updatedStories);
     }
 
-    // Then update the database in the background
-    const success = await updateStoryStatus(draggableId, newStatus);
-    
-    // If the database update failed, revert the optimistic update
+    const success = await updateStoryStatus(data, story.id);
+
     if (!success && onStoryUpdate) {
-      onStoryUpdate(stories); // Revert to original state
+      onStoryUpdate(stories);
     }
   };
 
@@ -124,9 +140,9 @@ export const SprintKanbanView = ({ stories, sprintId, sprintStatus, onStoryUpdat
         <CardTitle>Sprint Kanban Board</CardTitle>
         <SprintStatusWarning
           sprintStatus={sprintStatus}
-          isProjectInProgress={isProjectInProgress}
-          isLoadingStatus={isLoadingStatus}
-          projectStatus={projectStatus}
+          isProjectInProgress={true}
+          isLoadingStatus={false}
+          projectStatus="in-progress"
         />
       </CardHeader>
       <CardContent>

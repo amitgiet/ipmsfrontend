@@ -19,29 +19,21 @@ interface Sprint {
 export const useSprintsData = (projectId: string) => {
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sprintMetaData, setSprintMetaData] = useState<Sprint[]>([]);
+  const [sprintsDashboard, setSprintsDashboard] = useState<Sprint[]>([]);
   const user = JSON.parse(localStorage.getItem('ipms_user') || '{}');
 
   const fetchSprints = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching sprints for project:', projectId);
       
-      const { data, error } = await apiCall(allRoutes.sprints.list(projectId), 'get');
+      const { data, error } = await apiCall(allRoutes.sprints.get(projectId), 'get');
 
-      if (error) {
-        console.error('❌ Error fetching sprints:', error);
-        toast.error("Failed to fetch sprints");
-        return;
-      }
-
-      console.log('✅ Fetched sprints:', data);
-
-      // Type assertion to ensure proper typing
-      const typedSprints: Sprint[] = (data || []).map(sprint => ({
+      const typedSprints: Sprint[] = (data.data || []).map(sprint => ({
         ...sprint,
         status: sprint.status as 'created' | 'running' | 'completed'
       }));
-
+      setSprintMetaData(data.meta );
       setSprints(typedSprints);
     } catch (error) {
       console.error('❌ Error fetching sprints:', error);
@@ -115,17 +107,25 @@ export const useSprintsData = (projectId: string) => {
     }
   };
 
+  const fetchSprintsDashboard = async () => {
+    const { data, error } = await apiCall(allRoutes.sprints.dashboard(projectId), 'get');
+    setSprintsDashboard(data.data);
+  };
+
   useEffect(() => {
     if (projectId) {
       fetchSprints();
+      fetchSprintsDashboard();
     }
   }, [projectId]);
 
   return {
     sprints,
+    sprintMetaData,
     loading,
     fetchSprints,
     createSprint,
-    updateSprint
+    updateSprint,
+    sprintsDashboard
   };
 };

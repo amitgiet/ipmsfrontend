@@ -8,7 +8,7 @@ import { SprintClosureDialog } from './SprintClosureDialog';
 
 interface Sprint {
   id: string;
-  sprint_name: string;
+  name: string;
   status: 'created' | 'running' | 'completed';
 }
 
@@ -108,7 +108,7 @@ export const SprintHeader: React.FC<SprintHeaderProps> = ({
         
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{sprint.sprint_name}</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{sprint.name}</h1>
             <p className="text-gray-600 mt-1">Sprint Management Dashboard</p>
           </div>
           <div className="flex items-center gap-3">

@@ -1,6 +1,6 @@
 
-    import { useState, useEffect } from 'react';
-    import { apiCall } from '@/services/apiCall';
+import { useState, useEffect } from 'react';
+import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
 import { toast } from 'react-toastify';
 
@@ -30,7 +30,7 @@ interface Project {
   created_by: string | null;
 }
 
-export const useTeamLeadProjects = (currentUser: any) => {
+export const useQAProjects = (currentUser: any) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [dashboardData, setDashboardData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,36 +38,43 @@ export const useTeamLeadProjects = (currentUser: any) => {
   const fetchMyProjects = async () => {
     try {
       setLoading(true);
-    
-      const { data: projectsData, error: projectsError } = await apiCall(allRoutes.projects.get_assigned_projects, 'get');
+      
+      if (!currentUser?.email) {
+        setProjects([]);
+        setLoading(false);
+        return;
+      }
+      
+      // Find the team member with qa role
+      const { data } = await apiCall(allRoutes.projects.dashboard, 'get');
 
-      setProjects(projectsData.data || []);
+      setDashboardData(data.data || []);
     } catch (error) {
       console.error('❌ Error in fetchMyProjects:', error);
-      toast.error("Failed to fetch projects");  
+      toast.error("Failed to fetch projects");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchDashboardData = async () => {
-    const { data } = await apiCall(allRoutes.projects.dashboard, 'get');
-    setDashboardData(data.data || []);
+  const fetchAssignedProjects = async () => {
+    const { data } = await apiCall(allRoutes.projects.get_assigned_projects, 'get');
+    setProjects(data.data || []);
   };
 
   useEffect(() => {
     if (currentUser?.email) {
       fetchMyProjects();
-      fetchDashboardData();
+      fetchAssignedProjects();
     } else {
       setLoading(false);
     }
   }, [currentUser?.email]);
 
   return {
+    dashboardData,
     projects,
     loading,
-    dashboardData,
     refetch: fetchMyProjects
   };
 };

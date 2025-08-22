@@ -42,15 +42,13 @@ export const TeamLeadProjectsTable = ({ projects, loading, currentUserEmail }: T
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.project_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.project_id?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || project.project_status === statusFilter;
+  const filteredProjects = projects.filter((project: any) => {
+    const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const handleViewProject = (project: Project) => {
+  const handleViewProject = (project: any) => {
     navigate(`/project/${project.id}`);
   };
 

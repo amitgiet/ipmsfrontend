@@ -26,7 +26,7 @@ interface DatabaseStory {
 }
 
 export const useStoryActionHandlers = (
-  story: DatabaseStory | null,
+  storyToUse: DatabaseStory | null,
   setStory: (story: DatabaseStory | null) => void,
   updateStoryStatus: (status: DatabaseStory['status']) => Promise<void>,
   loadDocuments: () => Promise<void>,
@@ -36,12 +36,12 @@ export const useStoryActionHandlers = (
   setNewComment: (comment: string) => void,
 ) => {
   const navigate = useNavigate();
-  const userStory = convertToUserStory(story);
-  const handleStoryUpdate = createStoryUpdateHandler(story, setStory);
+  const userStory = convertToUserStory(storyToUse);
+  const handleStoryUpdate = createStoryUpdateHandler(storyToUse, setStory);
 
   // Create a wrapper for updateStoryStatus to handle type conversion
   const handleUpdateStoryStatus = async (status: UserStory['status']) => {
-    await updateStoryStatus(status as typeof story.status);
+    await updateStoryStatus(status as typeof storyToUse.status);
   };
 
   const {
@@ -70,9 +70,9 @@ export const useStoryActionHandlers = (
   const handleStoryPointsChange = (points: number) => {
     
     // Update local state immediately for instant UI feedback
-    if (story) {
+    if (storyToUse) {
       const updatedStory = {
-        ...story,
+        ...storyToUse,
         story_points: points
       };
       setStory(updatedStory);
@@ -83,7 +83,7 @@ export const useStoryActionHandlers = (
   };
 
   const handleMarkAsReady = () => {
-    if (!story?.story_points) {
+    if (!storyToUse?.storyPoints) {
       return; // This will be handled by the GroomingActions component
     }
     markAsReady();

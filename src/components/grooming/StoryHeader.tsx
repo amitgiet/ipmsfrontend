@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 
 interface UserStory {
   id: string;
+  code?: string;
   storyId?: string;
   title: string;
   description?: string;
@@ -55,9 +56,9 @@ export const StoryHeader: React.FC<StoryHeaderProps> = ({ story }) => {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              {story.storyId && (
+              {story.code && (
                 <Badge variant="outline" className="font-mono text-sm">
-                  {story.storyId}
+                  {story.code}
                 </Badge>
               )}
               <Badge className={getPriorityColor(story.priority)}>

@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { calculateEndDate } from '@/utils/dateCalculations';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { SprintDetailsForm } from './SprintDetailsForm';
 import { SprintBacklogSelector } from './SprintBacklogSelector';
 import { CreateSprintActions } from './CreateSprintActions';
@@ -27,7 +27,6 @@ interface CreateSprintPageProps {
 }
 
 export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateSprintPageProps) => {
-  console.log('CreateSprintPage');
   const [sprintName, setSprintName] = useState('');
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [duration, setDuration] = useState(14);
@@ -36,7 +35,6 @@ export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateS
   const [selectedStories, setSelectedStories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const { toast } = useToast();
 
   // Calculate end date when start date or duration changes
   useEffect(() => {
@@ -51,58 +49,33 @@ export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateS
     const loadUnassignedStories = async () => {
       try {
         setLoading(true);
-        
-        // Get all ready stories for this project
-        const { data: allStories, error: storiesError } = await apiCall(allRoutes.stories.list(projectId), 'get');
+
+        const { data: allStories, error: storiesError } = await apiCall(allRoutes.stories.list(projectId, null, 'for_sprint'), 'get');
 
         if (storiesError) {
-          toast({
-            title: "Error",
-            description: "Failed to load user stories",
-            variant: "destructive",
-          });
+          toast.error("Failed to load user stories");
           return;
         }
 
-        // Get all story IDs that are already assigned to sprints
-        const { data: assignedStories, error: assignedError } = await apiCall(allRoutes.sprintBacklog.list(projectId), 'get');
-
-        if (assignedError) {
-          toast({
-            title: "Error",
-            description: "Failed to check assigned stories",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        // Filter out already assigned stories
-        const assignedStoryIds = new Set(assignedStories?.map(item => item.story_id) || []);
-        const unassignedStories = allStories?.filter(story => !assignedStoryIds.has(story.id)) || [];
-
-
-        const mappedStories: UserStory[] = unassignedStories.map(story => ({
+        const mappedStories: UserStory[] = allStories.data.map((story: any) => ({
           id: story.id,
           title: story.title,
-          description: story.description || undefined,
-          priority: story.priority as 'low' | 'medium' | 'high' | 'urgent',
-          status: story.status as 'to_do' | 'in_grooming' | 'ready',
-          storyPoints: story.story_points || undefined,
+          description: story.description,
+          priority: story.priority,
+          status: story.status,
+          storyPoints: story.story_point
         }));
 
         setReadyStories(mappedStories);
       } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to load available user stories",
-          variant: "destructive",
-        });
+        console.error("Failed to load user stories", error);
+        toast.error("Failed to load available user stories");
       } finally {
         setLoading(false);
       }
     };
 
-    // loadUnassignedStories();
+    loadUnassignedStories();
   }, [projectId]);
 
   const handleStorySelection = (storyId: string, checked: boolean) => {
@@ -115,85 +88,39 @@ export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateS
 
   const handleCreateSprint = async () => {
     if (!sprintName.trim() || !startDate || !endDate) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
+      toast.error("Please fill in all required fields");
       return;
     }
 
     if (selectedStories.length === 0) {
-      toast({
-        title: "Validation Error",
-        description: "Please select at least one user story for the sprint",
-        variant: "destructive",
-      });
+      toast.error("Please select at least one user story for the sprint");
       return;
     }
 
     try {
       setCreating(true);
       // Create the sprint
-      const sprintData = {
-        project_id: projectId,
-        sprint_name: sprintName,
-        start_date: format(startDate, 'yyyy-MM-dd'),
-        end_date: format(endDate, 'yyyy-MM-dd'),
-        duration: duration,
-        status: 'created' as const
-      };
+      const sprintData = new FormData();
+
+      sprintData.append('project_id', projectId);
+      sprintData.append('name', sprintName);
+      sprintData.append('start_date', format(startDate, 'yyyy-MM-dd'));
+      sprintData.append('end_date', format(endDate, 'yyyy-MM-dd'));
+      sprintData.append('duration', duration.toString());
+      selectedStories.forEach(storyId => {
+        sprintData.append('user_stories[]', storyId);
+      });
 
       const { data: sprint, error: sprintError } = await apiCall(allRoutes.sprints.create, 'post', sprintData);
-
-      if (sprintError) {
-        
-        if (sprintError.code === '42501') {
-          toast({
-            title: "Permission Error",
-            description: "You don't have permission to create sprints. Please contact your administrator.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Error",
-            description: "Failed to create sprint: " + sprintError.message,
-            variant: "destructive",
-          });
-        }
-        return;
+      if (!sprintError) {
+        toast.success(`Sprint "${sprint.data.name}" created successfully`);
+        onSprintCreated();
       }
 
 
-      // Add selected stories to the sprint backlog
-      const sprintBacklogEntries = selectedStories.map(storyId => ({
-        sprint_id: sprint.id,
-        story_id: storyId
-      }));
-
-      const { error: backlogError } = await apiCall(allRoutes.sprintBacklog.create, 'post', sprintBacklogEntries);
-
-      if (backlogError) {
-        toast({
-          title: "Warning",
-          description: "Sprint created but failed to add some stories. You can add them later.",
-          variant: "destructive",
-        });
-      } else {
-      }
-
-      toast({
-        title: "Success",
-        description: `Sprint "${sprintName}" created successfully with ${selectedStories.length} user stories`,
-      });
-
-      onSprintCreated();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create sprint",
-        variant: "destructive",
-      });
+      console.error("Failed to create sprint", error);
+      toast.error("Failed to create sprint");
     } finally {
       setCreating(false);
     }

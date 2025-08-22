@@ -4,11 +4,11 @@ import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import { KanbanColumn } from './KanbanColumn';
 
 interface Story {
-  id: string;
+  id: number;
   title: string;
   description?: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'to_do' | 'in_progress' | 'qa' | 'done';
+  status: 'ready' | 'in_progress' | 'qa' | 'done';
   story_points?: number;
   project_id: string;
 }
@@ -22,7 +22,7 @@ interface SprintBoardContentProps {
 }
 
 const statusColumns = [
-  { id: 'to_do', title: 'To Do', status: 'to_do' as const },
+  { id: 'ready', title: 'To Do', status: 'ready' as const },
   { id: 'in_progress', title: 'In Progress', status: 'in_progress' as const },
   { id: 'qa', title: 'QA', status: 'qa' as const },
   { id: 'done', title: 'Done', status: 'done' as const },
@@ -35,7 +35,7 @@ export const SprintBoardContent: React.FC<SprintBoardContentProps> = ({
   onViewStory,
   onDragEnd
 }) => {
-  const getStoriesForStatus = (status: 'to_do' | 'in_progress' | 'qa' | 'done') => {
+  const getStoriesForStatus = (status: 'ready' | 'in_progress' | 'qa' | 'done') => {
     return stories.filter(story => story.status === status);
   };
 

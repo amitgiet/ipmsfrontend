@@ -64,8 +64,6 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
   
   const fetchComments = async () => {
     const { data, error } = await apiCall(allRoutes.comments.get(projectId, 'mindmap'), 'get');
-
-
     if (error) {
       console.error('❌ Error fetching comments:', error);
       throw error;

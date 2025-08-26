@@ -73,26 +73,8 @@ export const TeamLoginForm = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="admin" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="admin" className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              Admin/Client
-            </TabsTrigger>
-            <TabsTrigger value="team" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Team
-            </TabsTrigger>
-          </TabsList>
 
           <TabsContent value="admin" className="space-y-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-              <p className="text-sm text-blue-800">
-                <strong>Admin:</strong> Use your admin credentials
-                <br />
-                <strong>Client:</strong> Use your client credentials
-              </p>
-            </div>
-
             <form onSubmit={handleAdminLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="admin-email">Email</Label>
@@ -151,12 +133,6 @@ export const TeamLoginForm = () => {
           </TabsContent>
 
           <TabsContent value="team" className="space-y-4">
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
-              <p className="text-sm text-purple-800">
-                <strong>Team Members:</strong> Use your team credentials provided by admin
-              </p>
-            </div>
-
             <form onSubmit={handleAdminLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="team-email">Email</Label>

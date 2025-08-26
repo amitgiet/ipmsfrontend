@@ -8,10 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTestCaseNotifications } from '@/hooks/useTestCaseNotifications';
-
+import { useParams } from 'react-router-dom';
+  
 interface AddTaskDialogProps {
   open: boolean;
   onClose: () => void;
@@ -30,14 +31,14 @@ export const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
   open,
   onClose,
   onAdd,
-  projectId
+
 }) => {
+  const { projectId } = useParams();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
   const { userRole, currentUser } = useUserRole();
   const { createTaskAssignmentNotification } = useTestCaseNotifications();
 
@@ -56,68 +57,33 @@ export const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
   }, [open, canAssignToOthers, projectId]);
 
   const setSelfAssignmentOption = () => {
-    if (currentUser && currentUser.email) {
+    if (currentUser && currentUser.id) {
       const selfOption: TeamMember = {
-        id: 'self',
+        id: currentUser.id,
         name: 'Myself',
         email: currentUser.email,
         role: userRole || ''
       };
       setTeamMembers([selfOption]);
-      setAssignedTo(currentUser.email); // Set to actual email instead of 'self'
+      setAssignedTo(currentUser.id); // Set to actual email instead of 'self'
     }
   };
 
+  
   const loadProjectTeamMembers = async () => {
     try {
-      console.log('🔄 Loading team members for project:', projectId);
-
-      // Get team members assigned to this specific project
         const { data, error } = await apiCall(allRoutes.projects.getTeamMembersDropdown(projectId), 'get');
 
       if (error) {
-        console.error('Error loading project team members:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load team members",
-          variant: "destructive",
-        });
+        console.error('Error loading team members:', error);
         return;
       }
 
       if (data) {
-        // Extract team members from the join result and filter for assignable roles
-        const projectTeamMembers: TeamMember[] = data
-          .filter(item => item.team_members) // Filter out any null team_members
-          .map(item => {
-            const member = item.team_members as any;
-            return {
-              id: member.id,
-              name: member.name,
-              email: member.email,
-              role: member.role
-            };
-          })
-          .filter(member => ['team_lead', 'developer', 'qa'].includes(member.role)); // Only show assignable roles
-
-        // Add self-assign option if current user is not already in the list
-        if (currentUser && currentUser.email) {
-          const isCurrentUserInList = projectTeamMembers.some(member => member.email === currentUser.email);
-          if (!isCurrentUserInList && ['team_lead', 'developer', 'qa'].includes(userRole || '')) {
-            projectTeamMembers.unshift({
-              id: 'self',
-              name: 'Myself',
-              email: currentUser.email,
-              role: userRole || ''
-            });
-          }
-        }
-
-        setTeamMembers(projectTeamMembers);
-        console.log('✅ Loaded project team members:', projectTeamMembers);
+        setTeamMembers(data.data);
       }
     } catch (error) {
-      console.error('Error loading project team members:', error);
+      console.error('Error loading team members:', error);
     }
   };
 
@@ -127,11 +93,11 @@ export const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
     if (!title.trim()) return;
 
     // For developers and QA, ensure they can only assign to themselves
-    if ((userRole === 'developer' || userRole === 'qa') && currentUser?.email) {
+    if ((userRole === 'developer' || userRole === 'qa') && currentUser?.id) {
       // For non-team leads, always assign to themselves
-      if (assignedTo !== currentUser.email) {
+      if (assignedTo !== currentUser.id) {
         console.log('🔄 Auto-assigning task to current user for developer/QA');
-        setAssignedTo(currentUser.email);
+        setAssignedTo(currentUser.id);
       }
     }
 
@@ -234,7 +200,7 @@ export const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
                     {teamMembers.map((member) => (
                       <SelectItem 
                         key={member.id} 
-                        value={member.email}
+                        value={member.id}
                         className="cursor-pointer"
                       >
                         {member.name} ({member.role.toUpperCase()})

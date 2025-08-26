@@ -7,7 +7,7 @@ import { TeamLeadDashboard } from "./TeamLeadDashboard/TeamLeadDashboard";
 import { ProductOwnerDashboard } from "./ProductOwner/ProductOwnerDashboard";
 import { DeveloperDashboard } from "./DeveloperDashboard/DeveloperDashboard";
 import { QADashboard } from "./QaDashboard/QADashboard";
-import { ClientDashboard } from "./ClientDashboard/ClientDashboard";
+import ClientDashboard from "./ClientDashboard/ClientDashboard";
 
 const DashboardPage = () => {
   const dispatch = useDispatch();

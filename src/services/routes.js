@@ -27,7 +27,7 @@ export const allRoutes = {
     get_assigned_projects: '/user-project/assigned-projects'
   },
   productOwner: {
-    time_logs_list: '/time-logs',
+    time_logs_list: (isProjectLog = false) => `/time-logs?is_project_log=${isProjectLog}`,
     add_time_log: '/time-logs',
     dashboard: '/dashboard',  
     get_assigned_projects: '/user-project/assigned-projects'
@@ -39,7 +39,7 @@ export const allRoutes = {
   },
   comments: {
     store: '/comments',
-    get: (projectId, type, storyId) => {
+    get: (projectId, type, storyId, bugId) => {
       let url = `comments?project_id=${projectId}&type=${type}`
       if(type === 'user_story'){
         url += `&user_story_id=${storyId}`
@@ -47,18 +47,22 @@ export const allRoutes = {
       if(type === 'test_case'){
         url += `&test_case_id=${storyId}`
       }
+      if(type === 'bug'){
+        url += `&bug_id=${bugId}`
+      }
       return url
     },
     getByStoryId: (storyId, projectId) => `comments?story_id=${storyId}&project_id=${projectId}`
   },
   tasks: {
-    list: '/tasks',
+    list: (projectId) => `/tasks?project_id=${projectId}`,
     create: '/tasks',
     update: (id) => `/tasks/${id}`,
     get: (id) => `/tasks/${id}`,
-    delete: (id) => `/tasks/${id}`,
+    delete: (id, projectId) => `/tasks/${id}?project_id=${projectId}`,
     assign: (id) => `/tasks/${id}/assign`,
-    updateStatus: (id) => `/tasks/${id}/status`
+    updateStatus: (id) => `/tasks/${id}/status`,
+    update_assignee: (id) => `/tasks/${id}/change-user`
   },
   sprints: {
     dashboard: (projectId) => `/sprints/dashboard?project_id=${projectId}`,
@@ -73,7 +77,22 @@ export const allRoutes = {
     getSprintById: (id, projectId) => `/sprints/${id}?project_id=${projectId}`,
     getSprintBacklog: (id) => `/sprints/${id}/backlog`,
     uploadImage: (fileName, file) => `/sprints/upload-image?fileName=${fileName}&file=${file}`,
-    createBug: '/bugs'
+    
+    //Issues or bugs
+    getBugs: (projectId, sprintId, status) =>
+      {
+        let url = `/bugs?project_id=${projectId}`
+        if(sprintId){
+          url += `&sprint_id=${sprintId}`
+        }
+        if(status){
+          url += `&status=${status}`
+        }
+        return url
+      },
+    createBug: '/bugs',
+    resolveBug: (bugId, projectId) => `/bugs/${bugId}/resolve?project_id=${projectId}`,
+    reopenBug: (bugId, projectId) => `/bugs/${bugId}/reopen?project_id=${projectId}`,
   },
   stories: {
     list: (projectId, sprintId, motive) =>{

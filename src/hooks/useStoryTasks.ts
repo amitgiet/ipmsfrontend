@@ -1,47 +1,41 @@
 import { useState, useEffect } from 'react';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { useAuth } from '@/hooks/useAuth';
+import { useParams } from 'react-router-dom';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface Task {
   id: string;
   title: string;
   description?: string;
   status: 'to_do' | 'in_progress' | 'completed';
-  assignedTo?: string;
+  assignedTo?: number;
   created_by?: string;
   created_at: string;
   updated_at: string;
 }
 
 export const useStoryTasks = (storyId: string) => {
-  const { toast } = useToast();
-    const { user, teamUser } = useAuth();
+  const { projectId } = useParams();
+  const { user, teamUser } = useAuth();
   const currentUser = user || teamUser;
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadTasks = async () => {
-    if (!storyId) return;
-
     try {
-      console.log('🔄 Loading tasks for story:', storyId);
 
-      const { data, error } = await apiCall(allRoutes.tasks.get(storyId), 'get');
+      const { data, error } = await apiCall(allRoutes.tasks.list(projectId), 'get');
 
       if (error) {
-        console.error('❌ Error loading tasks:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load tasks",
-          variant: "destructive",
-        });
+        toast.error("Failed to load tasks");
         return;
       }
 
       if (data) {
-        const mappedTasks: Task[] = data.map(task => ({
+        const mappedTasks: Task[] = data.data.map(task => ({
           id: task.id,
           title: task.title,
           description: task.description || undefined,
@@ -53,27 +47,22 @@ export const useStoryTasks = (storyId: string) => {
         }));
 
         setTasks(mappedTasks);
-        console.log('✅ Loaded tasks:', mappedTasks.length);
       }
     } catch (error) {
       console.error('❌ Error in loadTasks:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load tasks",
-        variant: "destructive",
-      });
+      toast.error("Failed to load tasks");
     }
   };
 
   const canDeleteTask = async (task: Task): Promise<boolean> => {
     if (!currentUser) return false;
-    
+
     // Check if user created the task
     const userEmail = currentUser.email || currentUser.name || '';
     if (task.created_by !== userEmail && task.created_by !== 'Current User') {
       return false;
     }
-    
+
     // Check if any time has been logged for this task
     try {
       const { data: timeLogs, error } = await apiCall(allRoutes.tasks.get(task.id), 'get');
@@ -90,109 +79,74 @@ export const useStoryTasks = (storyId: string) => {
     }
   };
 
-  const addTask = async (taskData: { title: string; description: string; assignedTo?: string }) => {
+  const addTask = async (taskData: { title: string; description: string; assignedTo?: number }) => {
     try {
-      console.log('🔄 Adding new task:', taskData);
-      console.log('🔍 Debug - Current user:', currentUser);
-      console.log('🔍 Debug - Story ID:', storyId);
 
-      const createdByUser = currentUser?.email || currentUser?.name || 'Current User';
+      let body = new FormData();
+      body.append('project_id', projectId);
+      body.append('user_story_id', storyId);
+      body.append('title', taskData.title);
+      body.append('description', taskData.description);
+      body.append('assignee_to_user_id', taskData.assignedTo || '');
 
-      const { data, error } = await apiCall(allRoutes.tasks.create, 'post', {
-        story_id: storyId,
-        title: taskData.title,
-        description: taskData.description || null,
-        status: 'to_do',
-        assigned_to: taskData.assignedTo || null,
-        created_by: createdByUser
-      });
+      const { data, error } = await apiCall(allRoutes.tasks.create, 'post', body);
 
       if (error) {
         console.error('❌ Error adding task:', error);
-        toast({
-          title: "Error",
-          description: "Failed to add task",
-          variant: "destructive",
-        });
         return;
       }
-
-      const newTask: Task = {
-        id: data.id,
-        title: data.title,
-        description: data.description || undefined,
-        status: data.status as 'to_do' | 'in_progress' | 'completed',
-        assignedTo: data.assigned_to || undefined,
-        created_by: data.created_by || undefined,
-        created_at: data.created_at,
-        updated_at: data.updated_at
-      };
-
-      setTasks(prev => [...prev, newTask]);
-      console.log('✅ Task added successfully');
-      
-      toast({
-        title: "Success",
-        description: "Task added successfully",
-      });
+      loadTasks();
+      toast.success("Task added successfully");
     } catch (error) {
       console.error('❌ Error in addTask:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add task",
-        variant: "destructive",
-      });
+      toast.error("Failed to add task");
     }
   };
 
-  const updateTask = async (taskId: string, taskData: { title: string; description: string; status: 'to_do' | 'in_progress' | 'completed'; assignedTo?: string }) => {
+  const updateTask = async (taskId: string, taskData: { title: string; description: string; status: 'to_do' | 'in_progress' | 'completed'; assignedTo?: number }) => {
     try {
-      console.log('🔄 Updating task:', taskId, taskData);
 
-        const { data, error } = await apiCall(allRoutes.tasks.update(taskId), 'put', {
-        title: taskData.title,
-        description: taskData.description || null,
-        status: taskData.status,
-        assigned_to: taskData.assignedTo || null,
-        updated_at: new Date().toISOString()
-      });
+      let body = new FormData();
+      body.append('project_id', projectId);
+      body.append('user_story_id', storyId);
+      body.append('title', taskData.title);
+      body.append('description', taskData.description);
+      body.append('assignee_to_user_id', taskData.assignedTo || '');
+      body.append('status', taskData.status);
+      body.append('_method', 'patch');
+
+      const { data, error } = await apiCall(allRoutes.tasks.update(taskId), 'patch', body);
 
       if (error) {
         console.error('❌ Error updating task:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update task",
-          variant: "destructive",
-        });
         return;
       }
 
-      const updatedTask: Task = {
-        id: data.id,
-        title: data.title,
-        description: data.description || undefined,
-        status: data.status as 'to_do' | 'in_progress' | 'completed',
-        assignedTo: data.assigned_to || undefined,
-        created_by: data.created_by || undefined,
-        created_at: data.created_at,
-        updated_at: data.updated_at
-      };
-
-      setTasks(prev => prev.map(task => task.id === taskId ? updatedTask : task));
-      console.log('✅ Task updated successfully');
-      console.log('🔍 Updated task:', updatedTask);
-      
-      toast({
-        title: "Success",
-        description: "Task updated successfully",
-      });
+      loadTasks();
+      toast.success("Task updated successfully");
     } catch (error) {
       console.error('❌ Error in updateTask:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update task",
-        variant: "destructive",
-      });
+      toast.error("Failed to update task");
+    }
+  };
+
+  const updateAssignee = async (taskId: string, assigneeId: number, projectId: string) => {
+    try {
+      let body = new FormData();
+      console.log(" assigneeId ", assigneeId);
+      body.append('assignee_to_user_id', assigneeId);
+      body.append('project_id', projectId);
+      const { data, error } = await apiCall(allRoutes.tasks.update_assignee(taskId), 'post', body);
+      if (error) {
+        console.error('❌ Error updating assignee:', error);
+        return;
+      }
+      loadTasks();
+      toast.success("Assignee updated successfully");
+      return true;
+    } catch (error) {
+      console.error('❌ Error in updateAssignee:', error);
+      toast.error("Failed to update assignee");
     }
   };
 
@@ -201,62 +155,41 @@ export const useStoryTasks = (storyId: string) => {
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
 
-      console.log('🔄 Checking if task can be deleted:', taskId);
-      
-      const canDelete = await canDeleteTask(task);
-      if (!canDelete) {
-        toast({
-          title: "Cannot Delete Task",
-          description: "You can only delete tasks you created that have no time logged",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log('🔄 Deleting task:', taskId);
-
-      const { error } = await apiCall(allRoutes.tasks.delete(taskId), 'delete');
+      // const canDelete = await canDeleteTask(task);
+      // if (!canDelete) {
+      //   toast.error("You can only delete tasks you created that have no time logged");
+      //   return;
+      // }
+      const { error } = await apiCall(allRoutes.tasks.delete(taskId, projectId), 'delete');
 
       if (error) {
         console.error('❌ Error deleting task:', error);
-        toast({
-          title: "Error",
-          description: "Failed to delete task",
-          variant: "destructive",
-        });
         return;
       }
 
-      setTasks(prev => prev.filter(task => task.id !== taskId));
-      console.log('✅ Task deleted successfully');
-      
-      toast({
-        title: "Success",
-        description: "Task deleted successfully",
-      });
+      setTasks(prev => prev.filter(task => task.id !== taskId))
+
+      toast.success("Task deleted successfully");
     } catch (error) {
       console.error('❌ Error in deleteTask:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete task",
-        variant: "destructive",
-      });
+      toast.error("Failed to delete task");
     }
   };
 
   useEffect(() => {
-    if (storyId) {
+    if (projectId) {
       setLoading(true);
       loadTasks().finally(() => {
         setLoading(false);
       });
     }
-  }, [storyId]);
+  }, [projectId]);
 
   return {
     tasks,
     loading,
     addTask,
+    updateAssignee,
     updateTask,
     deleteTask,
     loadTasks,

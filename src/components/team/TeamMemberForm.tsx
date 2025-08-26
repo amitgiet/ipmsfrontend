@@ -45,6 +45,11 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
   onSubmit,
   onCancel
 }) => {
+  // Password validation state
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong'>('weak');
+  const [mobileError, setMobileError] = useState<string>('');
+  const [nameError, setNameError] = useState<string>('');
   const [availableSkills, setAvailableSkills] = useState<
     Array<{ id: string | number; name: string }>
   >([]);
@@ -54,6 +59,110 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
   const [open, setOpen] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Name validation function
+  const validateName = (name: string) => {
+    if (name.length === 0) {
+      setNameError('');
+      return true;
+    }
+    
+    // Only allow alphabets, spaces, and optionally numbers
+    // Pattern: letters, spaces, numbers, but no special characters
+    if (!/^[a-zA-Z\s0-9]+$/.test(name)) {
+      setNameError('Name can only contain letters, spaces, and numbers');
+      return false;
+    }
+    
+    // Must have at least one letter
+    if (!/[a-zA-Z]/.test(name)) {
+      setNameError('Name must contain at least one letter');
+      return false;
+    }
+    
+    // Check for consecutive special characters or excessive spaces
+    if (/\s{2,}/.test(name)) {
+      setNameError('Name cannot have consecutive spaces');
+      return false;
+    }
+    
+    // Check for excessive numbers (should not be more than letters)
+    const letterCount = (name.match(/[a-zA-Z]/g) || []).length;
+    const numberCount = (name.match(/[0-9]/g) || []).length;
+    
+    if (numberCount > letterCount) {
+      setNameError('Name should contain more letters than numbers');
+      return false;
+    }
+    
+    setNameError('');
+    return true;
+  };
+
+  // Mobile number validation function
+  const validateMobileNumber = (mobile: string) => {
+    // Remove any non-digit characters
+    const cleanMobile = mobile.replace(/\D/g, '');
+    
+    if (cleanMobile.length === 0) {
+      setMobileError('');
+      return true;
+    }
+    
+    if (cleanMobile.length !== 10) {
+      setMobileError('Please enter a valid 10-digit mobile number');
+      return false;
+    }
+    
+    if (!/^[6-9]\d{9}$/.test(cleanMobile)) {
+      setMobileError('Mobile number should start with 6, 7, 8, or 9');
+      return false;
+    }
+    
+    setMobileError('');
+    return true;
+  };
+
+  // Password validation function
+  const validatePassword = (password: string) => {
+    const errors: string[] = [];
+    
+    if (password.length < 8) {
+      errors.push('At least 8 characters');
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+      errors.push('At least one uppercase letter');
+    }
+    
+    if (!/[a-z]/.test(password)) {
+      errors.push('At least one lowercase letter');
+    }
+    
+    if (!/\d/.test(password)) {
+      errors.push('At least one number');
+    }
+    
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      errors.push('At least one special character');
+    }
+    
+    setPasswordErrors(errors);
+    
+    // Calculate password strength
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score++;
+    
+    if (score <= 2) setPasswordStrength('weak');
+    else if (score <= 4) setPasswordStrength('medium');
+    else setPasswordStrength('strong');
+    
+    return errors.length === 0;
+  };
 
   // Fetch skills when search, page or popover open changes
   useEffect(() => {
@@ -118,26 +227,61 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
    }
   }, [editingMember]);
 
+  // Form submission handler with password validation
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate name
+    if (!validateName(formData.name)) {
+      return;
+    }
+    
+    // Validate mobile number
+    if (!validateMobileNumber(formData.mobile_no)) {
+      return;
+    }
+    
+    // Validate password if it's a new member or if password is being changed
+    if (!editingMember || formData.password) {
+      if (!validatePassword(formData.password)) {
+        // Don't submit if password validation fails
+        return;
+      }
+    }
+    
+    // If validation passes, call the original onSubmit
+    onSubmit(e);
+  };
+
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleFormSubmit} className="space-y-4">
+      
       {/* Name + Email */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="name">Name</Label>
+          <Label htmlFor="name">Name <span className="text-red-500">*</span></Label>
           <Input
             id="name"
             value={formData.name}
-            onChange={(e) =>
+            onChange={(e) => {
+              const newName = e.target.value;
               onFormDataChange((prev: any) => ({
                 ...prev,
-                name: e.target.value
-              }))
-            }
+                name: newName
+              }));
+              // Validate name when it changes
+              validateName(newName);
+            }}
+            placeholder="Enter full name (letters, spaces, numbers only)"
+            className={nameError ? 'border-red-500' : ''}
             required
           />
+          {nameError && (
+            <p className="text-sm text-red-500 mt-1">{nameError}</p>
+          )}
         </div>
         <div>
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
           <Input
             id="email"
             type="email"
@@ -156,19 +300,27 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
       {/* Mobile + Emergency Contact */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="mobile_no">Mobile Number</Label>
+          <Label htmlFor="mobile_no">Mobile Number <span className="text-red-500">*</span></Label>
           <Input
             id="mobile_no"
             type="tel"
             value={formData.mobile_no}
-            onChange={(e) =>
+            onChange={(e) => {
+              const newMobile = e.target.value;
               onFormDataChange((prev: any) => ({
                 ...prev,
-                mobile_no: e.target.value
-              }))
-            }
-            placeholder="+1 (555) 123-4567"
+                mobile_no: newMobile
+              }));
+              // Validate mobile number when it changes
+              validateMobileNumber(newMobile);
+            }}
+            placeholder="Enter 10-digit mobile number"
+            className={mobileError ? 'border-red-500' : ''}
+            required
           />
+          {mobileError && (
+            <p className="text-sm text-red-500 mt-1">{mobileError}</p>
+              )}
         </div>
         {/* <div>
           <Label htmlFor="emergency_contact">Emergency Contact</Label>
@@ -190,19 +342,28 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="password">
-            Password {editingMember && '(leave empty to keep current)'}
+            Password {editingMember && '(leave empty to keep current)'} {!editingMember && <span className="text-red-500">*</span>}
+            {!editingMember && <span className="text-xs text-gray-500 ml-2">(min 8 chars, uppercase, lowercase, number, special)</span>}
           </Label>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
               value={formData.password}
-              onChange={(e) =>
+              onChange={(e) => {
+                const newPassword = e.target.value;
                 onFormDataChange((prev: any) => ({
                   ...prev,
-                  password: e.target.value
-                }))
-              }
+                  password: newPassword
+                }));
+                // Validate password when it changes
+                if (newPassword) {
+                  validatePassword(newPassword);
+                } else {
+                  setPasswordErrors([]);
+                  setPasswordStrength('weak');
+                }
+              }}
               required={!editingMember}
               className="pr-10"
             />
@@ -218,9 +379,66 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
               )}
             </button>
           </div>
+          
+          {/* Password requirements and strength indicator */}
+          {formData.password && (
+            <div className="mt-2 space-y-2">
+              {/* Password strength indicator */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-600">Strength:</span>
+                <div className="flex gap-1">
+                  <div className={`h-2 w-8 rounded ${
+                    passwordStrength === 'weak' ? 'bg-red-400' : 
+                    passwordStrength === 'medium' ? 'bg-yellow-400' : 'bg-green-400'
+                  }`}></div>
+                  <div className={`h-2 w-8 rounded ${
+                    passwordStrength === 'weak' ? 'bg-gray-200' : 
+                    passwordStrength === 'medium' ? 'bg-yellow-400' : 'bg-green-400'
+                  }`}></div>
+                  <div className={`h-2 w-8 rounded ${
+                    passwordStrength === 'weak' ? 'bg-gray-200' : 
+                    passwordStrength === 'medium' ? 'bg-gray-200' : 'bg-green-400'
+                  }`}></div>
+                </div>
+                <span className={`text-xs font-medium ${
+                  passwordStrength === 'weak' ? 'text-red-600' : 
+                  passwordStrength === 'medium' ? 'text-yellow-600' : 'text-green-600'
+                }`}>
+                  {passwordStrength.charAt(0).toUpperCase() + passwordStrength.slice(1)}
+                </span>
+              </div>
+              
+              {/* Password requirements */}
+              <div className="text-xs text-gray-600">
+                <p className="font-medium mb-1">Password must contain:</p>
+                <ul className="space-y-1">
+                  <li className={`flex items-center gap-1 ${formData.password.length >= 8 ? 'text-green-600' : 'text-red-500'}`}>
+                    <span>{formData.password.length >= 8 ? '✓' : '✗'}</span>
+                    At least 8 characters
+                  </li>
+                  <li className={`flex items-center gap-1 ${/[A-Z]/.test(formData.password) ? 'text-green-600' : 'text-red-500'}`}>
+                    <span>{/[A-Z]/.test(formData.password) ? '✓' : '✗'}</span>
+                    At least one uppercase letter
+                  </li>
+                  <li className={`flex items-center gap-1 ${/[a-z]/.test(formData.password) ? 'text-green-600' : 'text-red-500'}`}>
+                    <span>{/[a-z]/.test(formData.password) ? '✓' : '✗'}</span>
+                    At least one lowercase letter
+                  </li>
+                  <li className={`flex items-center gap-1 ${/\d/.test(formData.password) ? 'text-green-600' : 'text-red-500'}`}>
+                    <span>{/\d/.test(formData.password) ? '✓' : '✗'}</span>
+                    At least one number
+                  </li>
+                  <li className={`flex items-center gap-1 ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? 'text-green-600' : 'text-red-500'}`}>
+                    <span>{/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? '✓' : '✗'}</span>
+                    At least one special character
+                  </li>
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
         <div>
-          <Label htmlFor="role">Role</Label>
+          <Label htmlFor="role">Role <span className="text-red-500">*</span></Label>
           <select
             id="role"
             value={formData.role}
@@ -231,6 +449,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
               }))
             }
             className="w-full rounded border border-gray-300 px-3 py-2"
+            required
           >
             <option value="admin">Admin</option>
             <option value="team_lead">Team Lead</option>
@@ -244,7 +463,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
 
       {/* Skills dropdown with search + pagination */}
       <div>
-        <Label>Skills</Label>
+        <Label>Skills <span className="text-red-500">*</span></Label>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button

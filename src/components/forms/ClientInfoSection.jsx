@@ -39,9 +39,17 @@ export const ClientInfoSection = ({ formData, errors, onInputChange }) => {
           <Label htmlFor="clientPhone">Client Phone</Label>
           <Input
             id="clientPhone"
-            type="tel"
+            type="text"
             value={formData.clientPhone || ''}
-            onChange={(e) => onInputChange('clientPhone', e.target.value)}
+            onChange={(e) =>{
+              const length = e.target.value.length;
+              if(length > 13){
+                return;
+              }
+              if(!e.target.value.startsWith('+91')){
+                e.target.value = '+91' + e.target.value;
+              }
+              onInputChange('clientPhone', e.target.value.replace(/[^0-9+]/g, ''))}}
             placeholder="Enter client phone number"
           />
         </div>
@@ -50,8 +58,17 @@ export const ClientInfoSection = ({ formData, errors, onInputChange }) => {
           <Label htmlFor="backupContact">Backup Contact</Label>
           <Input
             id="backupContact"
-            value={formData.backupContact || ''}
-            onChange={(e) => onInputChange('backupContact', e.target.value)}
+            type="text"
+              value={formData.backupContact || ''}
+            onChange={(e) =>{
+              const length = e.target.value.length;
+              if(length > 13){
+                return;
+              }
+              if(!e.target.value.startsWith('+91')){
+                e.target.value = '+91' + e.target.value;
+              }
+              onInputChange('backupContact', e.target.value.replace(/[^0-9+]/g, ''))}}
             placeholder="Enter backup contact"
           />
         </div>

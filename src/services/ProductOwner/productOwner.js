@@ -3,8 +3,8 @@ import { allRoutes } from '../routes';
 
 export const productOwnerService = {    
   // Get all projects
-  getTimeLogs: async (params = {}) => {
-    const url = allRoutes.productOwner.time_logs_list;
+  getTimeLogs: async (isProjectLog = false) => {
+    const url = allRoutes.productOwner.time_logs_list(isProjectLog);
     return await apiCall(url, 'get');
   },
   addTimeLog: async (data) => {

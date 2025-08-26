@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { apiCall } from '@/services/apiCall';
+import { allRoutes } from '@/services/routes';
+import { toast } from 'react-toastify';
 
 interface QAStory {
   id: string;
@@ -19,7 +20,6 @@ interface QAStory {
 export const useQAStories = (currentUserEmail: string) => {
   const [stories, setStories] = useState<QAStory[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
   const fetchQAStories = async () => {
     try {
@@ -32,13 +32,7 @@ export const useQAStories = (currentUserEmail: string) => {
       console.log('🔄 Fetching QA stories for:', currentUserEmail);
 
       // First, get the team member data
-      const { data: teamMemberData, error: teamMemberError } = await supabase
-        .from('team_members')
-        .select('id')
-        .eq('email', currentUserEmail.toLowerCase())
-        .eq('role', 'qa')
-        .eq('is_active', true)
-        .maybeSingle();
+      const { data: teamMemberData, error: teamMemberError } = await apiCall(allRoutes.auth.get_team_member, 'get', { email: currentUserEmail.toLowerCase() });
 
       if (teamMemberError) {
         console.error('❌ Error fetching team member:', teamMemberError);
@@ -53,10 +47,7 @@ export const useQAStories = (currentUserEmail: string) => {
       }
 
       // Get project assignments for this team member
-      const { data: assignmentData, error: assignmentError } = await supabase
-        .from('project_team_members')
-        .select('project_id')
-        .eq('team_member_id', teamMemberData.id);
+      const { data: assignmentData, error: assignmentError } = await apiCall(allRoutes.projects.get_assigned_projects, 'get', { team_member_id: teamMemberData.id });
 
       if (assignmentError) {
         console.error('❌ Error fetching project assignments:', assignmentError);
@@ -74,23 +65,9 @@ export const useQAStories = (currentUserEmail: string) => {
       const projectIds = assignmentData.map(assignment => assignment.project_id);
 
       // Fetch stories with status 'qa' in these projects, joined with project info
-      const { data: storiesData, error: storiesError } = await supabase
-        .from('user_stories')
-        .select(`
-          id,
-          title,
-          description,
-          priority,
-          status,
-          story_points,
-          project_id,
-          updated_at,
-          created_at,
-          projects!inner(project_name)
-        `)
-        .in('project_id', projectIds)
-        .eq('status', 'qa')
-        .order('updated_at', { ascending: false });
+      const { data: storiesData, error: storiesError } = await apiCall(allRoutes.stories.getStoriesByProjectIds(projectIds), 'get');
+
+      console.log('📥 Raw API response:', storiesData.data);
 
       if (storiesError) {
         console.error('❌ Error fetching stories:', storiesError);
@@ -98,20 +75,16 @@ export const useQAStories = (currentUserEmail: string) => {
       }
 
       // Transform the data to include project_name
-      const transformedStories = (storiesData || []).map(story => ({
-        ...story,
-        project_name: story.projects?.project_name
-      }));
+      // const transformedStories = (storiesData || []).map(story => ({
+      //   ...story,
+      //   project_name: story.projects?.project_name
+      // }));
 
-      console.log('✅ QA stories fetched:', transformedStories.length);
-      setStories(transformedStories);
+      console.log('✅ QA stories fetched:', storiesData.data.length);
+      setStories(storiesData);
     } catch (error) {
       console.error('❌ Error in fetchQAStories:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch QA stories",
-        variant: "destructive",
-      });
+      toast.error("Failed to fetch QA stories");
     } finally {
       setLoading(false);
     }

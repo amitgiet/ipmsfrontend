@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Bug, AlertTriangle, CheckCircle, Clock, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Bug, AlertTriangle, CheckCircle, Clock, Edit, Trash2, Loader2, CloudCog } from 'lucide-react';
 import { apiCall } from '@/services/apiCall';
 
 import { useUserRole } from '@/hooks/useUserRole';
@@ -13,6 +13,7 @@ import { BugReportDialog } from './BugReportDialog';
 import { BugDetailsDialog } from './BugDetailsDialog';
 import { toast } from 'react-toastify';
 import { allRoutes } from '@/services/routes';
+import { useParams } from 'react-router-dom';
 
 interface Bug {
   id: string;
@@ -22,9 +23,24 @@ interface Bug {
   description?: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   status: 'open' | 'resolved' | 'reopened';
-  reported_by: string;
-  assigned_to?: string;
-  resolved_by?: string;
+  created_by: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
+  assigned_to?: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
+  resolved_by?: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
   resolved_at?: string;
   created_at: string;
   updated_at: string;
@@ -39,13 +55,15 @@ interface Story {
 interface SprintIssuesViewProps {
   sprintId: string;
   stories: Story[];
+  projectId: string;
 }
 
 export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
   sprintId,
-  stories
+  stories,
 }) => {
-  const [bugs, setBugs] = useState<Bug[]>([]);
+  const { projectId } = useParams<{ projectId: string }>();
+  const [bugs, setBugs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showBugDialog, setShowBugDialog] = useState(false);
   const [selectedBug, setSelectedBug] = useState<Bug | null>(null);
@@ -55,35 +73,42 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
   const fetchBugs = async () => {
     try {
       setLoading(true);
-
-      const { data: bugsData, error } = await apiCall(allRoutes.sprints.getBugs(sprintId), 'GET');
-
-
-      
-      // Enrich bugs with story titles and ensure proper typing
-      const enrichedBugs: Bug[] = bugsData?.map(bug => {
-        const story = stories.find(s => s.id === bug.story_id);
-        return {
-          id: bug.id,
-          story_id: bug.story_id,
-          sprint_id: bug.sprint_id,
-          title: bug.title,
-          description: bug.description || undefined,
-          severity: bug.severity as 'low' | 'medium' | 'high' | 'critical',
-          status: bug.status as 'open' | 'resolved' | 'reopened',
-          reported_by: bug.reported_by,
-          assigned_to: bug.assigned_to || undefined,
-          resolved_by: bug.resolved_by || undefined,
-          resolved_at: bug.resolved_at || undefined,
-          created_at: bug.created_at,
-          updated_at: bug.updated_at,
-          story_title: story?.title || 'Unknown Story'
-        };
-      }) || [];
-
-      setBugs(enrichedBugs);
+  
+      const [openBugsRes, closedBugsRes] = await Promise.all([
+        apiCall(allRoutes.sprints.getBugs(projectId, sprintId, "open"), "get"),
+        apiCall(allRoutes.sprints.getBugs(projectId, sprintId, "closed"), "get"),
+      ]);
+  
+      const enrichBugs = (bugs: any[] = []) => {
+        return bugs.map((bug) => {
+          const story = stories.find((s) => s.id === bug.story.id);
+          return {
+            id: bug.id,
+            story_id: bug.story.id,
+            sprint_id: bug.sprint_id,
+            title: bug.title,
+            description: bug.description || undefined,
+            severity: bug.severity as "low" | "medium" | "high" | "critical",
+            status: bug.status as "open" | "resolved" | "reopened" | "closed",
+            created_by: bug.created_by || { id: 0, name: 'Unknown', email: 'unknown@example.com', role: 'unknown' },
+            assigned_to: bug.assigned_to || undefined,
+            resolved_by: bug.resolved_by || undefined,
+            resolved_at: bug.resolved_at || undefined,
+            created_at: bug.created_at,
+            updated_at: bug.updated_at,
+            story_title: story?.title || "Unknown Story",
+          };
+        });
+      };
+  
+      const enrichedOpen = enrichBugs(openBugsRes?.data?.data || []);
+      const enrichedClosed = enrichBugs(closedBugsRes?.data?.data || []);
+  
+      const allBugs = [...enrichedOpen, ...enrichedClosed];
+  
+      setBugs(allBugs);
     } catch (error) {
-      toast.error("Failed to fetch bugs");
+      console.error("Error fetching bugs:", error);
     } finally {
       setLoading(false);
     }
@@ -92,43 +117,33 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
   const handleResolveBug = async (bugId: string) => {
     try {
 
-      const { error } = await apiCall(allRoutes.sprints.updateBug(bugId), 'PUT', {
-          status: 'resolved',
-          resolved_by: 'Current User', // You can enhance this to get actual user info
-          resolved_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-      });
+      const { error } = await apiCall(allRoutes.sprints.resolveBug(bugId, projectId), 'post');
 
       if (error) {
-        toast.error("Failed to resolve bug");
+        return;
       }
       toast.success("Bug marked as resolved");
 
       fetchBugs(); // Refresh the list
     } catch (error) {
-      toast.error("Failed to resolve bug");
+      console.log(" error ", error);
     }
   };
 
   const handleReopenBug = async (bugId: string) => {
     try {
 
-      const { error } = await apiCall(allRoutes.sprints.updateBug(bugId), 'PUT', {
-          status: 'reopened',
-          resolved_by: null,
-          resolved_at: null,
-          updated_at: new Date().toISOString()
-        });
+      const { error } = await apiCall(allRoutes.sprints.reopenBug(bugId, projectId), 'post');
 
       if (error) {
-        toast.error("Failed to reopen bug");
+        return;
       }
 
       toast.success("Bug reopened");
 
       fetchBugs(); // Refresh the list
     } catch (error) {
-      toast.error("Failed to reopen bug");
+      console.log(" error ", error);
     }
   };
 
@@ -164,16 +179,16 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
     fetchBugs();
   }, [sprintId]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="flex justify-center items-center py-8">
+  //       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  //     </div>
+  //   );
+  // }
 
   const openBugs = bugs.filter(bug => bug.status === 'open' || bug.status === 'reopened');
-  const resolvedBugs = bugs.filter(bug => bug.status === 'resolved');
+  const resolvedBugs = bugs.filter(bug => bug.status === 'closed' || bug.status === 'resolved');
 
   return (
     <>
@@ -228,7 +243,7 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
                             <div className="text-xs text-gray-500">
                               <span>Story: {bug.story_title}</span>
                               <span className="mx-2">•</span>
-                              <span>Reported by: {bug.reported_by}</span>
+                              <span>Reported by: {bug.created_by?.name}</span>
                               <span className="mx-2">•</span>
                               <span>{new Date(bug.created_at).toLocaleDateString()}</span>
                             </div>
@@ -294,7 +309,7 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
                             <div className="text-xs text-gray-500">
                               <span>Story: {bug.story_title}</span>
                               <span className="mx-2">•</span>
-                              <span>Resolved by: {bug.resolved_by}</span>
+                              <span>Resolved by: {bug.resolved_by?.name || 'Unknown'}</span>
                               <span className="mx-2">•</span>
                               <span>{bug.resolved_at ? new Date(bug.resolved_at).toLocaleDateString() : 'Unknown'}</span>
                             </div>

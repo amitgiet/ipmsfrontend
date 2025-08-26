@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-export const ProjectInfoSection = ({ formData, errors, onInputChange }) => {
+export const ProjectInfoSection = ({ formData, errors, onInputChange, isEditMode = false }) => {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Project Information</h3>
@@ -85,14 +85,25 @@ export const ProjectInfoSection = ({ formData, errors, onInputChange }) => {
             <SelectValue placeholder="Select status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="planned">Planned</SelectItem>
-            <SelectItem value="in_progress">In Progress</SelectItem>
-            <SelectItem value="on_hold">On Hold</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
+            {isEditMode ? (
+              // When editing, show all statuses
+              <>
+                <SelectItem value="planned">Planned</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="on_hold">On Hold</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </>
+            ) : (
+              // When creating new project, only show Planned
+              <SelectItem value="planned">Planned</SelectItem>
+            )}
           </SelectContent>
         </Select>
         {errors.projectStatus && <p className="text-sm text-red-500">{errors.projectStatus}</p>}
+        {!isEditMode && (
+          <p className="text-xs text-gray-500">New projects always start with 'Planned' status</p>
+        )}
       </div>
     </div>
   );

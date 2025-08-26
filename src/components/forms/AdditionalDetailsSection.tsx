@@ -103,16 +103,9 @@ export const AdditionalDetailsSection = ({ formData, onInputChange }) => {
               multiple
               accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.webp"
               onChange={handleFileUpload}
-              className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              // className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => document.getElementById('documents')?.click()}
-            >
-              Choose Files
-            </Button>
+         
           </div>
 
           {uploadedFiles.length > 0 && (

@@ -116,6 +116,7 @@ export const StoryDetailsPage: React.FC = () => {
     );
   }
 
+  console.log(" sinisi", story);
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-6 py-8">
@@ -197,7 +198,7 @@ export const StoryDetailsPage: React.FC = () => {
           </TabsList>
 
           {/* Story Details Tab */}
-          <TabsContent value="story" className="space-y-6 mt-6">  
+          <TabsContent value="story" className="space-y-6 mt-6">
             {/* Description */}
             <Card>
               <CardHeader>

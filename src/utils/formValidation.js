@@ -47,6 +47,36 @@ export const validateProjectForm = (formData) => {
     errors.priority = 'Priority is required';
   }
 
+  // Validate budgeted hours
+  if (formData.budgetedHours && formData.budgetedHours.trim()) {
+    const budgetedHours = parseFloat(formData.budgetedHours);
+    if (isNaN(budgetedHours) || budgetedHours < 0) {
+      errors.budgetedHours = 'Budgeted hours must be a positive number';
+    } else if (budgetedHours > 9999) {
+      errors.budgetedHours = 'Budgeted hours cannot exceed 9999';
+    }
+  }
+
+  // Validate logged hours
+  if (formData.loggedHours && formData.loggedHours.trim()) {
+    const loggedHours = parseFloat(formData.loggedHours);
+    if (isNaN(loggedHours) || loggedHours < 0) {
+      errors.loggedHours = 'Logged hours must be a positive number';
+    } else if (loggedHours > 9999) {
+      errors.loggedHours = 'Logged hours cannot exceed 9999';
+    }
+  }
+
+  // Validate estimated budget
+  if (formData.estimatedBudget && formData.estimatedBudget.trim()) {
+    const estimatedBudget = parseFloat(formData.estimatedBudget);
+    if (isNaN(estimatedBudget) || estimatedBudget < 0) {
+      errors.estimatedBudget = 'Estimated budget must be a positive number';
+    } else if (estimatedBudget > 999999999.99) {
+      errors.estimatedBudget = 'Estimated budget cannot exceed 999,999,999.99';
+    }
+  }
+
   return errors;
 };
 

@@ -87,9 +87,9 @@ export const SprintKanbanView = ({ stories, sprintStatus, onStoryUpdate, sprint 
       return;
     }
 
-    if (destination.droppableId === source.droppableId && destination.index === source.index) {
-      return;
-    }
+    // if (destination.droppableId === source.droppableId && destination.index === source.index) {
+    //   return;
+    // }
 
     const newStatus = destination.droppableId as 'ready' | 'in_progress' | 'qa' | 'done';
     const sourceStatus = source.droppableId;
@@ -102,13 +102,13 @@ export const SprintKanbanView = ({ stories, sprintStatus, onStoryUpdate, sprint 
       return;
     }
 
-    const permissionResult = await canMoveCard(sourceStatus, newStatus, sprintStatus, userRole, projectId);
+    // const permissionResult = await canMoveCard(sourceStatus, newStatus, sprintStatus, userRole, projectId);
 
 
-    if (!permissionResult.canMove) {
-      toast.error(permissionResult.reason || "You don't have permission to perform this action.");
-      return;
-    }
+    // if (!permissionResult.canMove) {
+    //   toast.error(permissionResult.reason || "You don't have permission to perform this action.");
+    //   return;
+    // }
 
     const updatedStories = stories.map(story =>
       story.code === draggableId
@@ -116,6 +116,7 @@ export const SprintKanbanView = ({ stories, sprintStatus, onStoryUpdate, sprint 
         : story
     );
 
+    console.log(" updatedStories ",stories, updatedStories);
     const newSequenceNumber = getNewSequenceNumber(destination.index, stories);
 
     const data = new FormData();

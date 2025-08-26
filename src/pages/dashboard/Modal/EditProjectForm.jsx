@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'react-toastify';
@@ -46,11 +46,15 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
   // Auto-calculate end date when start date or duration changes
   useEffect(() => {
     if (formData.startDate && formData.duration && !isNaN(Number(formData.duration))) {
-      const endDate = calculateEndDate(formData.startDate, Number(formData.duration));
-      setFormData(prev => ({ ...prev, endDate }));
+      const calculatedEndDate = calculateEndDate(formData.startDate, Number(formData.duration));
+      
+      // Only update if the calculated end date is different from the current one
+      if (!formData.endDate || calculatedEndDate.getTime() !== formData.endDate.getTime()) {
+        setFormData(prev => ({ ...prev, endDate: calculatedEndDate }));
+      }
     }
   }, [formData.startDate, formData.duration]);
-
+  
   // Load project data when modal opens
   useEffect(() => {
     if (project && open) {
@@ -77,9 +81,8 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
         estimatedBudget: project.estimated_budget?.toString() || '',
         budgetCurrency: project.budget_currency || 'USD',
         priority: project.priority || '',
-        
-        budgetedHours: project.budgeted_hours?.toString() || project.budgetedHours?.toString() || '',
-        loggedHours: project.logged_hours?.toString() || project.loggedHours?.toString() || '',
+        budgetedHours: project.budgeted_hours?.toString() || '',
+        loggedHours: project.logged_hours?.toString() || '',
         tagsLabels: project.tags_labels || '',
       });
       setErrors({});
@@ -241,29 +244,30 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
     }
   };
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = useCallback((field, value) => {
     console.log('🔄 Input changed:', field, value);
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
-  };
+  }, [errors]); // Add errors to dependencies
 
   // Handle removing existing documents
-  const handleRemoveExistingDocument = (documentId) => {
+  const handleRemoveExistingDocument = useCallback((documentId) => {
     console.log(`🗑️ Removing document with ID: ${documentId}`);
     setFormData(prev => ({
       ...prev,
       existingDocuments: prev.existingDocuments.filter(doc => doc.id !== documentId),
       removedDocumentIds: [...prev.removedDocumentIds, documentId]
     }));
-  };
+  }, []);
 
   if (!project) {
     return null;
   }
 
+  console.log(formData, project);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -276,7 +280,8 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
             <ProjectInfoSection 
               formData={formData} 
               errors={errors} 
-              onInputChange={handleInputChange} 
+              onInputChange={handleInputChange}
+              isEditMode={true}
             />
             
             <ClientInfoSection 
@@ -293,7 +298,8 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
             
             <BudgetSection 
               formData={formData} 
-              onInputChange={handleInputChange} 
+              onInputChange={handleInputChange}
+              errors={errors}
             />
                 {/* Existing Documents Display */}
                 {formData.existingDocuments && formData.existingDocuments.length > 0 && (

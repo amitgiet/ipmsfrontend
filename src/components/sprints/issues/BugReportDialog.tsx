@@ -22,6 +22,7 @@ import { apiCall } from '@/services/apiCall';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, X, Image } from 'lucide-react';
 import { allRoutes } from '@/services/routes';
+import { useParams } from 'react-router-dom';
 
 interface Story {
   id: string;
@@ -49,6 +50,7 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
   stories,
   onBugReported
 }) => {
+  const { projectId } = useParams<{ projectId: string }>();
   const [loading, setLoading] = useState(false);
   const [attachedImages, setAttachedImages] = useState<AttachedImage[]>([]);
   const [formData, setFormData] = useState({
@@ -86,7 +88,7 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
 
       // Create preview URL
       const preview = URL.createObjectURL(file);
-      
+
       setAttachedImages(prev => [...prev, {
         file,
         preview,
@@ -134,7 +136,7 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim() || !formData.storyId) {
       toast({
         title: "Error",
@@ -146,17 +148,15 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
 
     try {
       setLoading(true);
-      console.log('🔄 Creating bug report:', formData);
+      let body = new FormData();
+      body.append('project_id', projectId);
+      body.append('sprint_id', sprintId);
+      body.append('user_story_id', formData.storyId);
+      body.append('title', formData.title.trim());
+      body.append('description', formData.description.trim() || '');
+      body.append('severity', formData.severity);
 
-      const { data: bugData, error } = await apiCall(allRoutes.sprints.createBug, 'POST', {
-          title: formData.title.trim(),
-          description: formData.description.trim() || null,
-          severity: formData.severity,
-          story_id: formData.storyId,
-          sprint_id: sprintId,
-          reported_by: 'QA User',
-          status: 'open'
-      });
+      const { data: bugData, error } = await apiCall(allRoutes.sprints.createBug, 'post', body);
 
       if (error) {
         console.error('❌ Error creating bug:', error);
@@ -170,9 +170,9 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
 
       // Update story status back to in_progress since a bug was found
       console.log('🔄 Updating story status back to in_progress for story:', formData.storyId);
-        const { error: statusError } = await apiCall(allRoutes.stories.update(formData.storyId), 'PUT', { 
-          status: 'in_progress',
-          updated_at: new Date().toISOString()
+      const { error: statusError } = await apiCall(allRoutes.stories.update(formData.storyId), 'PUT', {
+        status: 'in_progress',
+        updated_at: new Date().toISOString()
       });
 
       if (statusError) {
@@ -203,11 +203,6 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
       onBugReported();
     } catch (error) {
       console.error('❌ Error in handleSubmit:', error);
-      toast({
-        title: "Error",
-        description: "Failed to report bug",
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
@@ -228,6 +223,7 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
     onClose();
   };
 
+  console.log(" stories ", stories, " formData ", formData);
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -241,8 +237,8 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="story">Story *</Label>
-            <Select 
-              value={formData.storyId} 
+            <Select
+              value={formData.storyId.toString()}
               onValueChange={(value) => setFormData(prev => ({ ...prev, storyId: value }))}
             >
               <SelectTrigger>
@@ -250,7 +246,7 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {stories.map(story => (
-                  <SelectItem key={story.id} value={story.id}>
+                  <SelectItem key={story.id} value={story.id.toString()}>
                     {story.title}
                   </SelectItem>
                 ))}
@@ -271,9 +267,9 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
 
           <div>
             <Label htmlFor="severity">Severity</Label>
-            <Select 
-              value={formData.severity} 
-              onValueChange={(value: 'low' | 'medium' | 'high' | 'critical') => 
+            <Select
+              value={formData.severity}
+              onValueChange={(value: 'low' | 'medium' | 'high' | 'critical') =>
                 setFormData(prev => ({ ...prev, severity: value }))
               }
             >

@@ -8,7 +8,7 @@ interface Task {
   id: string;
   title: string;
   description?: string;
-  status: 'to_do' | 'in_progress' | 'completed';
+  status: 'ready' | 'in_progress' | 'completed';
   assignedTo?: string;
   created_by?: string;
   created_at: string;
@@ -58,7 +58,7 @@ export const useDeveloperTasks = (currentUserEmail: string) => {
           id: task.id,
           title: task.title,
           description: task.description || undefined,
-          status: task.status as 'to_do' | 'in_progress' | 'completed',
+          status: task.status as 'ready' | 'in_progress' | 'completed',
           assignedTo: task.assigned_to || undefined,
           created_by: task.created_by || undefined,
           created_at: task.created_at,
@@ -77,7 +77,7 @@ export const useDeveloperTasks = (currentUserEmail: string) => {
     }
   };
 
-  const updateTaskStatus = async (taskId: string, newStatus: 'to_do' | 'in_progress' | 'completed') => {
+    const updateTaskStatus = async (taskId: string, newStatus: 'ready' | 'in_progress' | 'completed') => {
     try {
       console.log('🔄 Updating task status:', taskId, newStatus);
 

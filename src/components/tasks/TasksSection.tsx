@@ -17,8 +17,18 @@ interface Task {
   title: string;
   description?: string;
   status: 'to_do' | 'in_progress' | 'completed';
-  created_by?: string;
-  assignedTo?: string;
+  created_by?: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
+  assigned_to?: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
   created_at: string;
   updated_at: string;
 }
@@ -29,10 +39,10 @@ interface TasksSectionProps {
   canEdit?: boolean;
 }
 
-export const TasksSection: React.FC<TasksSectionProps> = ({ 
-  storyId, 
+export const TasksSection: React.FC<TasksSectionProps> = ({
+  storyId,
   projectId,
-  canEdit = true 
+  canEdit = true
 }) => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -41,9 +51,11 @@ export const TasksSection: React.FC<TasksSectionProps> = ({
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
   const { userRole } = useUserRole();
-  
+
+
+
   // Use the useStoryTasks hook for all task operations
-  const { tasks, loading, addTask, updateTask, deleteTask } = useStoryTasks(storyId);
+  const { tasks, loading, addTask, updateTask, deleteTask, updateAssignee } = useStoryTasks(storyId);
 
   const handleEditTask = (task: Task) => {
     setSelectedTask(task);
@@ -68,7 +80,7 @@ export const TasksSection: React.FC<TasksSectionProps> = ({
       title: task.title,
       description: task.description || '',
       status: newStatus,
-      assignedTo: task.assignedTo
+      assignedTo: task.assigned_to?.id || task.assigned_to?.id?.toString()
     });
   };
 
@@ -128,7 +140,7 @@ export const TasksSection: React.FC<TasksSectionProps> = ({
                 </Button>
               </div>
               {canEdit && (
-                <Button 
+                <Button
                   onClick={() => setShowAddDialog(true)}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
@@ -145,7 +157,7 @@ export const TasksSection: React.FC<TasksSectionProps> = ({
               <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500 mb-4">No tasks created yet</p>
               {canEdit && (
-                <Button 
+                <Button
                   onClick={() => setShowAddDialog(true)}
                   variant="outline"
                 >
@@ -175,12 +187,12 @@ export const TasksSection: React.FC<TasksSectionProps> = ({
                       )}
                       <div className="flex items-center gap-3 mt-2">
                         <Badge className={getStatusColor(task.status)} variant="outline">
-                          {task.status.replace('_', ' ')}
+                          {task.status?.replace('_', ' ')}
                         </Badge>
-                        {task.assignedTo && (
+                        {task.assigned_to && (
                           <div className="flex items-center gap-1 text-sm text-gray-500">
                             <User className="h-3 w-3" />
-                            {task.assignedTo}
+                            Assigned to: {task.assigned_to.name} ({task.assigned_to.email})
                           </div>
                         )}
                         <div className="flex items-center gap-1 text-sm text-gray-500">
@@ -248,7 +260,8 @@ export const TasksSection: React.FC<TasksSectionProps> = ({
             open={showEditDialog}
             task={selectedTask!}
             onClose={() => setShowEditDialog(false)}
-            onUpdate={async () => {
+            onUpdate={async (taskId, taskData) => {
+              await updateTask(taskId, taskData);
               setShowEditDialog(false);
             }}
           />
@@ -256,9 +269,10 @@ export const TasksSection: React.FC<TasksSectionProps> = ({
           <AssignTaskDialog
             open={showAssignDialog}
             taskTitle={selectedTask?.title || ''}
-            currentAssignee={selectedTask?.assignedTo}
+            currentAssignee={selectedTask?.assignedTo?.id || ''}
             onClose={() => setShowAssignDialog(false)}
-            onAssign={async () => {
+            onAssign={async (assignee) => {
+              await updateAssignee(selectedTask?.id || '', assignee, projectId);
               setShowAssignDialog(false);
             }}
           />
@@ -270,7 +284,7 @@ export const TasksSection: React.FC<TasksSectionProps> = ({
               setShowTimeDialog(false);
             }}
             taskTitle={selectedTask?.title || ''}
-            taskAssignedTo={selectedTask?.assignedTo}
+            taskAssignedTo={selectedTask?.assigned_to?.email || selectedTask?.assignedTo}
             currentUserEmail=""
             userRole=""
           />

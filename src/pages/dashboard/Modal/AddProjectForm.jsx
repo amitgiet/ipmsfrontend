@@ -24,7 +24,7 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
     duration: '',
     startDate: undefined,
     endDate: undefined,
-    projectStatus: '',
+    projectStatus: 'planned', // Default to planned for new projects
     projectType: '',
     documents: '',
     documentFiles: [],
@@ -50,10 +50,7 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    console.log('📝 Form submitted with data:', formData);
-    
     if (isSubmitting) {
-      console.log('⏳ Already submitting, ignoring...');
       return;
     }
     
@@ -63,7 +60,6 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
     try {
       // Client-side validation first
       const validationErrors = validateProjectForm(formData);
-      console.log('🔍 Client validation result:', validationErrors);
       
       if (Object.keys(validationErrors).length > 0) {
         setErrors(validationErrors);
@@ -97,10 +93,8 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
       if (formData.documentFiles && formData.documentFiles.length > 0) {
         formData.documentFiles.forEach((file, index) => {
           if (file instanceof File) {
-            console.log(`📄 Appending file ${index}:`, file.name, file.size, file.type);
             formDataToSend.append('documents[]', file);
           } else {
-            console.warn(`⚠️ Skipping item ${index} - not a real File:`, file);
           }
         });
       }
@@ -109,7 +103,6 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
       const response = await projectService.createProject(formDataToSend);
       
       if (response.success) {
-        console.log("✅ Project created successfully:", response.data);
         
         toast.success("Project created successfully!");
         
@@ -133,7 +126,7 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
           duration: '',
           startDate: undefined,
           endDate: undefined,
-          projectStatus: '',
+          projectStatus: 'planned', // Reset to planned for new projects
           projectType: '',
           documents: '',
           documentFiles: [],
@@ -153,7 +146,6 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
         
         // Handle API validation errors
         if (response.errors) {
-          console.log("📋 API validation errors:", response.errors);
           
           // Map API field names to form field names
           const apiErrors = {};
@@ -202,7 +194,6 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
   };
 
   const handleInputChange = (field, value) => {
-    console.log('🔄 Input changed:', field, value);
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
@@ -222,7 +213,8 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
             <ProjectInfoSection 
               formData={formData} 
               errors={errors} 
-              onInputChange={handleInputChange} 
+              onInputChange={handleInputChange}
+              isEditMode={false}
             />
             
             <ClientInfoSection 
@@ -239,7 +231,8 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
             
             <BudgetSection 
               formData={formData} 
-              onInputChange={handleInputChange} 
+              onInputChange={handleInputChange}
+              errors={errors}
             />
             
             <AdditionalDetailsSection 

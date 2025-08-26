@@ -1,13 +1,12 @@
-
 import React, { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { useSelector } from 'react-redux';
+import { useAuth } from '@/hooks/useAuth';    
 import { useClientProjects } from '@/hooks/useClientProjects';
-import { ClientDashboardHeader } from '@/components/client/ClientDashboardHeader';
-import { ClientProjectsGrid } from '@/components/client/ClientProjectsGrid';
-import { ClientMindmapView } from '@/components/mindmap/ClientMindmapView';
+import ClientDashboardHeader from '@/components/client/ClientDashboardHeader';
+import ClientProjectsGrid from '@/components/client/ClientProjectsGrid';
+import ClientMindmapView from '@/components/mindmap/ClientMindmapView';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 interface ClientProject {
   id: string;
@@ -24,32 +23,36 @@ interface ClientProject {
   project_type: string | null;
   created_at: string;
 }
-
-export const ClientDashboard = () => {
+ const ClientDashboard = () => {
   const { user, logout } = useAuth();
-  console.log('🔍 User:', user);
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const tab = searchParams[0].get('tab') || 'mindmap';
+  const projectId = params?.projectId;
   const { projects, loading } = useClientProjects(user);
   const [selectedProject, setSelectedProject] = useState<ClientProject | null>(null);
+  const navigate = useNavigate();
 
   const handleViewProject = (project: ClientProject) => {
-    setSelectedProject(project);
+    localStorage.setItem('selectedProject_name', project.name);
+    navigate(`/client-project/${project.id}?tab=${tab}`);
   };
 
   const handleBackToProjects = () => {
-    setSelectedProject(null);
+    navigate('/dashboard');
   };
 
-  // if (loading) {
-  //   return (
-  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-  //       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-  //     </div>
-  //   );
-  // }
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-  // if (!user) {
-  //   return null;
-  // }
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -57,7 +60,7 @@ export const ClientDashboard = () => {
       
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {selectedProject ? (
+        {projectId ? (
           <div className="space-y-4">
             <Button 
               variant="outline" 
@@ -69,8 +72,7 @@ export const ClientDashboard = () => {
             </Button>
             
             <ClientMindmapView 
-              projectId={selectedProject.project_id || selectedProject.id} 
-              projectName={selectedProject.project_name}
+              projectId={projectId} 
             />
           </div>
         ) : (
@@ -83,3 +85,5 @@ export const ClientDashboard = () => {
     </div>
   );
 };
+
+export default ClientDashboard;

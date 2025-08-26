@@ -85,7 +85,7 @@ export const AdminDashboard = () => {
         <Route path="/team-management" element={<TeamManagement />} />
         <Route path="/skills" element={<AdminSkillsSection />} />
         <Route path="/timesheets" element={<AdminTimesheetSection />} />
-      </Route>
+        </Route>
     </Routes>
   );
 };

@@ -4,16 +4,35 @@ import { ProjectMindmap } from '@/components/projects/ProjectMindmap';
 import { ProjectBacklog } from '@/components/projects/ProjectBacklog';
 import { SprintsSection } from '@/components/sprints/SprintsSection';
 import { MindmapComments } from '@/components/mindmap/MindmapComments';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Brain, FileText, Calendar } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface ClientMindmapViewProps {
   projectId: string;
-  projectName: string;
 }
 
-export const ClientMindmapView = ({ projectId, projectName }: ClientMindmapViewProps) => {
+const ClientMindmapView = ({ projectId }: ClientMindmapViewProps) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isClient = user?.role === 'client';
+  const projectName = localStorage.getItem('selectedProject_name');
+
+  const handleTabChange = (value: string) => {
+    searchParams.set('tab', value);
+    setSearchParams(searchParams);
+  };
+  
+  if(!isClient){
+    searchParams.set('tab', 'mindmap');
+    setSearchParams(searchParams);
+    navigate('/dashboard');
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -28,7 +47,7 @@ export const ClientMindmapView = ({ projectId, projectName }: ClientMindmapViewP
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="mindmap" className="space-y-6">
+      <Tabs defaultValue={searchParams.get('tab') || 'mindmap'} onValueChange={handleTabChange} className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="mindmap" className="flex items-center gap-2">
             <Brain className="h-4 w-4" />
@@ -60,3 +79,5 @@ export const ClientMindmapView = ({ projectId, projectName }: ClientMindmapViewP
     </div>
   );
 };
+
+export default ClientMindmapView; 

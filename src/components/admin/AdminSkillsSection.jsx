@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Loader2, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import { skillsService } from "@/services/skillsService";
 import { toast } from "react-toastify";
 
@@ -19,6 +19,8 @@ export const AdminSkillsSection = () => {
   const [newSkill, setNewSkill] = useState("");
   const [loading, setLoading] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [skillError, setSkillError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -63,9 +65,63 @@ export const AdminSkillsSection = () => {
     }
   };
 
+  const validateSkillName = (skillName) => {
+    // Only allow letters, numbers, and spaces
+    const validPattern = /^[a-zA-Z0-9\s]+$/;
+    
+    // Check if it contains only valid characters
+    if (!validPattern.test(skillName)) {
+      return { isValid: false, error: "Only letters, numbers, and spaces are allowed." };
+    }
+    
+    // Check character count limit (50 characters maximum)
+    const charCount = skillName.trim().length;
+    if (charCount > 50) {
+      return { isValid: false, error: "You can enter up to 50 characters only." };
+    }
+    
+    return { isValid: true, error: "" };
+  };
+
+  const handleSkillInputChange = (e) => {
+    const value = e.target.value;
+    setNewSkill(value);
+    
+    // Clear error when user starts typing
+    if (skillError) {
+      setSkillError("");
+    }
+    
+    // Validate input in real-time
+    if (value) {
+      const validation = validateSkillName(value);
+      if (!validation.isValid) {
+        setSkillError(validation.error);
+      }
+    }
+  };
+
+  // Filter skills based on search query
+  const getFilteredSkills = () => {
+    if (!searchQuery.trim()) {
+      return skills;
+    }
+    
+    const query = searchQuery.toLowerCase().trim();
+    return skills.filter(skill => 
+      skill.name.toLowerCase().includes(query)
+    );
+  };
+
   const addSkill = async () => {
     if (!newSkill.trim()) {
       toast.error("Please enter a skill name");
+      return;
+    }
+
+    const validation = validateSkillName(newSkill.trim());
+    if (!validation.isValid) {
+      setSkillError(validation.error);
       return;
     }
 
@@ -91,6 +147,7 @@ export const AdminSkillsSection = () => {
       // Add the new skill to the local state
       fetchSkills(); // Re-fetch skills to update pagination and list
       setNewSkill(''); 
+      setSkillError(""); // Clear any error messages
     } 
     setIsAdding(false);
   };
@@ -149,16 +206,24 @@ export const AdminSkillsSection = () => {
               <Input
                 id="skillName"
                 value={newSkill}
-                onChange={(e) => setNewSkill(e.target.value)}
+                onChange={handleSkillInputChange}
                 placeholder="Enter skill name"
                 onKeyPress={handleKeyPress}
                 disabled={isAdding}
               />
+              {skillError && (
+                <p className="text-red-500 text-sm mt-1">{skillError}</p>
+              )}
+              {newSkill && !skillError && (
+                <p className="text-gray-500 text-sm mt-1">
+                  Character count: {newSkill.trim().length}/50
+                </p>
+              )}
             </div>
             <Button
               onClick={addSkill}
               className="mt-6"
-              disabled={isAdding || !newSkill.trim()}
+              disabled={isAdding || !newSkill.trim() || skillError}
             >
               {isAdding ? (
                 <>
@@ -181,8 +246,20 @@ export const AdminSkillsSection = () => {
           <CardTitle>Existing Skills</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="flex gap-2 mb-4">
+            <div className="relative flex-1" style={{width: '340px'}}>
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+              <Input
+                style={{width: '340px'}}
+                placeholder="Search skills..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-10"
+              />
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2">
-            {skills.map((skill) => (
+            {getFilteredSkills().map((skill) => (
               <Badge
                 key={skill.id}
                 variant="outline"
@@ -193,9 +270,9 @@ export const AdminSkillsSection = () => {
               </Badge>
             ))}
           </div>
-          {skills.length === 0 && (
+          {getFilteredSkills().length === 0 && (
             <p className="text-gray-500 text-center py-4">
-              No skills added yet
+              {searchQuery ? `No skills found matching "${searchQuery}"` : "No skills added yet"}
             </p>
           )}
           

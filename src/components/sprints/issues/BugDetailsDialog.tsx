@@ -17,6 +17,7 @@ import { apiCall } from '@/services/apiCall';
 import { toast } from 'react-toastify';
 import { useUserRole } from '@/hooks/useUserRole';
 import { allRoutes } from '@/services/routes';
+import { useParams } from 'react-router-dom';
 
 interface Bug {
   id: string;
@@ -24,8 +25,14 @@ interface Bug {
   description?: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   status: 'open' | 'resolved' | 'reopened';
-  reported_by: string;
-  resolved_by?: string;
+  created_by: {
+    id: number;
+    name: string;
+  };
+  resolved_by?: {
+    id: number;
+    name: string;
+  };
   resolved_at?: string;
   created_at: string;
   user_stories?: {
@@ -33,13 +40,7 @@ interface Bug {
   };
 }
 
-interface BugComment {
-  id: string;
-  content: string;
-  author_name: string;
-  author_role: string;
-  created_at: string;
-}
+  
 
 interface BugDetailsDialogProps {
   bug: Bug;
@@ -54,21 +55,20 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
   onClose,
   onBugUpdated
 }) => {
-  const [comments, setComments] = useState<BugComment[]>([]);
+  const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(true);
   const { userRole } = useUserRole();
-
+  const { projectId } = useParams<{ projectId: string }>();
+  console.log(" projectId ", projectId, " bug ", bug);
   const fetchComments = async () => {
     try {
       setCommentsLoading(true);
-      console.log('🔄 Fetching comments for bug:', bug.id);
 
-      const { data: commentsData, error } = await apiCall(allRoutes.sprints.getBugComments(bug.id), 'GET');
+      const { data: commentsData, error } = await apiCall(allRoutes.comments.get(projectId, 'bug', '', bug.id), 'get');
 
-
-      setComments(commentsData || []);
+      setComments(commentsData.data || []);
     } catch (error) {
       toast.error("Failed to fetch comments");
     } finally {
@@ -88,13 +88,16 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
       setLoading(true);
       console.log('🔄 Adding comment to bug:', bug.id);
 
-      const { error } = await apiCall(allRoutes.sprints.createBugComment(bug.id), 'POST', {
-          bug_id: bug.id,
-          content: newComment.trim(),
-          author_name: 'Current User', // You can enhance this to get actual user info
-          author_role: userRole || 'unknown'
+      const { error } = await apiCall(allRoutes.comments.store, 'post', {
+        project_id: projectId,
+        type: 'bug',
+        bug_id: bug.id,
+        content: newComment.trim()
       });
 
+      if(error){
+        return;
+      }
       toast.success("Comment added successfully");
 
       setNewComment('');
@@ -164,9 +167,9 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
                 <Badge className={getSeverityColor(bug.severity)}>
                   {bug.severity.toUpperCase()}
                 </Badge>
-                <span className="text-sm text-gray-500">
-                  Story: {bug.user_stories?.title || 'Unknown'}
-                </span>
+                {/* <span className="text-sm text-gray-500">
+                  Story: {bug.title || 'Unknown'}
+                </span> */}
               </div>
             </div>
 
@@ -180,7 +183,7 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <Label className="text-sm font-medium">Reported By</Label>
-                <p className="text-gray-600">{bug.reported_by}</p>
+                <p className="text-gray-600">{bug.created_by?.name}</p>
               </div>
               <div>
                 <Label className="text-sm font-medium">Reported Date</Label>
@@ -190,7 +193,7 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
                 <>
                   <div>
                     <Label className="text-sm font-medium">Resolved By</Label>
-                    <p className="text-gray-600">{bug.resolved_by}</p>
+                    <p className="text-gray-600">{bug.resolved_by?.name}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Resolved Date</Label>
@@ -226,9 +229,9 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
                           <User className="h-8 w-8 text-gray-400 bg-gray-100 rounded-full p-1" />
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-sm">{comment.author_name}</span>
+                              <span className="font-medium text-sm">{comment.user?.name}</span>
                               <Badge variant="outline" className="text-xs">
-                                {comment.author_role}
+                                {comment.user?.role}
                               </Badge>
                               <span className="text-xs text-gray-500 flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />

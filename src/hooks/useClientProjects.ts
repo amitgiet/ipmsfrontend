@@ -20,7 +20,7 @@ interface ClientProject {
   created_at: string;
 }
 
-  export const useClientProjects = (user: any) => {
+export const useClientProjects = (user: any) => {
   const [projects, setProjects] = useState<ClientProject[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,49 +34,20 @@ interface ClientProject {
 
   const loadClientProjects = async () => {
     try {
-      console.log('🔄 Loading client projects for user:', {
-        id: user?.id,
-        email: user?.email,
-        name: user?.name,
-        role: user?.role
-      });
 
       // Check current authentication status
-      const { data: { session }, error: sessionError } = await apiCall(allRoutes.auth.get_session, 'get');
-      console.log('🔐 Current session:', session?.user?.id, session?.user?.email);
+      const { data, error: sessionError } = await apiCall(allRoutes.projects.get_assigned_projects, 'get');
 
       if (sessionError) {
         console.error('❌ Session error:', sessionError);
       }
+      const project = data.data;
+      setProjects(project || []);
 
-      // Check if user exists in profiles table
-      const { data: profileData, error: profileError } = await apiCall(allRoutes.auth.get_profile, 'get', { id: user?.id });
-
-      console.log('👤 Profile check result:', profileData, profileError);
-
-      // Query client_projects table with explicit email filter for debugging
-      const { data: clientProjects, error } = await apiCall(allRoutes.projects.get_client_projects, 'get', { client_email: user?.email });
-
-      if (error) {
-        console.error('❌ Error loading client projects:', error);
-        throw error;
-      }
-
-      console.log('✅ Client projects loaded successfully:', clientProjects?.length || 0, clientProjects);
-      console.log('📧 Filtered for client email:', user?.email);
-      
-      setProjects(clientProjects || []);
-
-      if (!clientProjects || clientProjects.length === 0) {
-        console.log('ℹ️ No projects found for this client');
+      if (!project || project.length === 0) {
         toast.error("You don't have access to any projects yet. Contact your project manager for access.");
-      } else {
-        console.log('✅ Successfully loaded projects:', clientProjects.length);
-        toast.success(`Found ${clientProjects.length} project(s) accessible to you.`);
-      }
+      } 
     } catch (error) {
-      console.error('❌ Exception loading client projects:', error);
-      toast.error("Failed to load projects. Please try again.");
       setProjects([]);
     } finally {
       setLoading(false);

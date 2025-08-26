@@ -84,7 +84,8 @@ const Login = () => {
         {/* Right side - Auth Forms with enhanced styling */}
         <div className="w-full space-y-6">
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/30 p-8">
-            {isSignUp ? <AdminLoginForm /> : <TeamLoginForm />}
+            {/* {isSignUp ? <AdminLoginForm /> : <TeamLoginForm />} */}
+            <TeamLoginForm />
           </div>
           
           

@@ -12,8 +12,18 @@ interface Task {
   title: string;
   description?: string;
   status: 'to_do' | 'in_progress' | 'completed';
-  assignedTo?: string;
-  created_by?: string;
+  assigned_to?: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
+  created_by?: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
   created_at: string;
   updated_at: string;
 }
@@ -41,6 +51,7 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
   onLogTime,
   userRole
 }) => {
+  console.log(" tasks ", tasks);
   const { toast } = useToast();
   const { currentUser } = useUserRole();
   const currentUserEmail = currentUser?.email || currentUser?.name || '';
@@ -61,7 +72,7 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
     if (!task) return;
 
     // Check if user is assigned to this task
-    if (task.assignedTo && task.assignedTo !== currentUserEmail) {
+    if (task.assigned_to && task.assigned_to.email !== currentUserEmail) {
       toast({
         title: "Permission Denied",
         description: "You can only change the status of tasks assigned to you",
@@ -100,7 +111,7 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
                 </div>
               ) : (
                 columnTasks.map((task) => {
-                  const canChangeStatus = !task.assignedTo || task.assignedTo === currentUserEmail;
+                  const canChangeStatus = !task.assigned_to || task.assigned_to.email === currentUserEmail;
                   
                   return (
                     <Card key={task.id} className="bg-white hover:shadow-md transition-shadow">
@@ -155,15 +166,15 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
                             </p>
                           )}
                           
-                          {task.assignedTo && (
+                          {task.assigned_to && (
                             <p className="text-xs text-gray-500">
-                              Assigned to: {task.assignedTo}
+                              Assigned to: {task.assigned_to.name} ({task.assigned_to.email})
                             </p>
                           )}
 
                           {task.created_by && (
                             <p className="text-xs text-gray-500">
-                              Created by: {task.created_by}
+                              Created by: {task.created_by.name} ({task.created_by.email})
                             </p>
                           )}
                           
@@ -206,9 +217,9 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
                             </div>
                           )}
 
-                          {!canChangeStatus && task.assignedTo && (
+                          {!canChangeStatus && task.assigned_to && (
                             <p className="text-xs text-orange-600">
-                              Status can only be changed by assigned user: {task.assignedTo}
+                              Status can only be changed by assigned user: {task.assigned_to.name} ({task.assigned_to.email})
                             </p>
                           )}
                         </div>

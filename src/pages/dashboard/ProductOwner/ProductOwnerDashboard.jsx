@@ -23,7 +23,7 @@ export const ProductOwnerDashboard = () => {
   }
 
   const fetchTimeLogs = async () => {
-    const result = await productOwnerService.getTimeLogs();
+    const result = await productOwnerService.getTimeLogs(false);
     setTimeLogs(result.data.data);
   };
   const fetchDashboardCardsData = async () => {

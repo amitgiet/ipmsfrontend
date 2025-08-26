@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Bell, Settings, LogOut, User } from 'lucide-react';
+import { Bell, Settings, LogOut, User, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -23,9 +23,9 @@ interface UnifiedHeaderProps {
 export const UnifiedHeader = ({ title, showNotifications = true }: UnifiedHeaderProps) => {
   const { user, teamUser, logout } = useAuth();
   const navigate = useNavigate();
-  
+
   const currentUser = user || teamUser;
-  
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -43,8 +43,14 @@ export const UnifiedHeader = ({ title, showNotifications = true }: UnifiedHeader
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+            <h1 className="flex items-center text-xl font-semibold text-gray-900">     
+              <div className="flex items-center mr-2">
+              <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </div>{title}</h1>
           </div>
+
 
           <div className="flex items-center space-x-4">
             {/* Notifications */}

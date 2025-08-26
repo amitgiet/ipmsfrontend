@@ -23,7 +23,10 @@ export const TeamMembersTable = ({
   teamMembers = [],
   onEdit,
   onDelete,
-  onToggleActive
+  onToggleActive,
+  onSort,
+  sortConfig,
+  getSortIcon
 }) => {
 
   const [showPassword, setShowPassword] = useState({});
@@ -36,6 +39,15 @@ export const TeamMembersTable = ({
     setShowPassword({});
     setLoadingPasswords({});
   }, [teamMembers]);
+
+  // Function to properly capitalize names
+  const capitalizeName = (name) => {
+    if (!name) return '';
+    return name
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
 
   // Function to clear cached password for a specific member
   const clearCachedPassword = (memberId) => {
@@ -127,20 +139,60 @@ export const TeamMembersTable = ({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Email</TableHead>
+          <TableHead 
+            className="cursor-pointer hover:bg-gray-50 select-none"
+            onClick={() => onSort('name')}
+          >
+            <div className="flex items-center gap-2">
+              Name
+              {getSortIcon('name')}
+            </div>
+          </TableHead>
+          <TableHead 
+            className="cursor-pointer hover:bg-gray-50 select-none"
+            onClick={() => onSort('email')}
+          >
+            <div className="flex items-center gap-2">
+              Email
+              {getSortIcon('email')}
+            </div>
+          </TableHead>
           <TableHead>Password</TableHead>
           <TableHead>Mobile</TableHead>
-          <TableHead>Role</TableHead>
-          <TableHead>Skills</TableHead>
-          <TableHead>Status</TableHead>
+          <TableHead 
+            className="cursor-pointer hover:bg-gray-50 select-none"
+            onClick={() => onSort('role')}
+          >
+            <div className="flex items-center gap-2">
+              Role
+              {getSortIcon('role')}
+            </div>
+          </TableHead>
+          <TableHead 
+            className="cursor-pointer hover:bg-gray-50 select-none"
+            onClick={() => onSort('skills')}
+          >
+            <div className="flex items-center gap-2">
+              Skills
+              {getSortIcon('skills')}
+            </div>
+          </TableHead>
+          <TableHead 
+            className="cursor-pointer hover:bg-gray-50 select-none"
+            onClick={() => onSort('status')}
+          >
+            <div className="flex items-center gap-2">
+              Status
+              {getSortIcon('status')}
+            </div>
+          </TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {teamMembers.map((member) => (
           <TableRow key={member.id}>
-            <TableCell className="font-medium">{member.name}</TableCell>
+            <TableCell className="font-medium">{capitalizeName(member.name)}</TableCell>
             <TableCell>{member.email}</TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
@@ -171,20 +223,41 @@ export const TeamMembersTable = ({
               </Badge>
             </TableCell>
             <TableCell>
-              <div className="flex flex-wrap gap-1">
-                {(member.skills || []).slice(0, 2).map((skill) => (
-                  <Badge key={typeof skill === 'object' ? skill.id : skill} variant="outline" className="text-xs">
-                    {typeof skill === 'object' ? skill.name : skill}
-                  </Badge>
-                ))}
-                {(member.skills || []).length > 2 && (
-                  <Badge variant="outline" className="text-xs">
-                    +{(member.skills || []).length - 2}
-                  </Badge>
-                )}
-                {(member.skills || []).length === 0 && (
-                  <span className="text-gray-400 text-xs">No skills</span>
-                )}
+              <div className="relative">
+                {/* Always show first 2 skills */}
+                <div className="flex flex-wrap gap-1">
+                  {(member.skills || []).slice(0, 2).map((skill) => (
+                    <Badge key={typeof skill === 'object' ? skill.id : skill} variant="outline" className="text-xs">
+                      {typeof skill === 'object' ? skill.name : skill}
+                    </Badge>
+                  ))}
+                  {(member.skills || []).length > 2 && (
+                    <div className="relative group">
+                      <Badge 
+                        variant="outline" 
+                        className="text-xs cursor-help bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 transition-colors"
+                      >
+                        +{(member.skills || []).length - 2}
+                      </Badge>
+                      
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 w-50 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                        <div className="text-center">
+                          {member.skills?.map((skill, index) => (
+                            <span key={typeof skill === 'object' ? skill.id : index}>
+                              {typeof skill === 'object' ? skill.name : skill}
+                              {index < (member.skills?.length || 0) - 1 ? ', ' : ''}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                      </div>
+                    </div>
+                  )}
+                  {(member.skills || []).length === 0 && (
+                    <span className="text-gray-400 text-xs">No skills</span>
+                  )}
+                </div>
               </div>
             </TableCell>
             <TableCell>

@@ -7,17 +7,17 @@ import { CalendarIcon, DollarSignIcon, Eye, BarChart3Icon } from 'lucide-react';
 
 interface ClientProject {
   id: string;
-  project_name: string;
+  name: string;
   project_id: string | null;
   client_name: string | null;
-  project_status: string | null;
+  status: string | null;
   start_date: string | null;
   end_date: string | null;
   estimated_budget: number | null;
   budget_currency: string | null;
-  progress_percent: number | null;
+  progress: number | null;
   priority: string | null;
-  project_type: string | null;
+  type: string | null;
   created_at: string;
 }
 
@@ -26,10 +26,7 @@ interface ClientProjectCardProps {
   onViewProject: () => void;
 }
 
-export const ClientProjectCard: React.FC<ClientProjectCardProps> = ({ 
-  project, 
-  onViewProject 
-}) => {
+export const ClientProjectCard: React.FC<ClientProjectCardProps> = ({ project, onViewProject }) => {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Not set';
     return new Date(dateString).toLocaleDateString();
@@ -55,20 +52,19 @@ export const ClientProjectCard: React.FC<ClientProjectCardProps> = ({
         return 'bg-gray-100 text-gray-800';
     }
   };
-
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-lg">{project.project_name}</CardTitle>
-          {project.project_status && (
-            <Badge className={getStatusColor(project.project_status)}>
-              {project.project_status.replace('_', ' ')}
+          <CardTitle className="text-lg">{project.name}</CardTitle>
+          {project.status && (
+            <Badge className={getStatusColor(project.status)}>
+              {project.status.replace('_', ' ')}
             </Badge>
           )}
         </div>
-        {project.project_type && (
-          <p className="text-sm text-gray-500">{project.project_type}</p>
+        {project.type && (
+          <p className="text-sm text-gray-500">{project.type}</p>
         )}
       </CardHeader>
       
@@ -91,16 +87,16 @@ export const ClientProjectCard: React.FC<ClientProjectCardProps> = ({
             </div>
           )}
           
-          {project.progress_percent !== null && (
+          {project.progress !== null && (
             <div>
               <div className="flex items-center mb-1">
                 <BarChart3Icon className="h-4 w-4 mr-2 text-gray-500" />
-                <span className="text-gray-700">{project.progress_percent}% complete</span>
+                <span className="text-gray-700">{project.progress} complete</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-blue-600 h-2 rounded-full" 
-                  style={{ width: `${project.progress_percent}%` }}
+                  style={{ width: `${project.progress}%` }}
                 />
               </div>
             </div>

@@ -11,7 +11,7 @@ interface ClientDashboardHeaderProps {
   onLogout: () => void;
 }
 
-export const ClientDashboardHeader = ({ user, onLogout }: ClientDashboardHeaderProps) => {
+const ClientDashboardHeader = ({ user, onLogout }: ClientDashboardHeaderProps) => {
   const navigate = useNavigate();
 
   const handleUpdatePassword = () => {
@@ -48,3 +48,5 @@ export const ClientDashboardHeader = ({ user, onLogout }: ClientDashboardHeaderP
     </header>
   );
 };
+
+export default ClientDashboardHeader; 

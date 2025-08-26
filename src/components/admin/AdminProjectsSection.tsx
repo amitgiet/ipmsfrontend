@@ -27,6 +27,7 @@ import { AddProjectForm } from '@/pages/dashboard/Modal/AddProjectForm';
 import { EditProjectForm } from '@/pages/dashboard/Modal/EditProjectForm';
 import { projectService } from '@/services/ProjectService/projectService';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+import { useNavigate } from 'react-router-dom';
 
 interface Project {
   id: string;
@@ -37,6 +38,8 @@ interface Project {
   priority: string | null;
   client_name: string | null;
   client_email: string | null;
+  client_phone: string | null;
+  backup_contact: string | null;
   allow_client_access: boolean | null;
   estimated_budget: number | null;
   budget_currency: string | null;
@@ -57,6 +60,7 @@ interface Project {
 
 export const AdminProjectsSection = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
@@ -129,6 +133,8 @@ export const AdminProjectsSection = () => {
             end_date: item.end_date || null,
             duration: parseInt(item.duration_days) || null,
             documents: item.documents || '',
+            client_phone: item.client_phone || '',
+            backup_contact: item.backup_contact || '',
             milestones: item.milestones || '',
             client_dependencies: item.client_dependencies || '',
             tags_labels: item.tags || item.tags_labels || '',
@@ -230,15 +236,15 @@ export const AdminProjectsSection = () => {
   }, [projects, searchTerm, statusFilter, priorityFilter, clientFilter, projectIdFilter]);
 
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (searchTerm || clientFilter || statusFilter !== 'all' || priorityFilter !== 'all') {
-        handleRefreshProjects();
-      }
-    }, 500); // 500ms delay
+  // useEffect(() => {
+  //   const timeoutId = setTimeout(() => {
+  //     if (searchTerm || clientFilter || statusFilter !== 'all' || priorityFilter !== 'all') {
+  //       handleRefreshProjects();
+  //     }
+  //   }, 500); // 500ms delay
 
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, clientFilter, statusFilter, priorityFilter]);
+  //   return () => clearTimeout(timeoutId);
+  // }, [searchTerm, clientFilter, statusFilter, priorityFilter]);
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.last_page) {
@@ -246,7 +252,6 @@ export const AdminProjectsSection = () => {
     }
   };
 
-  const handleRefreshProjects = () => {
     const loadProjects = async () => {
       setLoading(true);
 
@@ -287,6 +292,8 @@ export const AdminProjectsSection = () => {
             priority: item.priority || 'medium',
             client_name: item.client_name || item.customer_name || 'Unknown Client',
             client_email: item.client_email || item.email || '',
+            client_phone: item.client_phone || '',
+            backup_contact: item.backup_contact || '',
             allow_client_access: item.is_client_dashboard_access_enabled === '1' || item.allow_client_access || false,
             estimated_budget: parseFloat(item.estimated_budget) || 0,
             budget_currency: 'USD',
@@ -367,6 +374,7 @@ export const AdminProjectsSection = () => {
       setLoading(false);
     };
 
+  const handleRefreshProjects = () => {
     loadProjects();
   };
 
@@ -390,43 +398,7 @@ export const AdminProjectsSection = () => {
 
   const handleProjectSubmit = async (newProject) => {
     try {
-      // Add the new project to the local state
-      const newProjectData = {
-        id: newProject.id?.toString() || Date.now().toString(),
-        project_name: newProject.name || newProject.project_name || 'Untitled Project',
-        project_id: newProject.project_code || newProject.project_id || newProject.id?.toString(),
-        project_status: newProject.status || 'planned',
-        project_type: newProject.type || 'Web Development',
-        priority: newProject.priority || 'medium',
-        client_name: newProject.client_name || 'Unknown Client',
-        client_email: newProject.client_email || '',
-        allow_client_access: newProject.is_client_dashboard_access_enabled || false,
-        estimated_budget: newProject.estimated_budget || 0,
-        budget_currency: newProject.budget_currency || 'USD',
-        actual_budget_used: newProject.actual_budget_used || 0,
-        budgeted_hours: newProject.budgeted_hours || 0,
-        logged_hours: newProject.logged_hours || 0,
-        start_date: newProject.start_date || null,
-        end_date: newProject.end_date || null,
-        duration: newProject.duration_days || newProject.duration || 0,
-        documents: newProject.documents || '',
-        milestones: newProject.milestones || '',
-        client_dependencies: newProject.client_dependencies || '',
-        tags_labels: newProject.tags || newProject.tags_labels || '',
-        created_at: newProject.created_at || new Date().toISOString(),
-        created_by: newProject.created_by || 'admin',
-        progress_percent: newProject.progress_percent || 0
-      };
-
-      setProjects(prev => [newProjectData, ...prev]);
-      setFilteredProjects(prev => [newProjectData, ...prev]);
-
-      toast({
-        title: "Success!",
-        description: "Project created successfully.",
-        variant: "default"
-      });
-
+      loadProjects();
     } catch (error) {
       console.error("❌ Error handling project creation:", error);
       toast({
@@ -439,67 +411,7 @@ export const AdminProjectsSection = () => {
 
   const handleEditProjectSubmit = async (updatedProject) => {
     try {
-      // Update the project in local state
-      setProjects(prev => prev.map(project =>
-        project.id === editingProject?.id ? {
-          ...project,
-          project_name: updatedProject.name || updatedProject.project_name || project.project_name,
-          project_id: updatedProject.project_code || updatedProject.project_id || project.project_id,
-          project_status: updatedProject.status || project.project_status,
-          project_type: updatedProject.type || project.project_type,
-          priority: updatedProject.priority || project.priority,
-          client_name: updatedProject.client_name || project.client_name,
-          client_email: updatedProject.client_email || project.client_email,
-          allow_client_access: updatedProject.is_client_dashboard_access_enabled || project.allow_client_access,
-          estimated_budget: updatedProject.estimated_budget || project.estimated_budget,
-          budget_currency: updatedProject.budget_currency || project.budget_currency,
-          budgeted_hours: updatedProject.budgeted_hours || project.budgeted_hours,
-          logged_hours: updatedProject.logged_hours || project.logged_hours,
-          start_date: updatedProject.start_date || project.start_date,
-          end_date: updatedProject.end_date || project.end_date,
-          duration: updatedProject.duration_days || updatedProject.duration || project.duration,
-          documents: updatedProject.documents || project.documents,
-          milestones: updatedProject.milestones || project.milestones,
-          client_dependencies: updatedProject.client_dependencies || project.client_dependencies,
-          tags_labels: updatedProject.tags || updatedProject.tags_labels || project.tags_labels
-        } : project
-      ));
-
-      setFilteredProjects(prev => prev.map(project =>
-        project.id === editingProject?.id ? {
-          ...project,
-          project_name: updatedProject.name || updatedProject.project_name || project.project_name,
-          project_id: updatedProject.project_code || updatedProject.project_id || project.project_id,
-          project_status: updatedProject.status || project.project_status,
-          project_type: updatedProject.type || project.project_type,
-          priority: updatedProject.priority || project.priority,
-          client_name: updatedProject.client_name || project.client_name,
-          client_email: updatedProject.client_email || project.client_email,
-          allow_client_access: updatedProject.is_client_dashboard_access_enabled || project.allow_client_access,
-          estimated_budget: updatedProject.estimated_budget || project.estimated_budget,
-          budget_currency: updatedProject.budget_currency || project.budget_currency,
-          budgeted_hours: updatedProject.budgeted_hours || project.budgeted_hours,
-          logged_hours: updatedProject.logged_hours || project.logged_hours,
-          start_date: updatedProject.start_date || project.start_date,
-          end_date: updatedProject.end_date || project.end_date,
-          duration: updatedProject.duration_days || updatedProject.duration || project.duration,
-          documents: updatedProject.documents || project.documents,
-          milestones: updatedProject.milestones || project.milestones,
-          client_dependencies: updatedProject.client_dependencies || project.client_dependencies,
-          tags_labels: updatedProject.tags || updatedProject.tags_labels || project.tags_labels
-        } : project
-      ));
-
-      // Close the edit modal
-      setEditProjectModalOpen(false);
-      setEditingProject(null);
-
-      toast({
-        title: "Success!",
-        description: "Project updated successfully.",
-        variant: "default"
-      });
-
+      loadProjects();
     } catch (error) {
       console.error("❌ Error handling project update:", error);
       toast({
@@ -513,10 +425,6 @@ export const AdminProjectsSection = () => {
   const handleEditProject = (project: Project) => {
     setEditingProject(project);
     setEditProjectModalOpen(true);
-  };
-
-  const handleManageProject = (project: Project) => {
-    // This would navigate to project management page
   };
 
   const getProjectStatusColor = (status: string | null) => {
@@ -560,6 +468,7 @@ export const AdminProjectsSection = () => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
   };
+
   return (
     <div className="space-y-6 w-full p-6">
       <div className="flex items-center justify-between">
@@ -581,7 +490,6 @@ export const AdminProjectsSection = () => {
                 Add Project
               </>
             )}
-
           </Button>
 
         </div>
@@ -591,17 +499,8 @@ export const AdminProjectsSection = () => {
       {showFilters && <Collapsible open={true} onOpenChange={setFiltersOpen}>
         <Card>
           <CollapsibleTrigger asChild>
-            {/* <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4" />
-                  Filters
-                </div>
-                <ChevronDown className={`h-4 w-4 transition-transform ${filtersOpen ? 'rotate-180' : ''}`} />
-              </CardTitle>
-            </CardHeader> */}
           </CollapsibleTrigger>
-          <CollapsibleContent style={{marginTop: '20px'}}>
+          <CollapsibleContent style={{ marginTop: '20px' }}>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Search by Project Name */}
@@ -724,11 +623,11 @@ export const AdminProjectsSection = () => {
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="font-semibold text-xl">{project.project_name}</h3>
                         <Badge className={getProjectStatusColor(project.project_status)}>
-                          {project.project_status || 'Not Set'}
+                          {project.project_status?.replace('_', ' ').toUpperCase() || 'Not Set'}
                         </Badge>
                         {project.priority && (
                           <Badge className={getPriorityColor(project.priority)}>
-                            {project.priority}
+                            {project.priority.toUpperCase()}
                           </Badge>
                         )}
                       </div>
@@ -740,14 +639,14 @@ export const AdminProjectsSection = () => {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      {/* <Button
+                      <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleManageProject(project)}
+                        onClick={() => navigate(`/project/${project.id}`)}
                       >
                         <ExternalLink className="h-4 w-4 mr-1" />
                         Manage
-                      </Button> */}
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -903,19 +802,23 @@ export const AdminProjectsSection = () => {
       {/* Add Project Modal */}
       <AddProjectForm
         open={addProjectModalOpen}
-        onOpenChange={setAddProjectModalOpen}
+        onOpenChange={() => {
+          setAddProjectModalOpen(false);
+          handleRefreshProjects();
+        }}
         onSubmit={handleProjectSubmit}
       />
 
-      {/* Edit Project Modal */}
-      {editingProject && (
-        <EditProjectForm
-          open={editProjectModalOpen}
-          onOpenChange={setEditProjectModalOpen}
-          onSubmit={handleEditProjectSubmit}
-          project={editingProject}
-        />
-      )}
+      <EditProjectForm
+        open={editProjectModalOpen}
+        onOpenChange={() => {
+          setEditProjectModalOpen(false);
+          handleRefreshProjects();
+        }}
+        onSubmit={(val)=>handleEditProjectSubmit(val)}
+        project={editingProject}
+      />
+
     </div>
   );
 };

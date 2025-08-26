@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
 import { useToast } from '@/hooks/use-toast';
+import { useParams } from 'react-router-dom';
 
 interface AssignTaskDialogProps {
   open: boolean;
@@ -29,10 +30,10 @@ export const AssignTaskDialog: React.FC<AssignTaskDialogProps> = ({
   onClose,
   onAssign
 }) => {
+  const { projectId } = useParams();
   const [selectedAssignee, setSelectedAssignee] = useState(currentAssignee || '');
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (open) {
@@ -42,20 +43,15 @@ export const AssignTaskDialog: React.FC<AssignTaskDialogProps> = ({
 
   const loadTeamMembers = async () => {
     try {
-        const { data, error } = await apiCall(allRoutes.teamMembers.list, 'get');
+        const { data, error } = await apiCall(allRoutes.projects.getTeamMembersDropdown(projectId), 'get');
 
       if (error) {
         console.error('Error loading team members:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load team members",
-          variant: "destructive",
-        });
         return;
       }
 
       if (data) {
-        setTeamMembers(data);
+        setTeamMembers(data.data);
       }
     } catch (error) {
       console.error('Error loading team members:', error);
@@ -70,17 +66,8 @@ export const AssignTaskDialog: React.FC<AssignTaskDialogProps> = ({
     setIsSubmitting(true);
     try {
       await onAssign(selectedAssignee);
-      toast({
-        title: "Success",
-        description: "Task assigned successfully",
-      });
     } catch (error) {
       console.error('Error assigning task:', error);
-      toast({
-        title: "Error",
-        description: "Failed to assign task",
-        variant: "destructive",
-      });
     } finally {
       setIsSubmitting(false);
     }
@@ -91,6 +78,7 @@ export const AssignTaskDialog: React.FC<AssignTaskDialogProps> = ({
     onClose();
   };
 
+  console.log(" selectedAssignee ", selectedAssignee, " currentAssignee ", currentAssignee);
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -111,7 +99,7 @@ export const AssignTaskDialog: React.FC<AssignTaskDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   {teamMembers.map((member) => (
-                    <SelectItem key={member.id} value={member.name}>
+                    <SelectItem key={member.id} value={member.id}>
                       {member.name} ({member.role.replace('_', ' ').toUpperCase()})
                     </SelectItem>
                   ))}

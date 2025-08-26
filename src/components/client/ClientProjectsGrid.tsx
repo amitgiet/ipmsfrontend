@@ -24,7 +24,7 @@ interface ClientProjectsGridProps {
   onViewProject: (project: ClientProject) => void;
 }
 
-export const ClientProjectsGrid: React.FC<ClientProjectsGridProps> = ({ 
+const ClientProjectsGrid: React.FC<ClientProjectsGridProps> = ({ 
   projects, 
   onViewProject 
 }) => {
@@ -58,3 +58,5 @@ export const ClientProjectsGrid: React.FC<ClientProjectsGridProps> = ({
     </div>
   );
 };
+
+export default ClientProjectsGrid; 

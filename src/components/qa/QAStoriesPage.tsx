@@ -1,7 +1,7 @@
-
+    
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { QAHeader } from '@/components/QAHeader';
+import { useAuth } from '@/hooks/useAuth';
+import { QAHeader } from '@/components/qa/QAHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ const priorityColors = {
   urgent: 'bg-red-100 text-red-800 border-red-200',
 };
 
-export const QAStoriesPage = () => {
+const QAStoriesPage = () => {
   const { user, teamUser, logout } = useAuth();
   const navigate = useNavigate();
   const currentUser = user || teamUser;
@@ -122,3 +122,5 @@ export const QAStoriesPage = () => {
     </div>
   );
 };
+
+export default QAStoriesPage; 

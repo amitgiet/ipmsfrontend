@@ -1,20 +1,19 @@
 
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { DeveloperHeader } from '@/components/DeveloperHeader';
+import { useAuth } from '@/hooks/useAuth';
+import { DeveloperHeader } from '@/components/developer/DeveloperHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, Play, CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useDeveloperTasks } from '@/hooks/useDeveloperTasks';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 
-export const DeveloperTasksPage = () => {
+const DeveloperTasksPage = () => {
   const { user, teamUser, logout } = useAuth();
   const currentUser = user || teamUser;
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { tasks, loading, updateTaskStatus } = useDeveloperTasks(currentUser?.email || '');
 
   if (!currentUser) {
@@ -23,7 +22,7 @@ export const DeveloperTasksPage = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'to_do':
+      case 'ready':
         return 'bg-gray-100 text-gray-800 border-gray-200';
       case 'in_progress':
         return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -36,7 +35,7 @@ export const DeveloperTasksPage = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'to_do':
+      case 'ready':
         return <Clock className="h-4 w-4" />;
       case 'in_progress':
         return <Play className="h-4 w-4" />;
@@ -47,23 +46,19 @@ export const DeveloperTasksPage = () => {
     }
   };
 
-  const handleStatusChange = async (taskId: string, newStatus: 'to_do' | 'in_progress' | 'completed') => {
+  const handleStatusChange = async (taskId: string, newStatus: 'ready' | 'in_progress' | 'completed') => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
 
     // Check if user is assigned to this task
     if (task.assignedTo && task.assignedTo !== currentUser.email) {
-      toast({
-        title: "Permission Denied",
-        description: "You can only change the status of tasks assigned to you",
-        variant: "destructive",
-      });
+      toast.error("You can only change the status of tasks assigned to you");
       return;
     }
 
     // Business logic restrictions
     if ((task.status === 'in_progress' || task.status === 'completed') && newStatus === 'to_do') {
-      console.log('❌ Cannot move task back to "to do" from', task.status);
+      toast.error(`Cannot move task back to "to do" from ${task.status}`);
       return; // Prevent the status change
     }
 
@@ -71,13 +66,10 @@ export const DeveloperTasksPage = () => {
   };
 
   const handleNavigateToStory = async (storyId: string) => {
-    // We need to find the project ID for this story
-    // For now, we'll navigate to a generic story details page
-    // In a real implementation, you'd want to fetch the project ID from the story
     navigate(`/project/placeholder/story/${storyId}/details`);
   };
 
-  const todoTasks = tasks.filter(task => task.status === 'to_do');
+  const todoTasks = tasks.filter(task => task.status === 'ready');
   const inProgressTasks = tasks.filter(task => task.status === 'in_progress');
   const completedTasks = tasks.filter(task => task.status === 'completed');
 
@@ -100,14 +92,6 @@ export const DeveloperTasksPage = () => {
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">My Tasks</h1>
             <p className="text-gray-600">All tasks assigned to you</p>
@@ -309,3 +293,5 @@ export const DeveloperTasksPage = () => {
     </div>
   );
 };
+
+export default DeveloperTasksPage;  

@@ -70,8 +70,7 @@ The `apiCall` function automatically handles:
 const result = await apiCall(url, 'get');
 
 if (result.success) {
-  // Handle success
-  console.log(result.data);
+  // Handle success 
 } else {
   // Handle error
   console.error(result.error);
@@ -133,8 +132,7 @@ export const userService = {
 import { checkApiHealth } from '@/services/apiCall';
 
 const health = await checkApiHealth();
-if (health.success) {
-  console.log('API is healthy');
+if (health.success) { 
 } else {
   console.error('API health check failed');
 }

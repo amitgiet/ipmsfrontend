@@ -24,11 +24,9 @@ export const useProjectStatus = () => {
           setIsLoadingStatus(false);
           return;
         }
-
-        console.log('🔄 useProjectStatus - Fetching project status for project:', projectId);
+ 
         
-        const status = await getProjectStatus(projectId);
-        console.log('✅ useProjectStatus - Project status fetched:', status);
+        const status = await getProjectStatus(projectId); 
         setProjectStatus(status);
       } catch (error) {
         console.error('❌ Error in useProjectStatus fetchProjectStatus:', error);

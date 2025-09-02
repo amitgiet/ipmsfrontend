@@ -4,13 +4,11 @@ import { projectService } from '@/services/ProjectService/projectService';
 export const fetchProjects = createAsyncThunk(
   'projects/fetchProjects',
   async (_, { rejectWithValue }) => {
-    try {
-      console.log('Fetching projects from API...');
+    try { 
       
       // Temporary: Check if we're in development and use mock data
       const isDevelopment = import.meta.env.DEV;
-      if (isDevelopment) {
-        console.log('Development mode - using mock data for testing');
+      if (isDevelopment) { 
         const mockProjects = [
           {
             id: '1',
@@ -37,11 +35,9 @@ export const fetchProjects = createAsyncThunk(
       }
       
       const response = await projectService.getProjects();
+       
       
-      console.log('API Response received:', response);
-      
-      if (response.success && response.data) {
-        console.log('Projects fetched successfully:', response.data);
+      if (response.success && response.data) { 
         return response.data;
       } else {
         console.error('Failed to fetch projects:', response.error);
@@ -59,12 +55,10 @@ export const fetchProjects = createAsyncThunk(
 export const createProject = createAsyncThunk(
   'projects/createProject',
   async (projectData, { rejectWithValue }) => {
-    try {
-      console.log('Creating new project:', projectData);
+    try { 
       const response = await projectService.createProject(projectData);
       
-      if (response.success && response.data) {
-        console.log('Project created successfully:', response.data);
+      if (response.success && response.data) { 
         return response.data;
       } else {
         console.error('Failed to create project:', response.error);
@@ -80,12 +74,10 @@ export const createProject = createAsyncThunk(
 export const updateProject = createAsyncThunk(
   'projects/updateProject',
   async ({ id, projectData }, { rejectWithValue }) => {
-    try {
-      console.log('Updating project:', id, projectData);
+    try { 
       const response = await projectService.updateProject(id, projectData);
       
-      if (response.success && response.data) {
-        console.log('Project updated successfully:', response.data);
+      if (response.success && response.data) { 
         return response.data;
       } else {
         console.error('Failed to update project:', response.error);
@@ -101,12 +93,10 @@ export const updateProject = createAsyncThunk(
 export const deleteProject = createAsyncThunk(
   'projects/deleteProject',
   async (id, { rejectWithValue }) => {
-    try {
-      console.log('Deleting project:', id);
+    try { 
       const response = await projectService.deleteProject(id);
       
-      if (response.success) {
-        console.log('Project deleted successfully');
+      if (response.success) { 
         return id;
       } else {
         console.error('Failed to delete project:', response.error);

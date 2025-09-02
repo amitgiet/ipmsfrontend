@@ -11,6 +11,7 @@ import { AssignTaskDialog } from './AssignTaskDialog';
 import { LogTimeDialog } from './LogTimeDialog';
 import { TasksContent } from './TasksContent';
 import { format } from 'date-fns';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Task {
   id: string;
@@ -51,11 +52,11 @@ export const TasksSection: React.FC<TasksSectionProps> = ({
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>('list');
   const { userRole } = useUserRole();
-
-
+  const { user } = useAuth();
+  const currentUserEmail = user?.email;
 
   // Use the useStoryTasks hook for all task operations
-  const { tasks, loading, addTask, updateTask, deleteTask, updateAssignee } = useStoryTasks(storyId);
+  const { tasks, loading, addTask, updateTask, deleteTask, updateAssignee, logTime } = useStoryTasks(storyId);
 
   const handleEditTask = (task: Task) => {
     setSelectedTask(task);
@@ -94,6 +95,13 @@ export const TasksSection: React.FC<TasksSectionProps> = ({
       case 'in_progress': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
+  };
+
+
+  const formateTime = (time: number) => {
+    const hours = Math.floor(time / 3600);
+    const mins = Math.floor((time % 3600) / 60);
+    return `${hours}h ${mins}m`;
   };
 
   if (loading) {
@@ -185,53 +193,68 @@ export const TasksSection: React.FC<TasksSectionProps> = ({
                       {task.description && (
                         <p className="text-sm text-gray-600 mt-1">{task.description}</p>
                       )}
+                      <div className="flex flex-col items-start gap-1 text-sm text-gray-500 ">
+                        <p className="flex items-center gap-1 text-sm text-gray-500">
+                          <User className="h-3 w-3" />Created by: {task.created_by?.email}
+                        </p>
+                        <p className="flex items-center gap-1 text-sm text-gray-500">
+                          <User className="h-3 w-3" />
+                          Assigned to: {task.assignedTo.name.slice(0, 1).toUpperCase() + task.assignedTo.name.slice(1)} ({task.assignedTo?.email})
+                        </p>
+                      </div>
                       <div className="flex items-center gap-3 mt-2">
                         <Badge className={getStatusColor(task.status)} variant="outline">
-                          {task.status?.replace('_', ' ')}
+                          {task.status.toUpperCase().replace('_', ' ')}
                         </Badge>
                         {task.assigned_to && (
                           <div className="flex items-center gap-1 text-sm text-gray-500">
                             <User className="h-3 w-3" />
-                            Assigned to: {task.assigned_to.name} ({task.assigned_to.email})
+                            Assigned to: {task.assigned_to.name.slice(0, 1).toUpperCase() + task.assigned_to.name.slice(1)} ({task.assigned_to.email})
                           </div>
                         )}
+
                         <div className="flex items-center gap-1 text-sm text-gray-500">
                           <Calendar className="h-3 w-3" />
                           {format(new Date(task.created_at), 'MMM dd')}
                         </div>
+                         {task.timeLogs?.length > 0 && <div className="flex items-center gap-1 text-sm text-gray-500">
+                           <Clock className="h-3 w-3" />Log time : {formateTime(task.timeLogs[0].total_duration)}
+                        </div>}
                       </div>
                     </div>
                     {canEdit && (
                       <div className="flex items-center gap-2">
-                        <Button
+                        {task.created_by.email == currentUserEmail && <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleEditTask(task)}
                         >
                           Edit
-                        </Button>
-                        <Button
+                        </Button>}
+                        {(userRole == 'team_lead' || userRole == 'super-admin' || userRole == 'admin') && task.created_by?.email == currentUserEmail && <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleAssignTask(task)}
                         >
                           Assign
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleLogTime(task)}
-                        >
-                          Log Time
-                        </Button>
-                        <Button
+                        </Button>}
+                        {task.assignedTo.email == currentUserEmail && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleLogTime(task)}
+                          >
+                           {task.timeLogs?.length > 0 ? "+ Log Time" : "Log Time"}
+                          </Button>
+                        )}
+                        {task.created_by.email == currentUserEmail && <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeleteTask(task.id)}
                           className="text-red-600 hover:text-red-700"
                         >
                           Delete
-                        </Button>
+                        </Button>}
                       </div>
                     )}
                   </div>
@@ -280,13 +303,15 @@ export const TasksSection: React.FC<TasksSectionProps> = ({
           <LogTimeDialog
             open={showTimeDialog}
             onClose={() => setShowTimeDialog(false)}
-            onLogTime={async () => {
+            onLogTime={async (timeData) => {
+              await logTime(selectedTask?.id || '', timeData);
               setShowTimeDialog(false);
             }}
+            taskId={selectedTask?.id || ''}
             taskTitle={selectedTask?.title || ''}
             taskAssignedTo={selectedTask?.assigned_to?.email || selectedTask?.assignedTo}
-            currentUserEmail=""
-            userRole=""
+            sprintStatus={selectedTask?.sprint_status || ''}
+            projectStatus={selectedTask?.project_status || ''}
           />
         </>
       )}

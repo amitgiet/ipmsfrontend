@@ -1,9 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { apiCall } from '@/services/apiCall';
+import { allRoutes } from '@/services/routes';
 
 export const ProjectInfoSection = ({ formData, errors, onInputChange, isEditMode = false }) => {
+  const [projectTypes, setProjectTypes] = useState([]);
+  const [projectNatures, setProjectNatures] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchMasterData = async () => {
+      setLoading(true);
+      try {
+        // Fetch project types and natures
+        const [typesResponse, naturesResponse] = await Promise.all([
+          apiCall(allRoutes.master.types_create_or_get, 'get'),
+          apiCall(allRoutes.master.natures_create_or_get, 'get')
+        ]);
+
+        if (typesResponse.data) {
+          setProjectTypes(typesResponse.data.data);
+        }
+        
+        if (naturesResponse.data) {
+          setProjectNatures(naturesResponse.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching master data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMasterData();
+  }, []);
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Project Information</h3>
@@ -38,23 +71,57 @@ export const ProjectInfoSection = ({ formData, errors, onInputChange, isEditMode
         <div className="space-y-2">
           <Label>Project Type *</Label>
           <Select 
-            value={formData.projectType || ''} 
+            value={formData?.projectType} 
             onValueChange={(value) => onInputChange('projectType', value)}
           >
             <SelectTrigger className={errors.projectType ? 'border-red-500' : ''}>
               <SelectValue placeholder="Select project type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="web development">Web Development</SelectItem>
-              <SelectItem value="mobile app">Mobile App</SelectItem>
-              <SelectItem value="design">Design</SelectItem>
-              <SelectItem value="consulting">Consulting</SelectItem>
-              <SelectItem value="maintenance">Maintenance</SelectItem>
+              {loading ? (
+                <SelectItem value="loading" disabled>Loading types...</SelectItem>
+              ) : projectTypes.length > 0 ? (
+                projectTypes.map((type) => (
+                  <SelectItem key={type.id} value={type.name}>
+                    {type.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-types" disabled>No types available</SelectItem>
+              )}
             </SelectContent>
           </Select>
           {errors.projectType && <p className="text-sm text-red-500">{errors.projectType}</p>}
         </div>
 
+        <div className="space-y-2">
+          <Label>Project Nature *</Label>
+          <Select 
+            value={formData.projectNature || ''} 
+            onValueChange={(value) => onInputChange('projectNature', value)}
+          >
+            <SelectTrigger className={errors.projectNature ? 'border-red-500' : ''}>
+              <SelectValue placeholder="Select project nature" />
+            </SelectTrigger>
+            <SelectContent>
+              {loading ? (
+                <SelectItem value="loading" disabled>Loading natures...</SelectItem>
+              ) : projectNatures.length > 0 ? (
+                projectNatures.map((nature) => (
+                  <SelectItem key={nature.id} value={nature.name}>
+                    {nature.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-natures" disabled>No natures available</SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+          {errors.projectNature && <p className="text-sm text-red-500">{errors.projectNature}</p>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Priority *</Label>
           <Select 

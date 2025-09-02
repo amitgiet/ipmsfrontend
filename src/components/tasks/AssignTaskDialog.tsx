@@ -77,8 +77,7 @@ export const AssignTaskDialog: React.FC<AssignTaskDialogProps> = ({
     setSelectedAssignee(currentAssignee || '');
     onClose();
   };
-
-  console.log(" selectedAssignee ", selectedAssignee, " currentAssignee ", currentAssignee);
+ 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">

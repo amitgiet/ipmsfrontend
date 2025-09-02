@@ -94,8 +94,7 @@ export const useSprintManagement = (sprintId?: string, projectId?: string) => {
       setSprint(prev => prev ? { ...prev, status: 'running' } : null);
 
       toast.success(`Sprint status updated to ${newStatus}`);
-
-      console.log('✅ Sprint status updated successfully');
+ 
     } catch (error) {
       console.error('❌ Error in updateSprintStatus:', error);
       toast.error("Failed to update sprint status");

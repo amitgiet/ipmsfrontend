@@ -33,6 +33,19 @@ export const DeveloperProjectsTable = ({ projects, loading, currentUserEmail }: 
     );
   }
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'to_do':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'completed':
+        return 'bg-green-100 text-green-800 border-green-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
   if (projects.length === 0) {
     return (
       <Card>
@@ -65,8 +78,8 @@ export const DeveloperProjectsTable = ({ projects, loading, currentUserEmail }: 
                     <h3 className="font-semibold text-gray-900 truncate">
                       {project.name}
                     </h3>
-                    <Badge className={statusColors[project.project_status as keyof typeof statusColors]}>
-                      {project.status?.replace('-', ' ')}
+                    <Badge className={getStatusColor(project.status)}>
+                      {project.status?.slice(0, 1).toUpperCase() + project.status?.slice(1).replace('_', ' ').toUpperCase() || 'Unknown'}
                     </Badge>
                   </div>
                   
@@ -80,7 +93,7 @@ export const DeveloperProjectsTable = ({ projects, loading, currentUserEmail }: 
                     
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4" />
-                      <span>{formatBudget(project.estimated_budget, project.budget_currency)}</span>
+                      <span>{project.estimated_budget}</span>
                     </div>
                     
                     <div className="flex items-center gap-2">

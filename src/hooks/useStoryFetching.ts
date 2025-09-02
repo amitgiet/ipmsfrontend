@@ -28,8 +28,7 @@ export const useStoryFetching = () => {
   const fetchStory = async (storyId: string, projectId: string) => {
     if (!storyId) return;
 
-    try {
-      console.log('🔄 Fetching story...', { storyId, projectId });
+    try { 
       setLoading(true);
       setCurrentStoryId(storyId);
       setCurrentProjectId(projectId);
@@ -41,8 +40,7 @@ export const useStoryFetching = () => {
         return;
       }
 
-      if (data) {
-        console.log('📥 Raw API response:', data);
+      if (data) { 
         const typedStory: Story = {
           id: data.data.id,
           title: data.data.title,
@@ -54,9 +52,7 @@ export const useStoryFetching = () => {
           created_at: data.data.created_at,
           updated_at: data.data.updated_at,
           media: data.data.media || []
-        };
-        console.log('✅ Setting story state:', typedStory);
-        console.log('📁 Media count:', typedStory.media.length);
+        }; 
         setStory(typedStory);
       }
     } catch (error) {
@@ -68,17 +64,14 @@ export const useStoryFetching = () => {
   };
 
   // Refetch function to reload the current story data
-  const refetch = async () => {
-    console.log('🔄 Refetching story data...', { currentStoryId, currentProjectId, storyId: story?.id });
+  const refetch = async () => { 
     
     // If we have current IDs, use them
-    if (currentStoryId && currentProjectId) {
-      console.log('✅ Using stored IDs for refetch');
+    if (currentStoryId && currentProjectId) { 
       await fetchStory(currentStoryId, currentProjectId);
     } 
     // If we have a story object but no stored IDs, use the story's IDs
-    else if (story?.id && story?.project_id) {
-      console.log('✅ Using story object IDs for refetch');
+    else if (story?.id && story?.project_id) { 
       await fetchStory(story.id, story.project_id);
     } 
     // If we still don't have IDs, we can't refetch

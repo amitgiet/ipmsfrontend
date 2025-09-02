@@ -20,17 +20,6 @@ import { AcceptanceCriteriaSection } from '@/components/story/AcceptanceCriteria
 import { TestCasesSection } from '@/components/testcases/TestCasesSection';
 import { hasPermission } from '@/utils/permissions';
 
-interface UserStory {
-  id: string;
-  title: string;
-  description?: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'to_do' | 'in_grooming' | 'ready' | 'ready_for_estimate' | 'estimated' | 'in_progress' | 'qa' | 'done';
-  storyPoints?: number;
-  projectId: string;
-  acceptanceCriteria?: string;
-}
-
 const statusColors = {
   'to_do': 'bg-gray-100 text-gray-800 border-gray-200',
   'in_grooming': 'bg-blue-100 text-blue-800 border-blue-200',
@@ -116,7 +105,6 @@ export const StoryDetailsPage: React.FC = () => {
     );
   }
 
-  console.log(" sinisi", story);
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-6 py-8">
@@ -142,14 +130,14 @@ export const StoryDetailsPage: React.FC = () => {
                 <CardTitle className="text-xl mb-2">{story.title}</CardTitle>
                 <div className="flex items-center gap-2">
                   <Badge className={priorityColors[story.priority]} variant="outline">
-                    {story.priority} priority
+                    {story.priority.toUpperCase()}
                   </Badge>
                   <Badge className={statusColors[story.status]} variant="outline">
-                    {story.status.replace('_', ' ')}
+                    {story.status.toUpperCase().replace('_', ' ')}
                   </Badge>
                   {story.storyPoints && (
                     <Badge variant="outline">
-                      {story.storyPoints} points
+                      {story.storyPoints} Points
                     </Badge>
                   )}
                 </div>
@@ -218,7 +206,7 @@ export const StoryDetailsPage: React.FC = () => {
             {/* Acceptance Criteria - Only editable if can edit story */}
             <AcceptanceCriteriaSection
               storyId={story.id}
-              acceptanceCriteria={story.acceptanceCriteria}
+              acceptanceCriteria={story.acceptanceCriteria || story.acceptance_criteria}
               storyStatus={story.status}
               onUpdate={refetch}
               canEdit={true}

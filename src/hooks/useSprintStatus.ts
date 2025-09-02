@@ -33,8 +33,7 @@ export const useSprintStatus = (storyId?: string) => {
         const error = null;
         if (error) {
           if (error.code === 'PGRST116') {
-            // No sprint found - story is not in any sprint
-            console.log('✅ Story is not in any sprint');
+            // No sprint found - story is not in any sprint 
             setSprintStatus(null);
           } else {
             console.error('❌ Error checking sprint status:', error);
@@ -48,8 +47,7 @@ export const useSprintStatus = (storyId?: string) => {
           setSprintStatus({
             status: sprint.status as 'created' | 'running' | 'completed',
             sprintName: sprint.sprint_name
-          });
-          console.log('✅ Found sprint status:', sprint.status);
+          }); 
         }
       } catch (error) {
         console.error('❌ Error in fetchSprintStatus:', error);

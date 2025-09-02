@@ -63,16 +63,16 @@ export const AddEpicDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="h-5 w-5" />
-            Add Epic to Users
+            Add Child To Multiple Users
           </DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="epic-title">Epic Title</Label>
+            <Label htmlFor="epic-title">Title</Label>
             <Input
               id="epic-title"
-              placeholder="Enter epic title..."
+              placeholder="Enter title..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               autoFocus
@@ -123,7 +123,7 @@ export const AddEpicDialog = ({
               disabled={!title.trim() || selectedUserIds.length === 0}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Epic
+              Add
             </Button>
           </div>
         </form>

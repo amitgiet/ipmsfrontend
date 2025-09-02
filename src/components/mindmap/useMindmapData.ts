@@ -53,8 +53,7 @@ export const useMindmapData = (projectId: string) => {
       const response = await apiCall(allRoutes.mindmap.get(projectId), 'get');
 
       if (response?.data?.data) {
-        const transformedData = normalizeMindmapData(response.data.data);
-        console.log(transformedData);
+        const transformedData = normalizeMindmapData(response.data.data); 
         setNodes(transformedData);
       } else {
         setNodes([]);

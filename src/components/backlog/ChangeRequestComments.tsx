@@ -3,13 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-// import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { formatDistanceToNow } from 'date-fns';
 import { MessageSquare, Send } from 'lucide-react';
 import { ChangeRequestComment } from '@/hooks/useChangeRequests';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
+import { useParams } from 'react-router-dom';
 
 interface ChangeRequestCommentsProps {
   requestId: string;
@@ -20,43 +20,34 @@ interface ChangeRequestCommentsProps {
   onCommentsViewed?: (requestId: string, userEmail: string) => void;
 }
 
-export const ChangeRequestComments = ({ 
-  requestId, 
-  currentUserEmail, 
-  currentUserName, 
-  currentUserRole,
-  onCommentAdded,
-  onCommentsViewed
+export const ChangeRequestComments = ({
+  requestId,
 }: ChangeRequestCommentsProps) => {
+  const { projectId } = useParams();
   const [comments, setComments] = useState<ChangeRequestComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const { toast } = useToast();
 
   const loadComments = async () => {
     try {
       setLoading(true);
-      const { data, error } = await apiCall(allRoutes.comments.get(projectId, 'change_request'), 'get');
+      const { data, error } = await apiCall(allRoutes.comments.get(projectId || '', 'change_request', null, null, requestId), 'get', {},
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
 
       if (error) {
         console.error('❌ Error loading comments:', error);
-        throw error;
+        return;
       }
 
-      setComments((data || []) as ChangeRequestComment[]);
-      
-      // Mark comments as viewed when loaded
-      if (onCommentsViewed) {
-        onCommentsViewed(requestId, currentUserEmail);
-      }
+      setComments(data.data || []);
     } catch (error) {
       console.error('❌ Error loading comments:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load comments",
-        variant: "destructive",
-      });
+      toast.error("Failed to load comments");
     } finally {
       setLoading(false);
     }
@@ -68,34 +59,23 @@ export const ChangeRequestComments = ({
     try {
       setSubmitting(true);
       const { error } = await apiCall(allRoutes.comments.store, 'post', {
-        change_request_id: requestId,
+        project_id: projectId || '',
+        type: 'change_request',
         content: newComment.trim(),
-        author_email: currentUserEmail,
-        author_name: currentUserName,
-        author_role: currentUserRole,
+        change_request_id: requestId,
       });
 
       if (error) {
         console.error('❌ Error adding comment:', error);
-        throw error;
+        return;
       }
 
+      loadComments();
       setNewComment('');
-      if (onCommentAdded) {
-        onCommentAdded();
-      }
-      
-      toast({
-        title: "Success",
-        description: "Comment added successfully",
-      });
+      toast.success("Comment added successfully");
     } catch (error) {
       console.error('❌ Error adding comment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add comment",
-        variant: "destructive",
-      });
+      toast.error("Failed to add comment");
     } finally {
       setSubmitting(false);
     }
@@ -137,8 +117,7 @@ export const ChangeRequestComments = ({
     //   table: 'change_request_comments',
     //   filter: `change_request_id=eq.${requestId}`
     // });
-    //     (payload) => {
-    //       console.log('📥 New comment added:', payload.new);
+    //     (payload) => { 
     //       const newCommentData = payload.new as ChangeRequestComment;
     //       setComments(prev => [...prev, newCommentData]);
     //     }
@@ -149,18 +128,6 @@ export const ChangeRequestComments = ({
     //   apiCall(allRoutes.comments.get(projectId, 'change_request'), 'get');
     // };
   }, [requestId]);
-
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card>
@@ -177,9 +144,9 @@ export const ChangeRequestComments = ({
             {comments.map((comment) => (
               <div key={comment.id} className="border-l-2 border-gray-200 pl-3 py-2">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-medium">{comment.author_name}</span>
-                  <Badge className={`${getRoleBadgeColor(comment.author_role)} border-0 text-xs`}>
-                    {comment.author_role.replace('_', ' ')}
+                  <span className="text-sm font-medium">{comment.user.name}</span>
+                  <Badge className={`${getRoleBadgeColor(comment.user.role)} border-0 text-xs`}>
+                    {comment.user.role.replace('_', ' ').toUpperCase()}
                   </Badge>
                   <span className="text-xs text-gray-500">{getTimestamp(comment.created_at)}</span>
                 </div>

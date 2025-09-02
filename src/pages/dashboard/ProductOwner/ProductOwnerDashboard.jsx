@@ -23,21 +23,22 @@ export const ProductOwnerDashboard = () => {
   }
 
   const fetchTimeLogs = async () => {
-    const result = await productOwnerService.getTimeLogs(false);
+    const result = await productOwnerService.getTimeLogs(0);
     setTimeLogs(result.data.data);
   };
+
   const fetchDashboardCardsData = async () => {
     const result = await productOwnerService.getDashboard();
     setDashboard(result.data.data);
   };
+  
   const fetchAssignedProjects = async () => {
     const result = await productOwnerService.getAssignedProjects();
     setAssignedProjects(result.data.data);
   };
 
   const handleTimeLogged = () => {
-    // Demo function - just log to console
-    console.log('Time logged - would refetch data in real app');
+    // Demo function - just log to console 
     // In a real app, this would refetch both projects and time logs data
   };
 
@@ -83,6 +84,7 @@ export const ProductOwnerDashboard = () => {
           onClose={() => setShowTimeLogDialog(false)}
           projects={assignedProjects.map(p => ({ id: p.id, project_name: p.name }))}
           productOwnerEmail={currentUser.email}
+          refetchTimeLogs={fetchTimeLogs}
           onTimeLogged={handleTimeLogged}
         />
       </main>

@@ -29,8 +29,7 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
   const currentUser = user || teamUser;
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<MindmapComment[]>([]);
-  const [loading, setLoading] = useState(false);
-  console.log(currentUser);
+  const [loading, setLoading] = useState(false); 
   const handleDeleteComment = async (commentId: string) => {
     // Remove comment from local state
     setComments(prev => prev.filter(comment => comment.id !== commentId));
@@ -78,8 +77,7 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
       project_id: projectId,
       type: 'mindmap',
       content: commentText
-    });
-    console.log(data, error);
+    }); 
     if (error) {
       console.error('❌ Error adding comment:', error);
       throw error;
@@ -141,7 +139,7 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{comment.user.name}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${getRoleBadgeColor(comment.user.role)}`}>
-                      {comment.user.role.replace('_', ' ')}
+                      {comment.user.role.replace('_', ' ').toUpperCase()}
                     </span>
                   </div>
                   <div className="flex items-center text-xs text-gray-500 gap-2">

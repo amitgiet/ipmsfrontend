@@ -2,8 +2,7 @@ import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
 
 export const isProjectInProgress = async (projectId: string): Promise<boolean> => {
-  try {
-    console.log('🔄 Checking if project is in progress:', projectId);
+  try { 
 
     const { data: project, error } = await apiCall(allRoutes.projects.getById(projectId), 'get');
     if (error) {
@@ -16,8 +15,7 @@ export const isProjectInProgress = async (projectId: string): Promise<boolean> =
       return false;
     }
 
-    const inProgress = project?.project_status === 'in-progress';
-    console.log(`📊 Project status: ${project?.project_status}, In progress: ${inProgress}`);
+    const inProgress = project?.project_status === 'in-progress'; 
     
     return inProgress;
   } catch (error) {
@@ -29,8 +27,7 @@ export const isProjectInProgress = async (projectId: string): Promise<boolean> =
 export const getProjectStatus = async (projectId: string): Promise<string> => {
   try {
 
-    if (!projectId) {
-      console.warn('⚠️ No project ID provided');
+    if (!projectId) { 
       return 'unknown';
     }
 

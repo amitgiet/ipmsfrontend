@@ -50,8 +50,7 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
   onUpdateTaskStatus,
   onLogTime,
   userRole
-}) => {
-  console.log(" tasks ", tasks);
+}) => { 
   const { toast } = useToast();
   const { currentUser } = useUserRole();
   const currentUserEmail = currentUser?.email || currentUser?.name || '';
@@ -82,14 +81,13 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
     }
 
     // Business logic restrictions
-    if ((task.status === 'in_progress' || task.status === 'completed') && newStatus === 'to_do') {
-      console.log('❌ Cannot move task back to "to do" from', task.status);
+    if ((task.status === 'in_progress' || task.status === 'completed') && newStatus === 'to_do') { 
       return; // Prevent the status change
     }
 
     onUpdateTaskStatus(taskId, newStatus);
   };
-
+ 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {statusColumns.map(column => {
@@ -111,7 +109,7 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
                 </div>
               ) : (
                 columnTasks.map((task) => {
-                  const canChangeStatus = !task.assigned_to || task.assigned_to.email === currentUserEmail;
+                  const canChangeStatus = !task.assignedTo || task.assignedTo.email === currentUserEmail;
                   
                   return (
                     <Card key={task.id} className="bg-white hover:shadow-md transition-shadow">
@@ -166,9 +164,9 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
                             </p>
                           )}
                           
-                          {task.assigned_to && (
+                          {task.assignedTo && (
                             <p className="text-xs text-gray-500">
-                              Assigned to: {task.assigned_to.name} ({task.assigned_to.email})
+                              Assigned to: {task.assignedTo.name} ({task.assignedTo.email})
                             </p>
                           )}
 

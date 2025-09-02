@@ -12,8 +12,7 @@ interface StoryPointsSectionProps {
 const fibonacciSeries = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
 
 export const StoryPointsSection = ({ storyPoints, onStoryPointsChange }: StoryPointsSectionProps) => {
-  console.log('🔍 StoryPointsSection - Current storyPoints:', storyPoints);
-  
+   
   return (
     <Card className="mb-6">
       <CardHeader>
@@ -27,8 +26,7 @@ export const StoryPointsSection = ({ storyPoints, onStoryPointsChange }: StoryPo
             </Label>
             <Select
               value={storyPoints ? storyPoints.toString() : ""}
-              onValueChange={(value) => {
-                console.log('🔄 StoryPointsSection - Selected value:', value);
+              onValueChange={(value) => { 
                 onStoryPointsChange(parseInt(value));
               }}
             >

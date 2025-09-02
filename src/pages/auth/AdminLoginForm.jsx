@@ -80,8 +80,7 @@ export const AdminLoginForm = () => {
           teamUser: null,
           token: token
         }, 'loginUser', { email, password, name, role }));
-        
-        console.log('✅ Login successful, navigating to dashboard');
+         
         navigate('/dashboard');
       } else {
         // Handle API call failure

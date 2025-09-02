@@ -88,12 +88,18 @@ export const ProductOwnerTimeLogTable = ({
   const handleRefresh = () => {
     if (refetchTimeLogs) {
       refetchTimeLogs();
-    } else {
-      console.log('Refreshing time logs...');
-      console.log('Data refreshed successfully');
+      } else {
+        console.info('Refreshing time logs...'); 
     }
   };
 
+  const formatTimeIn12Hours = (time: string) => {
+    const hours = parseInt(time.split(':')[0]);
+    const minutes = time.split(':')[1].split(' ')[0];
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const formattedHours = hours % 12 || 12;
+    return `${formattedHours}:${minutes} ${period}`;
+  }
   return (
     <Card>
       <CardHeader>
@@ -144,7 +150,7 @@ export const ProductOwnerTimeLogTable = ({
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
-                      {formatTime(log.start_time)} - {formatTime(log.end_time)}
+                      {formatTimeIn12Hours(log.start_time)} - {formatTimeIn12Hours(log.end_time)}
                     </div>
                   </div>
 

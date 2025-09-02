@@ -9,6 +9,7 @@ import { AdminProjectsSection } from '@/components/admin/AdminProjectsSection';
 import { TeamManagement } from './TeamManagement';
 import { AdminSkillsSection } from '@/components/admin/AdminSkillsSection';
 import { AdminTimesheetSection } from '@/components/admin/AdminTimesheetSection';
+import { AdminTypeAndNatureSection } from '@/components/admin/AdminTypeAndNatureSection';
 
 const AppLayout = () => {
   const { logout } = useAuth();
@@ -36,11 +37,6 @@ const MainContentAdminDashboard = () => {
   const [editingProject, setEditingProject] = useState(null);
   const [skills, setSkills] = useState([]);
   const [activeSection, setActiveSection] = useState('dashboard');
-
-  const handleEditProject = (project) => {
-    setEditingProject(project);
-    setEditProjectOpen(true);
-  };
 
   const handleProjectSubmit = async (projectData) => {
     setAddProjectOpen(false);
@@ -85,6 +81,7 @@ export const AdminDashboard = () => {
         <Route path="/team-management" element={<TeamManagement />} />
         <Route path="/skills" element={<AdminSkillsSection />} />
         <Route path="/timesheets" element={<AdminTimesheetSection />} />
+        <Route path="/type-and-nature" element={<AdminTypeAndNatureSection />} />
         </Route>
     </Routes>
   );

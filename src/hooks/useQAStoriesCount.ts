@@ -15,8 +15,7 @@ export const useQAStoriesCount = (currentUserEmail: string) => {
         setLoading(false);
         return;
       }
-
-      console.log('🔄 Fetching QA stories count for:', currentUserEmail);
+ 
 
       // First, get the team member data
       const { data: teamMemberData, error: teamMemberError } = await apiCall(allRoutes.team.getTeamMemberByEmail(currentUserEmail), 'get');
@@ -26,8 +25,7 @@ export const useQAStoriesCount = (currentUserEmail: string) => {
         throw teamMemberError;
       }
 
-      if (!teamMemberData) {
-        console.log('❌ No QA found with email:', currentUserEmail);
+      if (!teamMemberData) { 
         setStoriesCount(0);
         setLoading(false);
         return;
@@ -41,8 +39,7 @@ export const useQAStoriesCount = (currentUserEmail: string) => {
         throw assignmentError;
       }
 
-      if (!assignmentData || assignmentData.length === 0) {
-        console.log('❌ No projects assigned to this QA');
+      if (!assignmentData || assignmentData.length === 0) { 
         setStoriesCount(0);
         setLoading(false);
         return;
@@ -58,8 +55,7 @@ export const useQAStoriesCount = (currentUserEmail: string) => {
         console.error('❌ Error fetching stories count:', storiesError);
         throw storiesError;
       }
-
-      console.log('✅ QA stories count:', count || 0);
+ 
       setStoriesCount(count || 0);
     } catch (error) {
       console.error('❌ Error in fetchQAStoriesCount:', error);

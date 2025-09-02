@@ -129,6 +129,7 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
   const isEstimated = story?.status === 'estimated';
   const storyPoints = story?.storyPoints || storyForComponents?.storyPoints;
 
+ 
   return (
     <>
       {/* Show estimation card for developers when story is ready for estimate */}
@@ -173,7 +174,7 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
       )}
 
       {/* Acceptance Criteria Section */}
-      { story.id && canEditContent && (
+      {story.id  && (
         <div className="mb-6">
           <AcceptanceCriteriaSection
             storyId={story.id}
@@ -248,9 +249,9 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
                       )}
                       <div>
                         <p className="font-medium">{doc.name}</p>
-                        <p className="text-sm text-gray-500">
+                        {/* <p className="text-sm text-gray-500">
                           {new Date(doc.uploaded_at).toLocaleDateString()}
-                        </p>
+                        </p> */}
                       </div>
                     </div>
                     <Button

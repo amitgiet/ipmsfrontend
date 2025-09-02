@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { apiCall } from '@/services/apiCall';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { Upload, X, Image } from 'lucide-react';
 import { allRoutes } from '@/services/routes';
 import { useParams } from 'react-router-dom';
@@ -53,13 +53,16 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
   const { projectId } = useParams<{ projectId: string }>();
   const [loading, setLoading] = useState(false);
   const [attachedImages, setAttachedImages] = useState<AttachedImage[]>([]);
+  const [bugLabel, setBugLabel] = useState([]);
+  const [bugLabelSelected, setBugLabelSelected] = useState('');
+  const [customLabelName, setCustomLabelName] = useState('');
+  const [isOthersSelected, setIsOthersSelected] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     severity: 'medium' as 'low' | 'medium' | 'high' | 'critical',
     storyId: ''
   });
-  const { toast } = useToast();
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -68,21 +71,13 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
     Array.from(files).forEach(file => {
       // Check file type
       if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Invalid File Type",
-          description: `${file.name} is not an image file`,
-          variant: "destructive",
-        });
+        toast.error("Invalid File Type");
         return;
       }
 
       // Check file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File Too Large",
-          description: `${file.name} is larger than 5MB`,
-          variant: "destructive",
-        });
+        toast.error("File Too Large");
         return;
       }
 
@@ -126,7 +121,6 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
           throw uploadError;
         }
 
-        console.log('✅ Image uploaded successfully:', fileName);
       }
     } catch (error) {
       console.error('❌ Error in uploadImages:', error);
@@ -138,11 +132,7 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
     e.preventDefault();
 
     if (!formData.title.trim() || !formData.storyId) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -156,6 +146,13 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
       body.append('description', formData.description.trim() || '');
       body.append('severity', formData.severity);
 
+      // Add bug label if selected
+      if (bugLabelSelected && !isOthersSelected) {
+        body.append('label', bugLabelSelected);
+      } else if (isOthersSelected && customLabelName.trim()) {
+        body.append('label', customLabelName.trim());
+      }
+
       const { data: bugData, error } = await apiCall(allRoutes.sprints.createBug, 'post', body);
 
       if (error) {
@@ -168,8 +165,7 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
         await uploadImages(bugData.id);
       }
 
-      // Update story status back to in_progress since a bug was found
-      console.log('🔄 Updating story status back to in_progress for story:', formData.storyId);
+      // Update story status back to in_progress since a bug was found 
       const { error: statusError } = await apiCall(allRoutes.stories.update(formData.storyId), 'PUT', {
         status: 'in_progress',
         updated_at: new Date().toISOString()
@@ -179,13 +175,10 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
         console.error('❌ Error updating story status:', statusError);
         // Don't throw here, bug was created successfully
       } else {
-        console.log('✅ Story status updated to in_progress');
+        console.info('✅ Story status updated to in_progress');
       }
 
-      toast({
-        title: "Success",
-        description: `Bug reported successfully${attachedImages.length > 0 ? ` with ${attachedImages.length} image(s)` : ''}. Story moved back to In Progress.`,
-      });
+      toast.success(`Bug reported successfully${attachedImages.length > 0 ? ` with ${attachedImages.length} image(s)` : ''}. Story moved back to In Progress.`);
 
       // Reset form and close dialog
       setFormData({
@@ -216,14 +209,28 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
       storyId: ''
     });
 
-    // Clean up image previews
+    // Clean up image previews and reset bug label selection
     attachedImages.forEach(image => URL.revokeObjectURL(image.preview));
     setAttachedImages([]);
+    setBugLabelSelected('');
+    setCustomLabelName('');
 
     onClose();
   };
 
-  console.log(" stories ", stories, " formData ", formData);
+  const getBugLabel = async () => {
+    const { data: bugLabelData, error } = await apiCall(allRoutes.sprints.bugLabel(projectId, 9), 'get');
+    if (error) {
+      console.error('❌ Error getting bug label:', error);
+      return;
+    }
+    setBugLabel(bugLabelData.data);
+  };
+
+  useEffect(() => {
+    getBugLabel();
+  }, [projectId]);
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -265,6 +272,67 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
             />
           </div>
 
+          <div className="space-y-3">
+            <Label htmlFor="bug-label">Bug Label *</Label>
+
+            {/* Radio buttons for predefined labels */}
+
+            <div className="space-y-2 flex flex-row gap-2 items-center self-end">
+              {bugLabel.map((label) => (
+                <div key={label.id} className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id={`label-${label.name}`}
+                    name="bugLabel"
+                    value={label.name}
+                    checked={bugLabelSelected === label.name}
+                    onChange={(e) => { setIsOthersSelected(false); setCustomLabelName(''); setBugLabelSelected(e.target.value) }}
+                    className="w-4 h-4 text-blue-600 accent-blue-600"
+                  />
+                  <label htmlFor={`label-${label.name}`} className="text-sm text-gray-700 cursor-pointer">
+                    {label.name}
+                  </label>
+                </div>
+              ))}
+
+              {/* "Others" radio option */}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  id="label-others"
+                  name="bugLabel"
+                  value="custom"
+                  checked={isOthersSelected}
+                  onChange={(e) => { setCustomLabelName(''); setIsOthersSelected(e.target.checked); setBugLabelSelected('') }}
+                  className="w-4 h-4 text-blue-600 accent-blue-600"
+                />
+                <label htmlFor="label-others" className="text-sm text-gray-700 cursor-pointer">
+                  Others
+                </label>
+              </div>
+            </div>
+
+            {/* Custom label input - show when "Others" is selected */}
+            {isOthersSelected && (
+              <div className="space-y-2">
+                <Label htmlFor="custom-label">Custom Label: </Label>
+                <Input
+                  type="text"
+                  placeholder="Enter custom bug label"
+                  value={customLabelName}
+                  onChange={(e) => setCustomLabelName(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+            )}
+
+            {/* Show selected label info */}
+            {bugLabelSelected && !isOthersSelected && (
+              <div className="p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+                Selected: {bugLabelSelected}
+              </div>
+            )}
+          </div>
           <div>
             <Label htmlFor="severity">Severity</Label>
             <Select

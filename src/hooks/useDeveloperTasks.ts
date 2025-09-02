@@ -4,70 +4,38 @@ import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
 import { toast } from 'react-toastify';
 
-interface Task {
-  id: string;
-  title: string;
-  description?: string;
-  status: 'ready' | 'in_progress' | 'completed';
-  assignedTo?: string;
-  created_by?: string;
-  created_at: string;
-  updated_at: string;
-  story_id: string;
-}
-
 export const useDeveloperTasks = (currentUserEmail: string) => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchTasks = async () => {
-    if (!currentUserEmail) {
-      console.log('❌ No currentUserEmail provided');
+    if (!currentUserEmail) { 
       setLoading(false);
       return;
     }
 
     try {
-      console.log('🔄 Fetching tasks for developer:', currentUserEmail);
-
-      // First, let's see all tasks in the table
-      const { data: allTasks, error: allTasksError } = await apiCall(allRoutes.tasks.list, 'get');
-
-      if (allTasksError) {
-        console.error('❌ Error fetching all tasks:', allTasksError);
-      } else {
-        console.log('📋 All tasks in database:', allTasks);
-        console.log('📋 Looking for tasks assigned to:', currentUserEmail);
-        const matchingTasks = allTasks?.filter(task => task.assigned_to === currentUserEmail) || [];
-        console.log('🎯 Matching tasks found:', matchingTasks);
-      }
-
-      // Now try the original filtered query
-      const { data, error } = await apiCall(allRoutes.tasks.list, 'get');
+      const { data, error } = await apiCall(allRoutes.tasks.list(null, null, true), 'get');
 
       if (error) {
         console.error('❌ Error fetching developer tasks:', error);
-        toast.error("Failed to load your tasks");
         return;
-      }
-
-      console.log('✅ Filtered query result:', data);
-
+      } 
+      
       if (data) {
-        const mappedTasks: Task[] = data.map(task => ({
+        const mappedTasks = data.data.map((task: any) => ({
           id: task.id,
           title: task.title,
           description: task.description || undefined,
-          status: task.status as 'ready' | 'in_progress' | 'completed',
-          assignedTo: task.assigned_to || undefined,
+          status: task.status as 'to_do' | 'in_progress' | 'completed',
+          assigned_to: task.assigned_to || undefined,
           created_by: task.created_by || undefined,
           created_at: task.created_at,
           updated_at: task.updated_at,
           story_id: task.story_id
         }));
 
-        setTasks(mappedTasks);
-        console.log('✅ Fetched developer tasks:', mappedTasks.length, mappedTasks);
+        setTasks(mappedTasks); 
       }
     } catch (error) {
       console.error('❌ Error in fetchTasks:', error);
@@ -77,13 +45,11 @@ export const useDeveloperTasks = (currentUserEmail: string) => {
     }
   };
 
-    const updateTaskStatus = async (taskId: string, newStatus: 'ready' | 'in_progress' | 'completed') => {
+    const updateTaskStatus = async (taskId: string, newStatus: 'to_do' | 'in_progress' | 'completed') => {
     try {
-      console.log('🔄 Updating task status:', taskId, newStatus);
-
-      const { error } = await apiCall(allRoutes.tasks.update(taskId), 'put', {
+      const { error } = await apiCall(allRoutes.tasks.update(taskId), 'post', {
         status: newStatus,
-        updated_at: new Date().toISOString()
+        _method: 'patch'
       });
 
       if (error) {
@@ -98,8 +64,7 @@ export const useDeveloperTasks = (currentUserEmail: string) => {
           ? { ...task, status: newStatus, updated_at: new Date().toISOString() }
           : task
       ));
-
-      console.log('✅ Task status updated successfully');
+ 
       
       toast.success("Task status updated successfully");
     } catch (error) {

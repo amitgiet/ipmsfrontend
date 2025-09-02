@@ -42,8 +42,7 @@ export const createStoryUpdateHandler = (
   story: DatabaseStory | null,
   setStory: (story: DatabaseStory | null) => void
 ) => {
-  return (updatedUserStory: UserStory) => {
-    console.log('🔄 Debug - handleStoryUpdate called with:', updatedUserStory);
+  return (updatedUserStory: UserStory) => { 
     if (story) {
       const updatedStory = {
         ...story,
@@ -52,8 +51,7 @@ export const createStoryUpdateHandler = (
         priority: updatedUserStory.priority,
         status: updatedUserStory.status as typeof story.status,
         story_points: updatedUserStory.storyPoints
-      };
-      console.log('🔄 Debug - Setting story to:', updatedStory);
+      }; 
       setStory(updatedStory);
     }
   };

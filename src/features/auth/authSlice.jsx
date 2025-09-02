@@ -38,8 +38,7 @@ const clearStoredAuth = () => {
 };
 
 const storeAuth = (user, teamUser, token, userRole) => {
-  try {
-    console.log("storing auth", user, teamUser, token, userRole);
+  try { 
     if (token) localStorage.setItem('ipms_token', token);
     if (user) localStorage.setItem('ipms_user', JSON.stringify(user));
     if (teamUser) localStorage.setItem('ipms_teamUser', JSON.stringify(teamUser));
@@ -87,8 +86,7 @@ export const logoutUser = createAsyncThunk(
       document.cookie.split(";").forEach(function(c) { 
         document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
       });
-      
-      console.log('✅ Logout successful - all data cleared');
+       
       return null;
     } catch (error) {
       console.error('❌ Error during logout:', error);

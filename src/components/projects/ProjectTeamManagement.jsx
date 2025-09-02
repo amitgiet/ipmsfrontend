@@ -3,19 +3,21 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Users } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Plus, X, Users, Check, Search } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
 import { useAuth } from '@/hooks/useAuth';
-  
+
 export const ProjectTeamManagement = ({ projectId }) => {
   const { user } = useAuth();
   const [assignedMembers, setAssignedMembers] = useState([]);
   const [availableMembers, setAvailableMembers] = useState([]);
-  const [selectedMemberId, setSelectedMemberId] = useState('');
+  const [selectedMemberIds, setSelectedMemberIds] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -31,14 +33,12 @@ export const ProjectTeamManagement = ({ projectId }) => {
       setAssignedMembers(data.data);
 
       if (data.data.length === 0) {
-        console.log('No team members assigned to this project');
         setAssignedMembers([]);
         return;
       }
 
       // Get team member details and combine with assignment data
 
-      console.log('Formatted assigned members:', data.data);
       setAssignedMembers(data.data);
     } catch (error) {
       console.error('Error fetching project team members:', error);
@@ -54,7 +54,6 @@ export const ProjectTeamManagement = ({ projectId }) => {
       const { data, error } = await apiCall(allRoutes.projects.getTeamMembersDropdown(projectId), 'get');
       if (error) {
         console.error('Error fetching available team members:', error);
-        toast.error("Failed to fetch available team members");
         return;
       }
       setAvailableMembers(data.data);
@@ -66,30 +65,44 @@ export const ProjectTeamManagement = ({ projectId }) => {
     }
   };
 
-  const assignTeamMember = async () => {
-    if (!selectedMemberId) {
-      console.warn('No team member selected');
+  const assignTeamMembers = async () => {
+    if (selectedMemberIds.length === 0) {
+      console.warn('No team members selected');
       return;
     }
 
     try {
-      const { error } = await apiCall(allRoutes.projects.addTeamMember, 'post', {
-        project_id: projectId,
-        user_id: selectedMemberId
-      });
-      if (error) {
-        console.error('Error assigning team member:', error);
-        toast.error("Failed to assign team member to project");
-        return;
+      setLoading(true);
+      
+      // Assign multiple team members sequentially
+      const promises = selectedMemberIds.map(memberId => 
+        apiCall(allRoutes.projects.addTeamMember, 'post', {
+          project_id: projectId,
+          user_id: memberId
+        })
+      );
+      
+      const results = await Promise.all(promises);
+      const errors = results.filter(result => result.error);
+      
+      if (errors.length > 0) {
+        console.error('Some team members failed to assign:', errors);
+        toast.error(`${errors.length} team member(s) failed to assign`);
       }
-      toast.success("Team member assigned to project successfully");
+      
+      if (results.length - errors.length > 0) {
+        toast.success(`${results.length - errors.length} team member(s) assigned to project successfully`);
+      }
 
-      setSelectedMemberId('');
+      setSelectedMemberIds([]);
+      setSearchQuery('');
       setDialogOpen(false);
       fetchProjectTeamMembers();
     } catch (error) {
-      console.error('Error assigning team member:', error);
-      toast.error("Failed to assign team member to project");
+      console.error('Error assigning team members:', error);
+      toast.error("Failed to assign team members to project");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -109,13 +122,58 @@ export const ProjectTeamManagement = ({ projectId }) => {
   const getUnassignedMembers = () => {
     const assignedMemberIds = assignedMembers.map(member => member.id);
     const unassigned = availableMembers.filter(member => !assignedMemberIds.includes(member.id));
-    console.log('Unassigned members:', unassigned);
     return unassigned;
+  };
+
+  const getFilteredUnassignedMembers = () => {
+    const unassigned = getUnassignedMembers();
+    if (!searchQuery.trim()) return unassigned;
+    
+    const query = searchQuery.toLowerCase();
+    return unassigned.filter(member => 
+      member.name.toLowerCase().includes(query) ||
+      member.email.toLowerCase().includes(query) ||
+      member.role.toLowerCase().includes(query)
+    );
+  };
+
+  const handleMemberSelection = (memberId, checked) => {
+    if (checked) {
+      setSelectedMemberIds(prev => [...prev, memberId]);
+    } else {
+      setSelectedMemberIds(prev => prev.filter(id => id !== memberId));
+    }
+  };
+
+  const getSelectedMembersCount = () => {
+    return selectedMemberIds.length;
+  };
+
+  const getSelectedMembersNames = () => {
+    const selectedMembers = availableMembers.filter(member => selectedMemberIds.includes(member.id));
+    return selectedMembers.map(member => member.name).join(', ');
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+  };
+
+  const getRoleBadgeColor = (role) => {
+    switch (role) {
+      case 'client':
+        return 'bg-blue-100 text-blue-800';
+      case 'product_owner':
+        return 'bg-green-100 text-green-800';
+      case 'admin':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   useEffect(() => {
     fetchProjectTeamMembers();
-    if (user.role === 'admin' || user.role === 'team_lead' || user.role === 'product_owner') {
+    if (user.role === 'admin' || user.role === 'super-admin' || user.role === 'team_lead' || user.role === 'product_owner') {
       fetchAvailableTeamMembers();
     }
   }, [projectId]);
@@ -133,60 +191,128 @@ export const ProjectTeamManagement = ({ projectId }) => {
               Manage team members assigned to this project
             </p>
           </div>
-       { (user.role === 'admin' || user.role === 'team_lead'|| user.role === 'product_owner') && <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          {(user.role === 'admin' || user.role === 'super-admin' || user.role === 'team_lead' || user.role === 'product_owner') && <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button className="self-start sm:self-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Team Member
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
               <DialogHeader>
-                <DialogTitle>Add Team Member to Project</DialogTitle>
+                <DialogTitle>Add Team Members to Project</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Select Team Member</label>
-                  <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Choose a team member" />
-                    </SelectTrigger>
-                    <SelectContent
-                      position="popper"
-                      side="bottom"
-                      align="start"
-                      className="max-h-[200px] overflow-y-auto z-[9999] bg-popover border shadow-md"
-                      sideOffset={4}
-                      avoidCollisions={true}
-                      sticky="always"
-                    >
-                      {getUnassignedMembers().map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{member.name}</span>
-                            <span className="text-xs text-gray-500">{member.role} • {member.email}</span>
+                                  <div>
+                    <label className="text-sm font-medium">Select Team Members</label>
+                    
+                    {/* Selected Members Display */}
+                    {getSelectedMembersCount() > 0 && (
+                      <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Check className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm font-medium text-blue-800">
+                              {getSelectedMembersCount()} member(s) selected
+                            </span>
                           </div>
-                        </SelectItem>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedMemberIds([])}
+                            className="h-6 px-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+                          >
+                            Clear
+                          </Button>
+                        </div>
+                        <p className="text-xs text-blue-700 break-words">
+                          {getSelectedMembersNames()}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Search Bar */}
+                    <div className="mt-3 relative">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          type="text"
+                          placeholder="Search team members by name, email, or role..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-10 pr-10"
+                        />
+                        {searchQuery && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearSearch}
+                            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 px-2 text-gray-500 hover:text-gray-700"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Search Results Info */}
+                    {searchQuery && (
+                      <div className="mt-2 text-xs text-gray-500">
+                        Found {getFilteredUnassignedMembers().length} member(s) matching "{searchQuery}"
+                      </div>
+                    )}
+                    
+                    {/* Multi-Select Checkbox List */}
+                    <div className="mt-3 max-h-[300px] overflow-y-auto border rounded-lg p-2 space-y-2">
+                      {getFilteredUnassignedMembers().map((member) => (
+                        <div key={member.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+                          <Checkbox
+                            id={`member-${member.id}`}
+                            checked={selectedMemberIds.includes(member.id)}
+                            onCheckedChange={(checked) => handleMemberSelection(member.id, checked)}
+                          />
+                          <label htmlFor={`member-${member.id}`} className="flex-1 cursor-pointer">
+                            <div className="flex flex-col">
+                              <span className="font-medium text-sm">{member.name}</span>
+                              <span className="text-xs text-gray-500">
+                                {member.role.replace('_', ' ').toUpperCase()} • {member.email}
+                              </span>
+                            </div>
+                          </label>
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
-                  {getUnassignedMembers().length === 0 && (
-                    <p className="text-sm text-gray-500 mt-2">
-                      All active team members are already assigned to this project.
-                    </p>
-                  )}
-                </div>
+                    </div>
+                    
+                    {getFilteredUnassignedMembers().length === 0 && searchQuery && (
+                      <div className="text-center py-4 text-gray-500">
+                        <Search className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                        <p className="text-sm">No members found matching "{searchQuery}"</p>
+                        <p className="text-xs">Try adjusting your search terms</p>
+                      </div>
+                    )}
+                    
+                    {getFilteredUnassignedMembers().length === 0 && !searchQuery && (
+                      <p className="text-sm text-gray-500 mt-2">
+                        All active team members are already assigned to this project.
+                      </p>
+                    )}
+                  </div>
+                
                 <div className="flex gap-2">
                   <Button
-                    onClick={assignTeamMember}
-                    disabled={!selectedMemberId}
+                    onClick={assignTeamMembers}
+                    disabled={getSelectedMembersCount() === 0}
                     className="flex-1"
                   >
-                    Assign Member
+                    Assign {getSelectedMembersCount() > 0 ? `${getSelectedMembersCount()} Member(s)` : 'Members'}
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => setDialogOpen(false)}
+                    onClick={() => {
+                      setDialogOpen(false);
+                      setSelectedMemberIds([]);
+                      setSearchQuery('');
+                    }}
                     className="flex-1"
                   >
                     Cancel
@@ -210,8 +336,8 @@ export const ProjectTeamManagement = ({ projectId }) => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-medium text-sm break-words">{member.name}</h4>
-                    <Badge variant="outline" className="text-xs">
-                      {member.role}
+                    <Badge variant="outline" className={`text-xs ${getRoleBadgeColor(member.role)}`}>
+                      {member.role.replace('_', ' ').toUpperCase()}
                     </Badge>
                   </div>
                   <p className="text-xs text-gray-500 break-all">{member.email}</p>
@@ -230,10 +356,10 @@ export const ProjectTeamManagement = ({ projectId }) => {
                     </div>
                   )}
                   <p className="text-xs text-gray-400 mt-1">
-                    Assigned: {new Date(member.assigned_at).toLocaleDateString()}
+                    Assigned: {new Date(member.created_at).toLocaleDateString()}
                   </p>
                 </div>
-                {member.id !== user.id && (user.role === 'admin' || user.role === 'team_lead' || user.role === 'product_owner') && <Button
+                {member.id !== user.id && (user.role === 'admin' || user.role === 'super-admin' || user.role === 'team_lead' || user.role === 'product_owner') && <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => removeTeamMember(member.id)}

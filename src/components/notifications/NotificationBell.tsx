@@ -15,8 +15,7 @@ export const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { unreadCount, loading } = useNotifications();
 
-  console.log('🔔 NotificationBell render - unreadCount:', unreadCount, 'loading:', loading);
-
+  
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>

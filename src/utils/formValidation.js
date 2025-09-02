@@ -43,6 +43,10 @@ export const validateProjectForm = (formData) => {
     errors.projectType = 'Project type is required';
   }
 
+  if (!formData.projectNature) {
+    errors.projectNature = 'Project nature is required';
+  }
+
   if (!formData.priority) {
     errors.priority = 'Priority is required';
   }

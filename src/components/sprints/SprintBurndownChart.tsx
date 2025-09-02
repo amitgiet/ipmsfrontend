@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
-import { differenceInDays, format, addDays } from 'date-fns';
 import { apiCall } from '@/services/apiCall';
-import { toast } from 'react-toastify';
 import { allRoutes } from '@/services/routes';
+import { useParams } from 'react-router-dom';
+import { eachDayOfInterval, format, parseISO, differenceInDays } from 'date-fns';
 
 interface Sprint {
   id: string;
@@ -16,24 +16,15 @@ interface Sprint {
   status: string;
 }
 
-interface Story {
-  id: string;
-  title: string;
-  status: string;
-  story_points?: number;
-  updated_at: string;
-}
-
-interface CompletionData {
-  story_id: string;
-  story_points: number;
-  completion_date: Date;
-}
-
 interface SprintBurndownChartProps {
   sprint: Sprint;
-  stories: Story[];
   targetStoryPoints: number;
+}
+
+interface BurndownPoint {
+  date: string;
+  ideal: number;
+  remaining: number | null; // null means no data that day
 }
 
 const chartConfig = {
@@ -42,117 +33,88 @@ const chartConfig = {
     color: "#3b82f6", // Blue color for ideal line
   },
   remaining: {
-    label: "Remaining", 
+    label: "Remaining",
     color: "#10b981", // Green color for actual remaining
   },
 };
 
-export const SprintBurndownChart = ({ sprint, stories, targetStoryPoints }: SprintBurndownChartProps) => {
-  const [completionData, setCompletionData] = useState<CompletionData[]>([]);
+export const SprintBurndownChart = ({ sprint, targetStoryPoints }: SprintBurndownChartProps) => {
+  const params = useParams();
+  const projectId = params?.projectId;
+  const [burndownData, setBurndownData] = useState<BurndownPoint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [completedPoints, setCompletedPoints] = useState(0);
+  const [remainingPoints, setRemainingPoints] = useState(0);
 
-
-  const fetchCompletionData = async () => {
-    if (stories.length === 0) {
-      setLoading(false);
-      return;
+  const generateBurndownData = (res: any): BurndownPoint[] => {
+    const completedPointsList = res.data.data.userStories_completed_points || [];
+    const { total, sprint_start_date, sprint_end_date } = res.data.data.dashboard;
+    const totalTasks = total ?? 0;
+  
+    const sprintStart = parseISO(sprint_start_date);
+    const sprintEnd = parseISO(sprint_end_date);
+  
+    // Find last completion date
+    let lastCompletionDate = sprintEnd;
+    if (completedPointsList.length > 0) {
+      const last = completedPointsList[completedPointsList.length - 1];
+      lastCompletionDate = parseISO(last.done_created_at);
     }
-
+  
+    // Extend timeline until max(sprintEnd, lastCompletionDate)
+    const days = eachDayOfInterval({
+      start: sprintStart,
+      end: lastCompletionDate,
+    });
+  
+    // Map completions into lookup
+    let runningCompleted = 0;
+    const completionByDate: Record<string, number> = {};
+    completedPointsList.forEach((item: any) => {
+      runningCompleted += parseInt(item.total_story_points ?? 0);
+      const formatted = format(parseISO(item.done_created_at), "yyyy-MM-dd");
+      completionByDate[formatted] = totalTasks - runningCompleted;
+    });
+  
+    // Build data points
+    return days.map((day, idx) => {
+      const formatted = format(day, "yyyy-MM-dd");
+  
+      // Ideal line only decreases within sprint duration
+      const ideal =
+        day <= sprintEnd
+          ? totalTasks - (totalTasks / (differenceInDays(sprintEnd, sprintStart) || 1)) * idx
+          : null; // After sprint, ideal stops
+  
+      return {
+        date: format(day, "MMM d"),
+        ideal,
+        remaining: completionByDate[formatted] ?? null,
+      };
+    });
+  };
+  
+  const fetchCompletions = async () => {
     try {
-      const storyIds = stories.map(story => story.id);
+      setLoading(true);
+      const res = await apiCall(allRoutes.sprints.burndownChart(sprint.id, projectId), "get");
 
-      // Fetch completion dates from status change log
-      const { data, error } = await apiCall(allRoutes.sprints.getStoryStatusChanges(storyIds), 'GET');
+      const { completed, remaining } = res.data.data.dashboard;
+      setCompletedPoints(completed ?? 0);
+      setRemainingPoints(remaining ?? 0);
 
-
-      if (error) {
-        toast.error("Failed to fetch story completion data");
-        return;
-      }
-
-      const completions: CompletionData[] = (data || [])
-        .filter(change => change.user_stories && (change.user_stories as any).story_points)
-        .map(change => ({
-          story_id: change.story_id,
-          story_points: (change.user_stories as any).story_points,
-          completion_date: new Date(change.changed_at)
-        }));
-
-      setCompletionData(completions);
+      const burndown = generateBurndownData(res);
+      setBurndownData(burndown);
     } catch (error) {
-      toast.error("Failed to fetch completion data");
+      console.error("Error fetching completions:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCompletionData();
-  }, [stories]);
-
-  // Generate burndown chart data with proper ideal line
-  const generateBurndownData = () => {
-    const startDate = new Date(sprint.start_date);
-    const endDate = new Date(sprint.end_date);
-    const currentDate = new Date();
-    const totalDays = differenceInDays(endDate, startDate) + 1;
-    
-    const data = [];
-    
-    // Group completions by date to handle multiple completions on same day
-    const completionsByDate = new Map<string, number>();
-    completionData.forEach(completion => {
-      const dateKey = format(completion.completion_date, 'yyyy-MM-dd');
-      const currentPoints = completionsByDate.get(dateKey) || 0;
-      completionsByDate.set(dateKey, currentPoints + completion.story_points);
-    });
-    
-    // Track running remaining points for actual line
-    let currentRemaining = targetStoryPoints;
-    
-    // Generate data points for each day
-    for (let dayIndex = 0; dayIndex < totalDays; dayIndex++) {
-      const currentDateInSprint = addDays(startDate, dayIndex);
-      const currentDateString = format(currentDateInSprint, 'yyyy-MM-dd');
-      const dayNumber = dayIndex + 1;
-      
-      // Calculate ideal remaining points (straight line from start to end)
-      const idealRemaining = targetStoryPoints - (targetStoryPoints * dayIndex / (totalDays - 1));
-      
-      // Calculate actual remaining points
-      let actualRemaining = currentRemaining;
-      
-      // Only process dates up to today for actual line
-      if (currentDateInSprint <= currentDate) {
-        const pointsCompletedToday = completionsByDate.get(currentDateString) || 0;
-        if (pointsCompletedToday > 0) {
-          currentRemaining -= pointsCompletedToday;
-          actualRemaining = currentRemaining;
-        }
-        
-        data.push({
-          day: dayNumber,
-          date: format(currentDateInSprint, 'MMM dd'),
-          ideal: Math.max(0, idealRemaining),
-          remaining: Math.max(0, actualRemaining),
-        });
-      } else {
-        // For future dates, only show ideal line
-        data.push({
-          day: dayNumber,
-          date: format(currentDateInSprint, 'MMM dd'),
-          ideal: Math.max(0, idealRemaining),
-          remaining: undefined,
-        });
-      }
-    }
-    
-    return data;
-  };
-
-  const burndownData = generateBurndownData();
-  const completedPoints = completionData.reduce((sum, completion) => sum + completion.story_points, 0);
-  const remainingPoints = targetStoryPoints - completedPoints;
+    fetchCompletions();
+  }, [sprint]);
 
   if (loading) {
     return (
@@ -183,6 +145,7 @@ export const SprintBurndownChart = ({ sprint, stories, targetStoryPoints }: Spri
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {/* Stats row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">{targetStoryPoints}</div>
@@ -197,26 +160,30 @@ export const SprintBurndownChart = ({ sprint, stories, targetStoryPoints }: Spri
               <div className="text-sm text-gray-600">Remaining Points</div>
             </div>
           </div>
-          
+
+          {/* Chart */}
           <ChartContainer config={chartConfig} className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={burndownData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+              <LineChart
+                data={burndownData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date" 
+                <XAxis
+                  dataKey="date"
                   tick={{ fontSize: 12 }}
                   angle={-45}
                   textAnchor="end"
                   height={60}
                 />
-                <YAxis 
+                <YAxis
                   label={{ value: 'Story Points Remaining', angle: -90, position: 'insideLeft' }}
                   tick={{ fontSize: 12 }}
                   domain={[0, targetStoryPoints]}
                 />
-                <ChartTooltip 
-                  content={<ChartTooltipContent />}
-                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+
+                {/* Ideal line (blue dashed) */}
                 <Line
                   type="linear"
                   dataKey="ideal"
@@ -225,8 +192,10 @@ export const SprintBurndownChart = ({ sprint, stories, targetStoryPoints }: Spri
                   strokeDasharray="5 5"
                   dot={false}
                   name="Ideal Burndown"
-                  connectNulls={false}
+                  connectNulls={true}
                 />
+
+                {/* Actual line (green) */}
                 <Line
                   type="linear"
                   dataKey="remaining"
@@ -234,7 +203,7 @@ export const SprintBurndownChart = ({ sprint, stories, targetStoryPoints }: Spri
                   strokeWidth={3}
                   dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
                   name="Actual Remaining"
-                  connectNulls={false}
+                  connectNulls={true}
                 />
               </LineChart>
             </ResponsiveContainer>

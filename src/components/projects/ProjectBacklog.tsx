@@ -10,13 +10,12 @@ import { UserStoryCard } from '@/components/backlog/UserStoryCard.tsx';
 import { ChangeRequestDialog } from '@/components/backlog/ChangeRequestDialog.tsx';
 import { ChangeRequestsSection } from '@/components/backlog/ChangeRequestsSection.tsx';
 import { useBacklogData } from '@/components/backlog/useBacklogData.ts';
-// import { useUserRole } from '@/hooks/useUserRole.tsx';
 import { useAuth } from '@/hooks/useAuth.jsx';
-// import { useSRSDownload } from '@/hooks/useSRSDownload.tsx';
+// import { useSRSDownload } from '@/hooks/useStoryDocuments.ts';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
 import { toast } from 'react-toastify';
-
+import { useNavigate } from 'react-router-dom';
 interface UserStory {
   id: string;
   title: string;
@@ -35,6 +34,7 @@ interface ProjectBacklogProps {
 }
 
 export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, projectName = 'Project' }: ProjectBacklogProps) => {
+  const navigate = useNavigate();
   const { userStories, setUserStories, loading, loadUserStories } = useBacklogData(projectId);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -108,8 +108,7 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
   };
 
   const updateStoryStatus = async (storyId: string, newStatus: UserStory['status']) => {
-    if (!canEdit) return;
-    console.log('Status update requested but will be handled by business logic later:', { storyId, newStatus });
+    if (!canEdit) return; 
   };
 
   const updateStoryPriority = async (storyId: string, newPriority: UserStory['priority']) => {
@@ -148,10 +147,56 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
     }
   };
 
+
+  const downloadSrs = async () => {
+    if (!canEdit || userStories.length === 0) return;
+  
+    try {
+      const response = await apiCall(
+        allRoutes.stories.downloadSRS(projectId),
+        'get',
+        null,
+        {
+          responseType: 'blob', 
+        }
+      );
+  
+      if (!response || response.error) return;
+  
+      // Create a blob URL
+      const blob = new Blob([response.data], { type: response.data.type });
+      const url = window.URL.createObjectURL(blob);
+  
+      // Create an anchor link and click it
+      const link = document.createElement('a');
+      link.href = url;
+  
+      // 👇 backend should set filename in header, fallback otherwise
+      const contentDisposition = response.headers?.['content-disposition'];
+      let filename = 'SRS.docx';
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (match?.[1]) filename = match[1];
+      }
+  
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+  
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+  
+    } catch (err) {
+      console.error('Error downloading SRS:', err);
+    }
+  };
+  
+
   const handleDownloadSRS = async () => {
     if (!canEdit || userStories.length === 0) return;
 
-    // await downloadSRS(projectId, projectName, userStories);
+    await downloadSrs();
   };
 
   const filteredStories = userStories.filter(story => {
@@ -203,13 +248,11 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
             {canEdit && !readOnly && userStories.length > 0 && (
               <Button
                 onClick={handleDownloadSRS}
-                // disabled={isGenerating}
                 className="flex items-center gap-2"
                 variant="outline"
               >
                 <Download className="h-4 w-4" />
                 Download SRS
-                {/* {isGenerating ? 'Generating...' : 'Download SRS'} */}
               </Button>
             )}
           </div>
@@ -246,6 +289,7 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
                       <SelectItem value="to_do">To Do</SelectItem>
                       <SelectItem value="in_grooming">In Grooming</SelectItem>
                       <SelectItem value="ready_for_estimate">Ready for Estimate</SelectItem>
+                      <SelectItem value="estimated">Estimated</SelectItem>
                       <SelectItem value="ready">Ready</SelectItem>
                       <SelectItem value="in_progress">In Progress</SelectItem>
                       <SelectItem value="qa">QA</SelectItem>
@@ -255,7 +299,7 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
                 </div>
                 {canSubmitChangeRequests && currentUser && (
                   <Button
-                    onClick={() => setShowChangeRequestDialog(true)}
+                    onClick={()=>navigate(`/change-request/${projectId}`)}
                     className="flex items-center gap-2"
                   >
                     <FileEdit className="h-4 w-4" />
@@ -282,6 +326,7 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
                     <SelectItem value="to_do">To Do</SelectItem>
                     <SelectItem value="in_grooming">In Grooming</SelectItem>
                     <SelectItem value="ready_for_estimate">Ready for Estimate</SelectItem>
+                    <SelectItem value="estimated">Estimated</SelectItem>
                     <SelectItem value="ready">Ready</SelectItem>
                     <SelectItem value="in_progress">In Progress</SelectItem>
                     <SelectItem value="qa">QA</SelectItem>

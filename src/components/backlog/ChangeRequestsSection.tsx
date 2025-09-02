@@ -7,6 +7,10 @@ import { useChangeRequests, ChangeRequest } from '@/hooks/useChangeRequests';
 import { ChangeRequestComments } from './ChangeRequestComments';
 import { formatDistanceToNow } from 'date-fns';
 import { FileEdit, MessageSquare, Check, X, Clock, ArrowRight, Workflow, Bell } from 'lucide-react';
+import { AddEpicDialog } from '../mindmap/AddEpicDialog';
+import { useMindmapData } from '../mindmap/useMindmapData';
+import { useMindmapOperations } from '../mindmap/useMindmapOperations';
+import { toast } from 'react-toastify';
 
 interface ChangeRequestsSectionProps {
   projectId: string;
@@ -27,8 +31,12 @@ export const ChangeRequestsSection = ({
   canApproveAsClient = false,
   canProcessAsEpic = false
 }: ChangeRequestsSectionProps) => {
+  const [showAddEpicDialog, setShowAddEpicDialog] = useState(false);
+  const { saveMindmapNode } = useMindmapOperations(projectId);
+  const { nodes, setNodes, loading: loadingMindmap, loadMindmapData } = useMindmapData(projectId);
   const { changeRequests, loading, updateChangeRequestStatus, processAsEpic, getUnreadCommentsCount, markCommentsAsViewed } = useChangeRequests(projectId);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const handlePOApproval = async (requestId: string) => {
     await updateChangeRequestStatus(requestId, 'po_approved', undefined, currentUserEmail);
@@ -74,10 +82,10 @@ export const ChangeRequestsSection = ({
 
   const getPriorityBadge = (priority: ChangeRequest['priority']) => {
     const priorityColors = {
-      low: 'bg-gray-100 text-gray-800',
-      medium: 'bg-blue-100 text-blue-800',
-      high: 'bg-orange-100 text-orange-800',
-      urgent: 'bg-red-100 text-red-800',
+      LOW: 'bg-gray-100 text-gray-800',
+      MEDIUM: 'bg-blue-100 text-blue-800',
+      HIGH: 'bg-orange-100 text-orange-800',
+      URGENT: 'bg-red-100 text-red-800',
     };
 
     return (
@@ -96,14 +104,17 @@ export const ChangeRequestsSection = ({
   };
 
   const canUserActOnRequest = (request: ChangeRequest) => {
-    if (request.status === 'pending' && canReview) return true;
-    if (request.status === 'po_approved' && canApproveAsClient) return true;
-    if (request.status === 'client_approved' && canProcessAsEpic) return true;
+    const currentStatus = request.status || 'pending';
+    if (currentStatus === 'pending' && canReview) return true;
+    if (currentStatus == 'po_approved' && canApproveAsClient) return true;
+    if (currentStatus == 'client_approved' && canProcessAsEpic) return true;
     return false;
   };
 
-  const getActionButtons = (request: ChangeRequest) => {
-    if (request.status === 'pending' && canReview) {
+  const getActionButtons = (request) => {
+    const currentStatus = request.status || 'pending';
+  
+    if (currentStatus == 'pending' && canReview) {
       return (
         <div className="flex gap-2">
           <Button
@@ -126,24 +137,24 @@ export const ChangeRequestsSection = ({
       );
     }
 
-    if (request.status === 'po_approved' && canApproveAsClient) {
+    if (currentStatus == 'po_approved' && canApproveAsClient) {
       return (
         <Button
           size="sm"
           onClick={() => handleClientApproval(request.id)}
           className="bg-blue-600 hover:bg-blue-700"
-        >
-          <Check className="h-4 w-4 mr-1" />
-          Client Approve
-        </Button>
+          >
+            <Check className="h-4 w-4 mr-1" />
+            Client Approve
+          </Button>
       );
     }
 
-    if (request.status === 'client_approved' && canProcessAsEpic) {
+    if (currentStatus === 'client_approved' && canProcessAsEpic) {
       return (
         <Button
           size="sm"
-          onClick={() => handleProcessAsEpic(request.id)}
+          onClick={() =>{setSelectedId(request.id);  setShowAddEpicDialog(true)}}
           className="bg-purple-600 hover:bg-purple-700"
         >
           <Workflow className="h-4 w-4 mr-1" />
@@ -155,7 +166,7 @@ export const ChangeRequestsSection = ({
     return null;
   };
 
-  const getWorkflowProgress = (status: ChangeRequest['status']) => {
+  const getWorkflowProgress = (status: string) => {
     const steps = ['pending', 'po_approved', 'client_approved', 'processed'];
     const currentIndex = steps.indexOf(status);
     
@@ -193,7 +204,37 @@ export const ChangeRequestsSection = ({
     );
   };
 
-  if (loading) {
+  const addEpicToUsers = async (epicTitle: string, selectedUserIds: string[]) => {
+    if (!epicTitle.trim() || selectedUserIds.length === 0) return;
+
+    try {
+      let isAllSuccess = true;
+      for (const userId of selectedUserIds) {
+        const newNode = {
+          id: `node_${Date.now()}_${userId}`,
+          title: epicTitle,
+          type: 'child',
+          children: [],
+          isExpanded: true,
+          hasUserStory: false,
+        };
+
+        const response = await saveMindmapNode(newNode, userId);
+        if (!response.success) {
+          isAllSuccess = false;
+        }
+      }
+
+      if (isAllSuccess) {
+        handleProcessAsEpic(selectedId);
+      }
+    } catch (error) {
+      console.error('Failed to add epic:', error);
+      toast.error("Failed to add epic");
+    }
+  };
+
+  if (loading || loadingMindmap) {
     return (
       <Card>
         <CardHeader>
@@ -212,6 +253,7 @@ export const ChangeRequestsSection = ({
     );
   }
 
+  const userNodes = nodes.filter(node => node.type === 'user');
   return (
     <>
       <Card>
@@ -240,24 +282,56 @@ export const ChangeRequestsSection = ({
                   <div key={request.id} className="border rounded-lg p-4 space-y-3">
                     <div className="flex justify-between items-start">
                       <div className="space-y-1">
-                        <h4 className="font-medium">{request.title}</h4>
+                        <h4 className="font-medium">{request.description}</h4>
                         <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <span>by {request.requested_by_name}</span>
+                          <span>by {request.user?.name || 'Unknown User'}</span>
                           <span>•</span>
                           <span>{getTimestamp(request.created_at)}</span>
+                          <span>•</span>
+                          <span>CR: {request.cr_code}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {getPriorityBadge(request.priority)}
-                        {getStatusBadge(request.status)}
+                        {getPriorityBadge(request.priority.toUpperCase())}
+                        {getStatusBadge(request.status?.[0]?.name || 'pending')}
                       </div>
                     </div>
 
-                    <p className="text-gray-700 whitespace-pre-wrap">{request.description}</p>
+                    <div className="space-y-2">
+                      <p className="text-gray-700 whitespace-pre-wrap">{request.description}</p>
+                      
+                      {request.reason_for_change && (
+                        <div className="text-sm">
+                          <span className="font-medium text-gray-600">Reason: </span>
+                          <span className="text-gray-700">{request.reason_for_change}</span>
+                        </div>
+                      )}
+                      
+                      {request.expected_benefits && (
+                        <div className="text-sm">
+                          <span className="font-medium text-gray-600">Benefits: </span>
+                          <span className="text-gray-700">{request.expected_benefits}</span>
+                        </div>
+                      )}
+                      
+                      {request.potential_risks && (
+                        <div className="text-sm">
+                          <span className="font-medium text-gray-600">Risks: </span>
+                          <span className="text-gray-700">{request.potential_risks}</span>
+                        </div>
+                      )}
+                      
+                      {request.preferred_timeline && (
+                        <div className="text-sm">
+                          <span className="font-medium text-gray-600">Timeline: </span>
+                          <span className="text-gray-700">{request.preferred_timeline}</span>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Workflow Progress */}
                     <div className="bg-gray-50 rounded p-3">
-                      {getWorkflowProgress(request.status)}
+                      {getWorkflowProgress(request.status || 'pending')}
                     </div>
 
                     {/* Action Buttons */}
@@ -312,6 +386,13 @@ export const ChangeRequestsSection = ({
           )}
         </DialogContent>
       </Dialog>
+
+      <AddEpicDialog
+        open={showAddEpicDialog}
+        onOpenChange={setShowAddEpicDialog}
+        users={userNodes}
+        onAddEpic={addEpicToUsers}
+      />
     </>
   );
 };

@@ -68,6 +68,16 @@ export const AdminHeader = ({
                 Dashboard
               </DropdownMenuItem>
 
+              <DropdownMenuItem
+                onClick={() => navigate('/dashboard/type-and-nature')}
+                className={`flex items-center gap-2 cursor-pointer ${
+                  activeSection === 'type-and-nature' ? 'bg-blue-50 text-blue-700' : ''
+                }`}
+              >
+                <BookOpen className="h-4 w-4" />
+                Type and Nature
+              </DropdownMenuItem>
+                
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
@@ -122,7 +132,6 @@ export const AdminHeader = ({
             variant="ghost"
             size="sm"
             onClick={() => {
-              console.log('🔘 AdminHeader logout button clicked');
               onLogout();
             }}
             className="flex items-center gap-2"

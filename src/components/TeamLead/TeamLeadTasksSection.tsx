@@ -54,13 +54,11 @@ export const TeamLeadTasksSection = ({ currentUserEmail }: TeamLeadTasksSectionP
     }
 
     // Business logic restrictions
-    if ((task.status === 'in_progress' || task.status === 'completed') && newStatus === 'to_do') {
-      console.log('❌ Cannot move task back to "to do" from', task.status);
+    if ((task.status === 'in_progress' || task.status === 'completed') && newStatus === 'to_do') { 
       return; // Prevent the status change
     }
 
-    try {
-      console.log('🔄 Updating task status:', taskId, newStatus);
+    try { 
 
       const { error } = await apiCall(allRoutes.tasks.updateTaskStatus(taskId, newStatus), 'put');
 
@@ -68,9 +66,7 @@ export const TeamLeadTasksSection = ({ currentUserEmail }: TeamLeadTasksSectionP
         console.error('❌ Error updating task status:', error);
         toast.error("Failed to update task status");
         return;
-      }
-
-      console.log('✅ Task status updated successfully');
+      } 
       
       toast.success("Task status updated successfully");
 

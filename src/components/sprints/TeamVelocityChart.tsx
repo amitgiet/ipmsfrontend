@@ -5,22 +5,9 @@ import { Button } from '@/components/ui/button';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { apiCall } from '@/services/apiCall';
+import { allRoutes } from '@/services/routes';
 import { toast } from 'react-toastify';
-
-interface Sprint {
-  id: string;
-  sprint_name: string;
-  status: string;
-  start_date: string;
-  end_date: string;
-}
-
-interface VelocityData {
-  sprint_name: string;
-  story_points_completed: number;
-  sprint_id: string;
-}
 
 interface TeamVelocityChartProps {
   projectId: string;
@@ -34,8 +21,8 @@ const chartConfig = {
 };
 
 export const TeamVelocityChart = ({ projectId }: TeamVelocityChartProps) => {
-  const [allSprints, setAllSprints] = useState<Sprint[]>([]);
-  const [velocityData, setVelocityData] = useState<VelocityData[]>([]);
+  const [allSprints, setAllSprints] = useState([]);
+  const [velocityData, setVelocityData] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -45,83 +32,26 @@ export const TeamVelocityChart = ({ projectId }: TeamVelocityChartProps) => {
     try {
       setLoading(true);
 
-      // Fetch all sprints for the project, ordered by start_date descending
-      const { data: sprints, error: sprintsError } = await supabase
-        .from('sprints')
-        .select('id, sprint_name, status, start_date, end_date')
-        .eq('project_id', projectId)
-        .order('start_date', { ascending: false });
-
-      if (sprintsError) {
-        console.error('Error fetching sprints:', sprintsError);
-        toast.error("Failed to fetch sprint data");
-        return;
-      }
-
-      setAllSprints(sprints || []);
-
-      // For each sprint, calculate total story points completed
-      const velocityPromises = (sprints || []).map(async (sprint) => {
-        // Get stories in this sprint
-        const { data: sprintBacklog, error: backlogError } = await supabase
-          .from('sprint_backlog')
-          .select('story_id')
-          .eq('sprint_id', sprint.id);
-
-        if (backlogError) {
-          console.error(`Error fetching sprint backlog for sprint ${sprint.id}:`, backlogError);
-          return {
-            sprint_name: sprint.sprint_name,
-            story_points_completed: 0,
-            sprint_id: sprint.id,
-          };
+      const { data: velocityRes, error } = await apiCall(
+        allRoutes.sprints.getTeamVelocityChart(projectId),
+        'get',
+        {
+          order_by: 'start_date',
+          order_by_column: 'desc',
+          order_direction: 'desc',
         }
+      );
 
-        const storyIds = sprintBacklog?.map(item => item.story_id) || [];
+      if (error) return;
 
-        if (storyIds.length === 0) {
-          return {
-            sprint_name: sprint.sprint_name,
-            story_points_completed: 0,
-            sprint_id: sprint.id,
-          };
-        }
+      const formattedData = velocityRes.data.map((sprint: any) => ({
+        sprint_name: sprint.name,
+        story_points_completed: sprint.total_done_story_points
+          ? Number(sprint.total_done_story_points)
+          : 0, 
+      }));
 
-        // Get completed stories with their story points
-        const { data: completedStories, error: storiesError } = await supabase
-          .from('story_status_changes')
-          .select(`
-            story_id,
-            user_stories!inner(id, story_points)
-          `)
-          .eq('new_status', 'done')
-          .in('story_id', storyIds);
-
-        if (storiesError) {
-          console.error(`Error fetching completed stories for sprint ${sprint.id}:`, storiesError);
-          return {
-            sprint_name: sprint.sprint_name,
-            story_points_completed: 0,
-            sprint_id: sprint.id,
-          };
-        }
-
-        // Calculate total story points
-        const totalStoryPoints = (completedStories || []).reduce((total, story) => {
-          const storyPoints = story.user_stories?.story_points || 0;
-          return total + storyPoints;
-        }, 0);
-
-        return {
-          sprint_name: sprint.sprint_name,
-          story_points_completed: totalStoryPoints,
-          sprint_id: sprint.id,
-        };
-      });
-
-      const velocityResults = await Promise.all(velocityPromises);
-      setVelocityData(velocityResults);
-      toast.success("Velocity data loaded successfully");
+      setVelocityData(formattedData);
 
     } catch (error) {
       console.error('Error in fetchSprintsAndVelocity:', error);
@@ -130,6 +60,7 @@ export const TeamVelocityChart = ({ projectId }: TeamVelocityChartProps) => {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchSprintsAndVelocity();
@@ -145,7 +76,7 @@ export const TeamVelocityChart = ({ projectId }: TeamVelocityChartProps) => {
   const hasNextPage = currentPage < totalPages - 1;
   const hasPrevPage = currentPage > 0;
 
-  const averageVelocity = velocityData.length > 0 
+  const averageVelocity = velocityData.length > 0
     ? Math.round(velocityData.reduce((sum, data) => sum + data.story_points_completed, 0) / velocityData.length)
     : 0;
 
@@ -166,7 +97,7 @@ export const TeamVelocityChart = ({ projectId }: TeamVelocityChartProps) => {
   }
 
   return (
-    <Card className="max-w-4xl">
+    <Card className="">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -210,18 +141,18 @@ export const TeamVelocityChart = ({ projectId }: TeamVelocityChartProps) => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={getCurrentPageData()} margin={{ top: 20, right: 20, left: 20, bottom: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="sprint_name" 
+                <XAxis
+                  dataKey="sprint_name"
                   tick={{ fontSize: 11 }}
                   angle={-45}
                   textAnchor="end"
                   height={50}
                 />
-                <YAxis 
+                <YAxis
                   label={{ value: 'Story Points', angle: -90, position: 'insideLeft' }}
                   tick={{ fontSize: 11 }}
                 />
-                <ChartTooltip 
+                <ChartTooltip
                   content={<ChartTooltipContent />}
                 />
                 <Bar

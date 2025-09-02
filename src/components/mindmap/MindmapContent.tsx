@@ -28,8 +28,7 @@ export const MindmapContent = ({
   onOpenUserStoryDialog,
   onDeleteNode,
   readOnly = false
-}: MindmapContentProps) => {
-  console.log(nodes);
+}: MindmapContentProps) => { 
   return (
     <div className="border rounded-lg p-4 min-h-[300px] overflow-x-auto">
       {nodes.length === 0 ? (

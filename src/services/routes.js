@@ -10,6 +10,13 @@ export const allRoutes = {
     logout: '/logout',
     teamLogin: '/team-login'
   },
+  master:{
+    types_create_or_get: '/master/project-types',
+    types_update_or_delete: (id) => `/master/project-types/${id}`,
+
+    natures_create_or_get: '/master/project-natures',
+    natures_update_or_delete: (id) => `/master/project-natures/${id}`,
+  },
   projects: {
     dashboard: '/dashboard',
     list: '/projects',
@@ -27,7 +34,20 @@ export const allRoutes = {
     get_assigned_projects: '/user-project/assigned-projects'
   },
   productOwner: {
-    time_logs_list: (isProjectLog = false) => `/time-logs?is_project_log=${isProjectLog}`,
+    time_logs_list: (isProjectLog = 0, projectId, perPage, isAll = 0) =>
+      {
+        let url = `/time-logs?is_project_log=${isProjectLog}`
+        if(projectId){
+          url += `&project_id=${projectId}`
+        }
+        if(perPage){
+          url += `&per_page=${perPage}`
+        }
+        if(isAll){
+          url += `&is_all=${isAll}`
+        }
+        return url
+      },
     add_time_log: '/time-logs',
     dashboard: '/dashboard',  
     get_assigned_projects: '/user-project/assigned-projects'
@@ -39,7 +59,7 @@ export const allRoutes = {
   },
   comments: {
     store: '/comments',
-    get: (projectId, type, storyId, bugId) => {
+    get: (projectId, type, storyId, bugId, cr_id) => {
       let url = `comments?project_id=${projectId}&type=${type}`
       if(type === 'user_story'){
         url += `&user_story_id=${storyId}`
@@ -50,19 +70,36 @@ export const allRoutes = {
       if(type === 'bug'){
         url += `&bug_id=${bugId}`
       }
+      if(type === 'change_request'){
+        url += `&change_request_id=${cr_id}`
+      }
       return url
     },
     getByStoryId: (storyId, projectId) => `comments?story_id=${storyId}&project_id=${projectId}`
   },
   tasks: {
-    list: (projectId) => `/tasks?project_id=${projectId}`,
+    list: (projectId, user_story_id, is_my_task) =>{
+      let url = `/tasks`
+      let params = []
+      if(user_story_id){
+        params.push(`user_story_id=${user_story_id}`)
+      }
+      if(projectId){
+        params.push(`project_id=${projectId}`)
+      }
+      if(is_my_task){
+        params.push(`is_my_task=${is_my_task}`)
+      }
+      const finalUrl = `${url}?${params.join('&')}`
+      return finalUrl
+    },
     create: '/tasks',
     update: (id) => `/tasks/${id}`,
     get: (id) => `/tasks/${id}`,
     delete: (id, projectId) => `/tasks/${id}?project_id=${projectId}`,
     assign: (id) => `/tasks/${id}/assign`,
     updateStatus: (id) => `/tasks/${id}/status`,
-    update_assignee: (id) => `/tasks/${id}/change-user`
+    update_assignee: (id) => `/tasks/${id}/change-user`,
   },
   sprints: {
     dashboard: (projectId) => `/sprints/dashboard?project_id=${projectId}`,
@@ -77,7 +114,15 @@ export const allRoutes = {
     getSprintById: (id, projectId) => `/sprints/${id}?project_id=${projectId}`,
     getSprintBacklog: (id) => `/sprints/${id}/backlog`,
     uploadImage: (fileName, file) => `/sprints/upload-image?fileName=${fileName}&file=${file}`,
-    
+    burndownChart: (sprintId, projectId) => `/sprints/${sprintId}/burndown?project_id=${projectId}`,
+    getTeamVelocityChart: (projectId) => `/team-velocity?project_id=${projectId}`,
+    bugLabel:(projectId, perPage) =>{ 
+      let url = `bugs/labels?project_id=${projectId}`
+      if(perPage){
+        url += `&per_page=${perPage}`
+      }
+      return url
+    },
     //Issues or bugs
     getBugs: (projectId, sprintId, status) =>
       {
@@ -91,6 +136,7 @@ export const allRoutes = {
         return url
       },
     createBug: '/bugs',
+    closeBug: (bugId, projectId) => `/bugs/${bugId}/close?project_id=${projectId}`,
     resolveBug: (bugId, projectId) => `/bugs/${bugId}/resolve?project_id=${projectId}`,
     reopenBug: (bugId, projectId) => `/bugs/${bugId}/reopen?project_id=${projectId}`,
   },
@@ -113,7 +159,8 @@ export const allRoutes = {
     addTask: (id) => `/user-stories/${id}/tasks`,
     markAsReady: (id) => `/user-stories/${id}/mark-ready`,
     updateStoryPoints: (id) => `/user-stories/${id}/update-story-points`,
-    markReadyForEstimate: (id, projectId) => `/user-stories/${id}/ready-for-estimate?project_id=${projectId}`
+    markReadyForEstimate: (id, projectId) => `/user-stories/${id}/ready-for-estimate?project_id=${projectId}`,
+    downloadSRS: (projectId) => `/srs-download?project_id=${projectId}`,
   },
   testCases: {
     list: (projectId, storyId) => `/test-cases?project_id=${projectId}&user_story_id=${storyId}`,
@@ -162,7 +209,13 @@ export const allRoutes = {
     update: (id) => `/clients/${id}`,
     get: (id) => `/clients/${id}`,
     delete: (id) => `/clients/${id}`,
-    projects: (id) => `/clients/${id}/projects`
+    projects: (id) => `/clients/${id}/projects`,
+    changeRequests: '/change-requests',
+    loadChangeRequests: (projectId) => `/change-requests?project_id=${projectId}`,
+    po_approved: (id, projectId) => `/change-requests/${id}/po-approved?project_id=${projectId}`,
+    po_reject: (id, projectId) => `/change-requests/${id}/po-rejected?project_id=${projectId}`,
+    client_approved: (id, projectId) => `/change-requests/${id}/client-approved?project_id=${projectId}`,
+    po_processed: (id, projectId) => `/change-requests/${id}/po-processed?project_id=${projectId}`,
   },
   dashboard: {
     stats: '/dashboard/stats',

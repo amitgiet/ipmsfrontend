@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import ProjectDashboard from "./ProjectDashboard.tsx";
 import { projectService } from "@/services/ProjectService/projectService";
 
@@ -19,10 +19,11 @@ const ProjectDashboardPage = () => {
   const projectId = params?.projectId;
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
-
+  const [loading, setLoading] = useState(true);
   const fetchProjectDetails = async () => {
     const result = await projectService.getProjectDetails(projectId);
     setProject(result.data.data);
+    setLoading(false);
   };
   
   useEffect(() => {
@@ -34,6 +35,19 @@ const ProjectDashboardPage = () => {
   const handleBack = () => {
     navigate("/dashboard");
   };
+
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold">Project Details</h2>
+        <div className="text-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading project details...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!project) {
     return (

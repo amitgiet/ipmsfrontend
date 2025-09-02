@@ -22,8 +22,7 @@ export const processExcelFile = (file: File): Promise<ProcessResult> => {
           defval: '', // Use empty string as default for missing values
           raw: false // Convert all values to strings first
         });
-
-        console.log('Raw Excel data:', jsonData);
+ 
 
         const errors: string[] = [];
         const processedData: ExcelTeamMember[] = [];
@@ -47,15 +46,11 @@ export const processExcelFile = (file: File): Promise<ProcessResult> => {
               skills: validateSkills(row.skills),
               is_active: validateIsActive(row.is_active)
             };
-            
-            console.log(`Processed member ${index + 1}:`, teamMember);
+             
             processedData.push(teamMember);
           }
         });
-
-        console.log('Validation errors:', errors);
-        console.log('Successfully processed members:', processedData.length);
-
+ 
         resolve({ errors, processedData });
       } catch (error) {
         console.error('Error processing Excel file:', error);

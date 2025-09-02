@@ -115,8 +115,7 @@ export const SprintKanbanView = ({ stories, sprintStatus, onStoryUpdate, sprint 
         ? { ...story, status: newStatus }
         : story
     );
-
-    console.log(" updatedStories ",stories, updatedStories);
+ 
     const newSequenceNumber = getNewSequenceNumber(destination.index, stories);
 
     const data = new FormData();

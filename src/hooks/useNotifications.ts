@@ -51,14 +51,12 @@ export const useNotifications = () => {
   ];
 
   const fetchNotifications = async () => {
-    if (!currentUser?.email) {
-      console.log('🔍 No current user email, skipping notification fetch');
+    if (!currentUser?.email) { 
       setLoading(false);
       return;
     }
 
-    try {
-      console.log('🔄 Fetching notifications for:', currentUser.email);
+    try { 
       
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -69,8 +67,7 @@ export const useNotifications = () => {
       );
       
       setNotifications(userNotifications);
-      setUnreadCount(userNotifications.filter(n => !n.is_read).length);
-      console.log('✅ Fetched notifications:', userNotifications.length, 'unread:', userNotifications.filter(n => !n.is_read).length);
+      setUnreadCount(userNotifications.filter(n => !n.is_read).length); 
     } catch (error) {
       console.error('❌ Error in fetchNotifications:', error);
       toast({
@@ -84,8 +81,7 @@ export const useNotifications = () => {
   };
 
   const markAsRead = async (notificationId: string) => {
-    try {
-      console.log('🔄 Marking notification as read:', notificationId);
+    try { 
 
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 200));
@@ -98,8 +94,7 @@ export const useNotifications = () => {
             : n
         )
       );
-      setUnreadCount(prev => Math.max(0, prev - 1));
-      console.log('✅ Notification marked as read');
+      setUnreadCount(prev => Math.max(0, prev - 1)); 
     } catch (error) {
       console.error('❌ Error in markAsRead:', error);
     }
@@ -108,8 +103,7 @@ export const useNotifications = () => {
   const markAllAsRead = async () => {
     if (!currentUser?.email) return;
 
-    try {
-      console.log('🔄 Marking all notifications as read');
+    try { 
 
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -120,16 +114,14 @@ export const useNotifications = () => {
         is_read: true, 
         updated_at: new Date().toISOString() 
       })));
-      setUnreadCount(0);
-      console.log('✅ All notifications marked as read');
+      setUnreadCount(0); 
     } catch (error) {
       console.error('❌ Error in markAllAsRead:', error);
     }
   };
 
   const deleteNotification = async (notificationId: string) => {
-    try {
-      console.log('🔄 Deleting notification:', notificationId);
+    try { 
 
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 200));
@@ -141,8 +133,7 @@ export const useNotifications = () => {
       if (notificationToDelete && !notificationToDelete.is_read) {
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
-      
-      console.log('✅ Notification deleted');
+       
     } catch (error) {
       console.error('❌ Error in deleteNotification:', error);
     }
@@ -162,58 +153,55 @@ export const useNotifications = () => {
     }
 
     // Show toast for new notification
-    toast({
-      title: newNotification.title,
-      description: newNotification.message,
-    });
+    // toast({
+    //   title: newNotification.title,
+    //   description: newNotification.message,
+    // });
 
     return newNotification;
   };
 
-  useEffect(() => {
-    if (currentUser?.email) {
-      fetchNotifications();
-    }
-  }, [currentUser?.email]);
+  // useEffect(() => {
+  //   if (currentUser?.email) {
+  //     fetchNotifications();
+  //   }
+  // }, [currentUser?.email]);
 
-  // Simulate real-time notifications with interval (replace with your WebSocket or polling solution)
-  useEffect(() => {
-    if (!currentUser?.email) {
-      console.log('🔍 No user email for notification simulation');
-      return;
-    }
+  // // Simulate real-time notifications with interval (replace with your WebSocket or polling solution)
+  // useEffect(() => {
+  //   if (!currentUser?.email) { 
+  //     return;
+  //   }
+ 
 
-    console.log('🔔 Setting up notification simulation for:', currentUser.email);
-
-    // Simulate new notifications every 30 seconds (for demo purposes)
-    intervalRef.current = setInterval(() => {
-      // Random chance to add a new notification
-      if (Math.random() < 0.1) { // 10% chance every 30 seconds
-        const notificationTypes = [
-          { title: 'Project Update', message: 'A project has been updated', type: 'project_assigned' as const },
-          { title: 'New Task', message: 'A new task has been assigned', type: 'task_assigned' as const },
-          { title: 'Reminder', message: 'Don\'t forget your upcoming meeting', type: 'story_ready' as const }
-        ];
+  //   // Simulate new notifications every 30 seconds (for demo purposes)
+  //   intervalRef.current = setInterval(() => {
+  //     // Random chance to add a new notification
+  //     if (Math.random() < 0.1) { // 10% chance every 30 seconds
+  //       const notificationTypes = [
+  //         { title: 'Project Update', message: 'A project has been updated', type: 'project_assigned' as const },
+  //         { title: 'New Task', message: 'A new task has been assigned', type: 'task_assigned' as const },
+  //         { title: 'Reminder', message: 'Don\'t forget your upcoming meeting', type: 'story_ready' as const }
+  //       ];
         
-        const randomType = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
+  //       const randomType = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
         
-        addNotification({
-          user_id: '1', // Mock user ID
-          user_email: currentUser.email!,
-          ...randomType,
-          is_read: false
-        });
-      }
-    }, 30000); // 30 seconds
+  //       addNotification({
+  //         user_id: '1', // Mock user ID
+  //         user_email: currentUser.email!,
+  //         ...randomType,
+  //         is_read: false
+  //       });
+  //     }
+  //   }, 30000); // 30 seconds
 
-    return () => {
-      console.log('🔔 Cleaning up notification simulation');
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [currentUser?.email]);
+  //   return () => { 
+  //     if (intervalRef.current) {
+  //       clearInterval(intervalRef.current);
+  //       intervalRef.current = null;
+  //     }
+  //   };
+  // }, [currentUser?.email]);
 
   return {
     notifications,

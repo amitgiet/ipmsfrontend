@@ -95,8 +95,7 @@ export const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
     // For developers and QA, ensure they can only assign to themselves
     if ((userRole === 'developer' || userRole === 'qa') && currentUser?.id) {
       // For non-team leads, always assign to themselves
-      if (assignedTo !== currentUser.id) {
-        console.log('🔄 Auto-assigning task to current user for developer/QA');
+      if (assignedTo !== currentUser.id) { 
         setAssignedTo(currentUser.id);
       }
     }
@@ -105,8 +104,7 @@ export const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
     try {
       // Use the assignedTo value directly (already set to email for developers/QA)
       const finalAssignedTo = assignedTo || undefined;
-
-      console.log('🔄 Creating task with assignment:', finalAssignedTo);
+ 
 
       await onAdd({
         title: title.trim(),

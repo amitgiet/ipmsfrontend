@@ -38,9 +38,7 @@ export const validateIsActive = (isActiveValue: any): boolean => {
 
 export const validateTeamMember = (member: any, rowIndex: number): string[] => {
   const errors: string[] = [];
-  
-  // Log the raw member data for debugging
-  console.log(`Row ${rowIndex + 2} data:`, member);
+   
   
   // Name validation
   if (!member.name || member.name.toString().trim() === '') {

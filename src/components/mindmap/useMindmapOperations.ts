@@ -23,16 +23,8 @@ export const useMindmapOperations = (projectId: string) => {
 
   const updateMindmapNode = async (nodeId: string, updates: Partial<{ title: string; is_expanded: boolean; has_user_story: boolean }>) => {
     // Demo operation - just log instead of updating in Supabase
-    console.log('🔄 Demo: Updating mindmap node:', {
-      node_id: nodeId,
-      project_id: projectId,
-      updates
-    });
-
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 200));
-
-    console.log('✅ Demo: Mindmap node updated successfully');
+ 
   };
 
   const deleteMindmapNode = async (nodeId: string, projectId: string) => {
@@ -44,8 +36,7 @@ export const useMindmapOperations = (projectId: string) => {
 
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 150));
-
-    console.log('✅ Demo: Node marked as having user story successfully');
+ 
   };
 
   return {

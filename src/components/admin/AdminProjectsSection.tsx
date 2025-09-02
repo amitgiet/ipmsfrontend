@@ -123,7 +123,7 @@ export const AdminProjectsSection = () => {
             priority: item.priority || 'medium',
             client_name: item.client_name || item.customer_name || 'Unknown Client',
             client_email: item.client_email || item.email || '',
-            allow_client_access: item.is_client_dashboard_access_enabled === '1' || item.allow_client_access || false,
+            allow_client_access: item.is_client_dashboard_access_enabled == true || item.allow_client_access || false,
             estimated_budget: parseFloat(item.estimated_budget) || 0,
             budget_currency: 'USD',
             actual_budget_used: 0,
@@ -178,11 +178,6 @@ export const AdminProjectsSection = () => {
             per_page: 10,
             total: 0
           });
-          toast({
-            title: "API Error",
-            description: "Failed to fetch projects. Please try again later.",
-            variant: "destructive"
-          });
         }
       } catch (error) {
         console.error("❌ Error fetching projects:", error);
@@ -194,11 +189,6 @@ export const AdminProjectsSection = () => {
           last_page: 1,
           per_page: 10,
           total: 0
-        });
-        toast({
-          title: "Error",
-          description: "An error occurred while fetching projects.",
-          variant: "destructive"
         });
       }
 
@@ -294,7 +284,7 @@ export const AdminProjectsSection = () => {
             client_email: item.client_email || item.email || '',
             client_phone: item.client_phone || '',
             backup_contact: item.backup_contact || '',
-            allow_client_access: item.is_client_dashboard_access_enabled === '1' || item.allow_client_access || false,
+            allow_client_access: item.is_client_dashboard_access_enabled == true || item.allow_client_access || false,
             estimated_budget: parseFloat(item.estimated_budget) || 0,
             budget_currency: 'USD',
             actual_budget_used: 0,
@@ -347,11 +337,6 @@ export const AdminProjectsSection = () => {
             per_page: 10,
             total: 0
           });
-          toast({
-            title: "API Error",
-            description: "Failed to refresh projects. Please try again later.",
-            variant: "destructive"
-          });
         }
       } catch (error) {
         console.error("❌ Error refreshing projects:", error);
@@ -363,11 +348,6 @@ export const AdminProjectsSection = () => {
           last_page: 1,
           per_page: 10,
           total: 0
-        });
-        toast({
-          title: "Error",
-          description: "An error occurred while refreshing projects.",
-          variant: "destructive"
         });
       }
 
@@ -810,6 +790,7 @@ export const AdminProjectsSection = () => {
       />
 
       <EditProjectForm
+        loadProjects={loadProjects}
         open={editProjectModalOpen}
         onOpenChange={() => {
           setEditProjectModalOpen(false);

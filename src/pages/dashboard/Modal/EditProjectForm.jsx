@@ -12,7 +12,7 @@ import { AdditionalDetailsSection } from '@/components/forms/AdditionalDetailsSe
 import { projectService } from '@/services/ProjectService/projectService';
 import { format } from 'date-fns';
 
-export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
+export const EditProjectForm = ({ open, onOpenChange, project, onSubmit, loadProjects }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     projectName: '',
@@ -21,12 +21,14 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
     clientEmail: '',
     clientPhone: '',
     backupContact: '',
+    allClients: [], // Store all clients
     allowClientAccess: false,
     duration: '',
     startDate: undefined,
     endDate: undefined,
     projectStatus: '',
     projectType: '',
+    projectNature: '',
     documents: '',
     documentFiles: [],
     existingDocuments: [], // Store existing documents from API
@@ -47,14 +49,14 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
   useEffect(() => {
     if (formData.startDate && formData.duration && !isNaN(Number(formData.duration))) {
       const calculatedEndDate = calculateEndDate(formData.startDate, Number(formData.duration));
-      
+
       // Only update if the calculated end date is different from the current one
       if (!formData.endDate || calculatedEndDate.getTime() !== formData.endDate.getTime()) {
         setFormData(prev => ({ ...prev, endDate: calculatedEndDate }));
       }
     }
   }, [formData.startDate, formData.duration]);
-  
+
   // Load project data when modal opens
   useEffect(() => {
     if (project && open) {
@@ -66,12 +68,37 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
         clientEmail: project.client_email || '',
         clientPhone: project.client_phone || '',
         backupContact: project.backup_contact || '',
+        allClients: project.additional_clients ? [
+          {
+            id: 1,
+            name: project.client_name || '',
+            email: project.client_email || '',
+            phone: project.client_phone || '',
+            backupContact: project.backup_contact || ''
+          },
+          ...JSON.parse(project.additional_clients).map((client, index) => ({
+            id: index + 2,
+            name: client.name || '',
+            email: client.email || '',
+            phone: client.phone || '',
+            backupContact: client.backupContact || ''
+          }))
+        ] : [
+          {
+            id: 1,
+            name: project.client_name || '',
+            email: project.client_email || '',
+            phone: project.client_phone || '',
+            backupContact: project.backup_contact || ''
+          }
+        ],
         allowClientAccess: project.allow_client_access || false,
         duration: project.duration?.toString() || '',
         startDate: project.start_date ? new Date(project.start_date) : undefined,
         endDate: project.end_date ? new Date(project.end_date) : undefined,
         projectStatus: project.project_status || '',
         projectType: project.project_type || '',
+        projectNature: project.project_nature || '',
         documents: '',
         documentFiles: [], // New files to upload
         existingDocuments: project.documents || [], // Existing documents from API
@@ -91,20 +118,19 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!project) {
       console.error('❌ No project selected for update');
       return;
     }
-    
+
     if (isSubmitting) {
-      console.log('⏳ Already submitting, ignoring...');
       return;
     }
-    
+
     setIsSubmitting(true);
     setErrors({}); // Clear previous errors
-    
+
     try {
       // Client-side validation first
       const validationErrors = validateProjectForm(formData);
@@ -120,12 +146,32 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
       formDataToSend.append('name', formData.projectName || '');
       formDataToSend.append('project_code', formData.projectId || '');
       formDataToSend.append('type', formData.projectType || '');
+      formDataToSend.append('nature', formData.projectNature || '');
       formDataToSend.append('priority', formData.priority || '');
       formDataToSend.append('status', formData.projectStatus || '');
-      formDataToSend.append('client_name', formData.clientName || '');
-      formDataToSend.append('client_email', formData.clientEmail || '');
-      formDataToSend.append('client_phone', formData.clientPhone || '');
-      formDataToSend.append('backup_contact', formData.backupContact || '');
+      
+      // Handle multiple clients
+      if (formData.allClients && formData.allClients.length > 0) {
+        // Primary client (first client)
+        const primaryClient = formData.allClients[0];
+        formDataToSend.append('client_name', primaryClient.name || '');
+        formDataToSend.append('client_email', primaryClient.email || '');
+        formDataToSend.append('client_phone', primaryClient.phone || '');
+        formDataToSend.append('backup_contact', primaryClient.backupContact || '');
+        
+        // Additional clients (if any)
+        if (formData.allClients.length > 1) {
+          const additionalClients = formData.allClients.slice(1);
+          formDataToSend.append('additional_clients', JSON.stringify(additionalClients));
+        }
+      } else {
+        // Fallback to single client data
+        formDataToSend.append('client_name', formData.clientName || '');
+        formDataToSend.append('client_email', formData.clientEmail || '');
+        formDataToSend.append('client_phone', formData.clientPhone || '');
+        formDataToSend.append('backup_contact', formData.backupContact || '');
+      }
+      
       formDataToSend.append('_method', 'put');
       formDataToSend.append('is_client_dashboard_access_enabled', formData.allowClientAccess ? '1' : '0');
       formDataToSend.append('duration_days', formData.duration || '');
@@ -137,7 +183,9 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
       formDataToSend.append('milestones', formData.milestones || '');
       formDataToSend.append('client_dependencies', formData.clientDependencies || '');
       formDataToSend.append('tags_labels', formData.tagsLabels || '');
-      
+      formDataToSend.append('natures', formData.projectNature || '');
+      formDataToSend.append('type', formData.projectType || '');
+
       // Handle new document files - append each document file
       if (formData.documentFiles && formData.documentFiles.length > 0) {
         formData.documentFiles.forEach((file, index) => {
@@ -157,9 +205,10 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
 
       // Make API call to update project
       const response = await projectService.updateProject(project.id, formDataToSend);
-      
+
       if (response.success) {
         toast.success("Project updated successfully!");
+      
         onOpenChange(false);
       } else {
         // Handle API validation errors
@@ -168,7 +217,7 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
           const apiErrors = {};
           Object.keys(response.errors).forEach(apiField => {
             let formField = apiField;
-            
+
             // Map API field names to form field names
             switch (apiField) {
               case 'name':
@@ -225,10 +274,10 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
               default:
                 formField = apiField;
             }
-            
+
             apiErrors[formField] = response.errors[apiField][0]; // Take first error message
           });
-          
+
           setErrors(apiErrors);
           toast.error(response.message || "Please fix the validation errors below.");
         } else {
@@ -236,16 +285,16 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
           toast.error(response.message || "Failed to update project. Please try again.");
         }
       }
-      
+
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "An unexpected error occurred. Please try again.");
     } finally {
+      loadProjects();
       setIsSubmitting(false);
     }
   };
 
   const handleInputChange = useCallback((field, value) => {
-    console.log('🔄 Input changed:', field, value);
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
@@ -255,7 +304,6 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
 
   // Handle removing existing documents
   const handleRemoveExistingDocument = useCallback((documentId) => {
-    console.log(`🗑️ Removing document with ID: ${documentId}`);
     setFormData(prev => ({
       ...prev,
       existingDocuments: prev.existingDocuments.filter(doc => doc.id !== documentId),
@@ -267,7 +315,6 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
     return null;
   }
 
-  console.log(formData, project);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -277,32 +324,32 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
-            <ProjectInfoSection 
-              formData={formData} 
-              errors={errors} 
+            <ProjectInfoSection
+              formData={formData}
+              errors={errors}
               onInputChange={handleInputChange}
               isEditMode={true}
             />
-            
-            <ClientInfoSection 
-              formData={formData} 
-              errors={errors} 
-              onInputChange={handleInputChange} 
+
+            <ClientInfoSection
+              formData={formData}
+              errors={errors}
+              onInputChange={handleInputChange}
             />
-            
-            <DateDurationSection 
-              formData={formData} 
-              errors={errors} 
-              onInputChange={handleInputChange} 
+
+            <DateDurationSection
+              formData={formData}
+              errors={errors}
+              onInputChange={handleInputChange}
             />
-            
-            <BudgetSection 
-              formData={formData} 
+
+            <BudgetSection
+              formData={formData}
               onInputChange={handleInputChange}
               errors={errors}
             />
-                {/* Existing Documents Display */}
-                {formData.existingDocuments && formData.existingDocuments.length > 0 && (
+            {/* Existing Documents Display */}
+            {formData.existingDocuments && formData.existingDocuments.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold">Existing Documents</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -310,15 +357,15 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
                     <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
-                          <span className="text-blue-600 text-sm font-medium">
+                          <span className="text-blue-600 text-sm font-medium ">
                             {doc.name.split('.').pop()?.toUpperCase() || 'FILE'}
                           </span>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{doc.name}</p>
-                          <a 
-                            href={doc.url} 
-                            target="_blank" 
+                          <p className="text-sm font-medium text-gray-900 break-words" style={{ width: '250px' }}>{doc.name.length > 60 ? doc.name.slice(0, 25) + '...' : doc.name}</p>
+                          <a
+                            href={doc.url}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs text-blue-600 hover:underline"
                           >
@@ -340,12 +387,12 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit }) => {
                 </div>
               </div>
             )}
-            <AdditionalDetailsSection 
-              formData={formData} 
-              onInputChange={handleInputChange} 
+            <AdditionalDetailsSection
+              formData={formData}
+              onInputChange={handleInputChange}
             />
 
-        
+
           </div>
 
           {/* Submit Button */}

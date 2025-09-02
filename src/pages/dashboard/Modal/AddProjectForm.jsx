@@ -20,12 +20,14 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
     clientEmail: '',
     clientPhone: '',
     backupContact: '',
+    allClients: [], // Store all clients
     allowClientAccess: false,
     duration: '',
     startDate: undefined,
     endDate: undefined,
     projectStatus: 'planned', // Default to planned for new projects
     projectType: '',
+    projectNature: '',
     documents: '',
     documentFiles: [],
     milestones: '',
@@ -73,12 +75,32 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
       formDataToSend.append('name', formData.projectName || '');
       formDataToSend.append('project_code', formData.projectId || '');
       formDataToSend.append('type', formData.projectType || '');
+      formDataToSend.append('nature', formData.projectNature || '');
       formDataToSend.append('priority', formData.priority || '');
       formDataToSend.append('status', formData.projectStatus || '');
-      formDataToSend.append('client_name', formData.clientName || '');
-      formDataToSend.append('client_email', formData.clientEmail || '');
-      formDataToSend.append('client_phone', formData.clientPhone || '');
-      formDataToSend.append('backup_contact', formData.backupContact || '');
+      
+      // Handle multiple clients
+      if (formData.allClients && formData.allClients.length > 0) {
+        // Primary client (first client)
+        const primaryClient = formData.allClients[0];
+        formDataToSend.append('client_name', primaryClient.name || '');
+        formDataToSend.append('client_email', primaryClient.email || '');
+        formDataToSend.append('client_phone', primaryClient.phone || '');
+        formDataToSend.append('backup_contact', primaryClient.backupContact || '');
+        
+        // Additional clients (if any)
+        if (formData.allClients.length > 1) {
+          const additionalClients = formData.allClients.slice(1);
+          formDataToSend.append('additional_clients', JSON.stringify(additionalClients));
+        }
+      } else {
+        // Fallback to single client data
+        formDataToSend.append('client_name', formData.clientName || '');
+        formDataToSend.append('client_email', formData.clientEmail || '');
+        formDataToSend.append('client_phone', formData.clientPhone || '');
+        formDataToSend.append('backup_contact', formData.backupContact || '');
+      }
+      
       formDataToSend.append('is_client_dashboard_access_enabled', formData.allowClientAccess ? '1' : '0');
       formDataToSend.append('duration_days', formData.duration || '');
       formDataToSend.append('start_date', formData.startDate ? formData.startDate.toISOString().split('T')[0] : '');
@@ -89,6 +111,8 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
       formDataToSend.append('milestones', formData.milestones || '');
       formDataToSend.append('client_dependencies', formData.clientDependencies || '');
       formDataToSend.append('tags', formData.tagsLabels || '');
+      formDataToSend.append('nature', formData.projectNature || '');
+      formDataToSend.append('type', formData.projectType || '');
       
       if (formData.documentFiles && formData.documentFiles.length > 0) {
         formData.documentFiles.forEach((file, index) => {
@@ -122,12 +146,14 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmit }) => {
           clientEmail: '',
           clientPhone: '',
           backupContact: '',
+          allClients: [],
           allowClientAccess: false,
           duration: '',
           startDate: undefined,
           endDate: undefined,
           projectStatus: 'planned', // Reset to planned for new projects
           projectType: '',
+          projectNature: '',
           documents: '',
           documentFiles: [],
           milestones: '',

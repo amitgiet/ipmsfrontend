@@ -91,23 +91,25 @@ export const AddChildItemDialog = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="child-title">
-                New {childType === 'user_story' ? 'User Story' : childType.charAt(0).toUpperCase() + childType.slice(1)} Title
+                {/* New {childType === 'user_story' ? 'User Story' : childType.charAt(0).toUpperCase() + childType.slice(1)} Title */}
+                New {childType === 'user_story' ? 'User Story' : "Item"} Title
+
               </Label>
               <Input
                 id="child-title"
-                placeholder={`Enter ${childType === 'user_story' ? 'user story' : childType} title...`}
+                placeholder={`Enter ${childType === 'user_story' ? 'user story' : ""} title...`}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 autoFocus
               />
             </div>
 
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            {/* <div className="flex items-center gap-2 text-sm text-gray-600">
               <span>Will be created as:</span>
               <Badge className={typeColors[childType]}>
                 {childType === 'user_story' ? 'user story' : childType}
               </Badge>
-            </div>
+            </div> */}
 
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={handleClose}>
@@ -115,7 +117,7 @@ export const AddChildItemDialog = ({
               </Button>
               <Button type="submit" disabled={!title.trim()}>
                 <Plus className="h-4 w-4 mr-2" />
-                Add {childType === 'user_story' ? 'User Story' : childType.charAt(0).toUpperCase() + childType.slice(1)}
+                Add {childType === 'user_story' ? 'User Story' :"Item"}
               </Button>
             </div>
           </form>

@@ -69,19 +69,16 @@ export const useStoryData = (
   };
 
   // Comprehensive refetch function that updates all data
-  const refetch = async () => {
-    console.log('🔄 useStoryData refetch called with:', { storyId, projectId, story: story?.id });
+  const refetch = async () => { 
     
     if (storyId && projectId) {
       setLoading(true);
-      try {
-        console.log('✅ Starting refetch with IDs:', { storyId, projectId });
+      try { 
         await Promise.all([
           refetchStory(), // This will also refresh the documents since they're in story.media
           // refetchDocuments(), // Not needed - documents are refreshed with story
           refetchComments()
-        ]);
-        console.log('✅ Refetch completed successfully');
+        ]); 
       } catch (error) {
         console.error('❌ Error during refetch:', error);
       } finally {

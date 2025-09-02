@@ -108,9 +108,9 @@ export const UserStoryCard: React.FC<UserStoryCardProps> = ({
             </div>
             <h3 className="font-semibold text-lg leading-tight">{story.title}</h3>
           </div>
-          {story.storyPoints && (
+          {story.story_point && (
             <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full ml-3">
-              <span className="text-sm font-bold text-blue-600">{story.storyPoints}</span>
+              <span className="text-sm font-bold text-blue-600">{story.story_point}</span>
             </div>
           )}
         </div>

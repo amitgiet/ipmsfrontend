@@ -8,6 +8,7 @@ import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface AcceptanceCriteriaSectionProps {
   storyId: string;
@@ -24,6 +25,7 @@ export const AcceptanceCriteriaSection: React.FC<AcceptanceCriteriaSectionProps>
   onUpdate,
   canEdit = true
 }) => {
+  const { userRole } = useUserRole();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(acceptanceCriteria || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -40,7 +42,6 @@ export const AcceptanceCriteriaSection: React.FC<AcceptanceCriteriaSectionProps>
       });
 
       if (error) {
-        toast.error("Failed to update acceptance criteria");
         return;
       }
 
@@ -66,7 +67,7 @@ export const AcceptanceCriteriaSection: React.FC<AcceptanceCriteriaSectionProps>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Acceptance Criteria</CardTitle>
-          {canEdit && !isEditing && (
+          {userRole === 'product_owner' && !isEditing && (
             <Button
               variant="ghost"
               size="sm"

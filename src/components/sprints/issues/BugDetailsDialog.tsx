@@ -60,8 +60,7 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
   const [loading, setLoading] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(true);
   const { userRole } = useUserRole();
-  const { projectId } = useParams<{ projectId: string }>();
-  console.log(" projectId ", projectId, " bug ", bug);
+  const { projectId } = useParams<{ projectId: string }>(); 
   const fetchComments = async () => {
     try {
       setCommentsLoading(true);
@@ -85,8 +84,7 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
     }
 
     try {
-      setLoading(true);
-      console.log('🔄 Adding comment to bug:', bug.id);
+      setLoading(true); 
 
       const { error } = await apiCall(allRoutes.comments.store, 'post', {
         project_id: projectId,

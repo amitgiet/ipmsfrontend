@@ -33,7 +33,7 @@ export const ProjectTableRow = ({ project, onViewProject }: ProjectTableRowProps
         <div className="max-w-[200px]">
           <div className="font-medium truncate" title={project.name}>{project.name}</div>
           {project.id && (
-            <div className="text-sm text-gray-500 truncate" title={`ID: ${project.id}`}>ID: {project.id}</div>
+            <div className="text-sm text-gray-500 truncate" title={`Code: ${project.project_code}`}>Code: {project.project_code}</div>
           )}
         </div>
       </TableCell>
@@ -47,13 +47,13 @@ export const ProjectTableRow = ({ project, onViewProject }: ProjectTableRowProps
       </TableCell>
       <TableCell>
           <Badge className={statusColors[project.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}>
-          {project.status?.replace('-', ' ') || 'Unknown'}
+          {project.status?.slice(0, 1).toUpperCase() + project.status?.slice(1).replace('_', ' ').toUpperCase() || 'Unknown'}
         </Badge>
       </TableCell>
       <TableCell>
         {project.priority && (
           <Badge variant="outline" className={priorityColors[project.priority as keyof typeof priorityColors]}>
-            {project.priority}
+            {project.priority.toUpperCase()}
           </Badge>
         )}
       </TableCell>
@@ -74,7 +74,7 @@ export const ProjectTableRow = ({ project, onViewProject }: ProjectTableRowProps
         <div className="flex items-center gap-1 max-w-[100px]">
           <DollarSign className="h-4 w-4 text-gray-400 flex-shrink-0" />
           <span className="text-sm truncate" title={formatBudget(project.estimated_budget, project.budget_currency)}>
-            {formatBudget(project.estimated_budget, project.budget_currency)}
+            {project.estimated_budget}
           </span>
         </div>
       </TableCell>

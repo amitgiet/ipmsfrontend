@@ -24,8 +24,7 @@ export const useTaskTimeLogs = (storyId: string) => {
   const loadTimeLogs = async () => {
     if (!storyId) return;
 
-    try {
-      console.log('🔄 Loading time logs for story:', storyId);
+    try { 
 
       // Get all tasks for this story first, then get time logs
       const { data: tasks, error: tasksError } = await apiCall(allRoutes.tasks.list, 'get');
@@ -51,8 +50,7 @@ export const useTaskTimeLogs = (storyId: string) => {
       }
 
       if (data) {
-        setTimeLogs(data as TimeLog[]);
-        console.log('✅ Loaded time logs:', data.length);
+        setTimeLogs(data as TimeLog[]); 
       }
     } catch (error) {
       console.error('❌ Error in loadTimeLogs:', error);
@@ -61,8 +59,7 @@ export const useTaskTimeLogs = (storyId: string) => {
   };
 
   const logTime = async (taskId: string, timeData: { startTime: string; endTime: string; timeSpentMinutes: number }) => {
-    try {
-      console.log('🔄 Logging time for task:', taskId, timeData);
+    try { 
 
       const today = new Date().toISOString().split('T')[0];
       const startDateTime = `${today}T${timeData.startTime}:00`;
@@ -95,8 +92,7 @@ export const useTaskTimeLogs = (storyId: string) => {
         created_at: data.created_at
       };
 
-      setTimeLogs(prev => [newTimeLog, ...prev]);
-      console.log('✅ Time logged successfully');
+      setTimeLogs(prev => [newTimeLog, ...prev]); 
       
       toast.success("Time logged successfully");
     } catch (error) {

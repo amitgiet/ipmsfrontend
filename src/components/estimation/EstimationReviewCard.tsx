@@ -24,9 +24,7 @@ export const EstimationReviewCard: React.FC<EstimationReviewCardProps> = ({
 
   const handleApproveEstimation = async () => {
     setIsSubmitting(true);
-    try {
-      console.log('🔄 Approving estimation for story:', storyId);
-      
+    try { 
       const { error } = await apiCall(allRoutes.stories.update(storyId), 'put', { 
         status: 'ready',
         updated_at: new Date().toISOString()
@@ -41,9 +39,7 @@ export const EstimationReviewCard: React.FC<EstimationReviewCardProps> = ({
         });
         return;
       }
-
-      console.log('✅ Estimation approved successfully');
-      
+ 
       toast({
         title: "Success",
         description: "Story estimation approved and marked as ready",

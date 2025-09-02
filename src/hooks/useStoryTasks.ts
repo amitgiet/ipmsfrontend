@@ -5,29 +5,27 @@ import { toast } from 'react-toastify';
 import { useAuth } from '@/hooks/useAuth';
 import { useParams } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
+import { format } from 'date-fns';
 
-interface Task {
-  id: string;
-  title: string;
-  description?: string;
-  status: 'to_do' | 'in_progress' | 'completed';
-  assignedTo?: number;
-  created_by?: string;
-  created_at: string;
-  updated_at: string;
-}
 
 export const useStoryTasks = (storyId: string) => {
   const { projectId } = useParams();
   const { user, teamUser } = useAuth();
   const currentUser = user || teamUser;
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  function formatTimeForApi(time: string) {
+    const [hours, minutes] = time.split(':').map(Number);
+    const d = new Date();
+    d.setHours(hours, minutes, 0, 0); // seconds = 0
+    return format(d, 'HH:mm:ss');
+  }
 
   const loadTasks = async () => {
     try {
 
-      const { data, error } = await apiCall(allRoutes.tasks.list(projectId), 'get');
+      const { data, error } = await apiCall(allRoutes.tasks.list(projectId, storyId), 'get');
 
       if (error) {
         toast.error("Failed to load tasks");
@@ -35,7 +33,7 @@ export const useStoryTasks = (storyId: string) => {
       }
 
       if (data) {
-        const mappedTasks: Task[] = data.data.map(task => ({
+        const mappedTasks = data.data.map(task => ({
           id: task.id,
           title: task.title,
           description: task.description || undefined,
@@ -43,7 +41,8 @@ export const useStoryTasks = (storyId: string) => {
           assignedTo: task.assigned_to || undefined,
           created_by: task.created_by || undefined,
           created_at: task.created_at,
-          updated_at: task.updated_at
+          updated_at: task.updated_at,
+          timeLogs: task.timeLogs|| []
         }));
 
         setTasks(mappedTasks);
@@ -54,7 +53,7 @@ export const useStoryTasks = (storyId: string) => {
     }
   };
 
-  const canDeleteTask = async (task: Task): Promise<boolean> => {
+  const canDeleteTask = async (task: any): Promise<boolean> => {
     if (!currentUser) return false;
 
     // Check if user created the task
@@ -79,7 +78,7 @@ export const useStoryTasks = (storyId: string) => {
     }
   };
 
-  const addTask = async (taskData: { title: string; description: string; assignedTo?: number }) => {
+  const addTask = async (taskData: { title: string; description: string; assignedTo?: string }) => {
     try {
 
       let body = new FormData();
@@ -132,8 +131,7 @@ export const useStoryTasks = (storyId: string) => {
 
   const updateAssignee = async (taskId: string, assigneeId: number, projectId: string) => {
     try {
-      let body = new FormData();
-      console.log(" assigneeId ", assigneeId);
+      let body = new FormData(); 
       body.append('assignee_to_user_id', assigneeId);
       body.append('project_id', projectId);
       const { data, error } = await apiCall(allRoutes.tasks.update_assignee(taskId), 'post', body);
@@ -147,6 +145,31 @@ export const useStoryTasks = (storyId: string) => {
     } catch (error) {
       console.error('❌ Error in updateAssignee:', error);
       toast.error("Failed to update assignee");
+    }
+  };
+
+  const logTime = async (taskId: string, timeData: { startTime: string; endTime: string; timeSpentMinutes: number; taskId: string }) => {
+    try {
+
+      let body = new FormData();
+      body.append('task_id', taskId);
+      body.append("project_id", projectId || '');
+
+      body.append('start_time', formatTimeForApi(timeData.startTime));
+      body.append('end_time', formatTimeForApi(timeData.endTime));
+
+      body.append('time_spent_minutes', timeData.timeSpentMinutes.toString());
+      body.append('is_project_log', '1');
+      const { data, error } = await apiCall(allRoutes.productOwner.add_time_log, 'post', body);
+      if (error) {
+        console.error('❌ Error logging time:', error);
+        return;
+      }
+      loadTasks();
+      toast.success("Time logged successfully");
+    } catch (error) {
+      console.error('❌ Error in logTime:', error);
+      toast.error("Failed to log time");
     }
   };
 
@@ -193,6 +216,7 @@ export const useStoryTasks = (storyId: string) => {
     updateTask,
     deleteTask,
     loadTasks,
-    canDeleteTask
+    canDeleteTask,
+    logTime
   };
 };

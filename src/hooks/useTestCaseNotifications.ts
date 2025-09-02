@@ -48,7 +48,7 @@ export const useTestCaseNotifications = () => {
       if (notificationError) {
         console.error('Error creating task assignment notification:', notificationError);
       } else {
-        console.log('✅ Task assignment notification created');
+        console.info('✅ Task assignment notification created');
       }
     } catch (error) {
       console.error('❌ Error in createTaskAssignmentNotification:', error);

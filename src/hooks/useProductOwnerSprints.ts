@@ -31,8 +31,7 @@ export const useProductOwnerSprints = (projectIds: string[]) => {
       try {
         return await fetcher();
       } catch (error) {
-        retries++;
-        console.log(`Retry attempt ${retries}/${maxRetries} for sprint data`);
+        retries++; 
         
         if (retries >= maxRetries) {
           throw error;
@@ -57,8 +56,7 @@ export const useProductOwnerSprints = (projectIds: string[]) => {
       return;
     }
 
-    try {
-      console.log('🔄 Fetching sprints for projects:', memoizedProjectIds);
+    try { 
       setLoading(true);
       
       // Improved error handling for fetch operations that safely handles empty responses
@@ -79,8 +77,7 @@ export const useProductOwnerSprints = (projectIds: string[]) => {
           apiCall(allRoutes.sprints.list, 'get')
         );
       });
-
-      console.log('✅ Fetched running sprints:', runningSprintsData?.length || 0);
+ 
       setSprints(runningSprintsData || []);
 
       // Calculate date 72 hours from now
@@ -94,8 +91,7 @@ export const useProductOwnerSprints = (projectIds: string[]) => {
           apiCall(allRoutes.sprints.list, 'get')
         );
       });
-
-      console.log('✅ Fetched sprints about to end:', endingSoonData?.length || 0);
+ 
       setSprintsAboutToEnd(endingSoonData || []);
 
       // Calculate today's date
@@ -107,8 +103,7 @@ export const useProductOwnerSprints = (projectIds: string[]) => {
             apiCall(allRoutes.sprints.list, 'get')
         );
       });
-
-      console.log('✅ Fetched overrun sprints:', overrunSprintsData?.length || 0);
+ 
       setOverrunSprints(overrunSprintsData || []);
     } catch (error) {
       console.error('❌ Error in fetchSprints:', error);

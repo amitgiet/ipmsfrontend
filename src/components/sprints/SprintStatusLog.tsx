@@ -43,8 +43,7 @@ export const SprintStatusLog = ({ stories }: SprintStatusLogProps) => {
     }
 
     try {
-      setLoading(true);
-      console.log('🔄 Fetching status changes for stories:', stories.map(s => s.id));
+      setLoading(true); 
 
       const storyIds = stories.map(story => story.id);
 
@@ -88,8 +87,7 @@ export const SprintStatusLog = ({ stories }: SprintStatusLogProps) => {
           story_title: (change.user_stories as any)?.title || 'Unknown Story',
           story_points: (change.user_stories as any)?.story_points || 0
         }));
-
-      console.log('✅ Fetched status changes:', transformedChanges);
+ 
       setStatusChanges(transformedChanges);
     } catch (error) {
       console.error('❌ Error in fetchStatusChanges:', error);

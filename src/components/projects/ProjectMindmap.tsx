@@ -50,39 +50,37 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
   } = useMindmapActions();
 
   const {
-    getNextType,
     findNodeById,
     addNodeToParent,
     toggleNodeExpansion,
     removeNode,
-    updateNodeTitle,
     updateNodeUserStoryStatus,
     toSentenceCase
   } = useMindmapHelpers();
 
   // Fix existing nodes with incorrect casing
-  useEffect(() => {
-    const fixExistingNodes = async () => {
-      for (const node of nodes) {
-        if (node.type === 'user') {
-          const sentenceCaseTitle = toSentenceCase(node.title);
-          if (node.title !== sentenceCaseTitle) {
-            try {
-              await updateMindmapNode(node.id, { title: sentenceCaseTitle });
-              setNodes(prev => updateNodeTitle(prev, node.id, sentenceCaseTitle));
-              toast.success(`Updated "${node.title}" to "${sentenceCaseTitle}"`);
-            } catch (error) {
-              console.error('Failed to fix node title:', error);
-            }
-          }
-        }
-      }
-    };
+  // useEffect(() => {
+  //   const fixExistingNodes = async () => {
+  //     for (const node of nodes) {
+  //       if (node.type === 'user') {
+  //         const sentenceCaseTitle = toSentenceCase(node.title);
+  //         if (node.title !== sentenceCaseTitle) {
+  //           try {
+  //             await updateMindmapNode(node.id, { title: sentenceCaseTitle });
+  //             setNodes(prev => updateNodeTitle(prev, node.id, sentenceCaseTitle));
+  //             toast.success(`Updated "${node.title}" to "${sentenceCaseTitle}"`);
+  //           } catch (error) {
+  //             console.error('Failed to fix node title:', error);
+  //           }
+  //         }
+  //       }
+  //     }
+  //   };
 
-    if (nodes.length > 0 && !readOnly) {
-      fixExistingNodes();
-    }
-  }, [nodes, updateMindmapNode, setNodes, toast, readOnly, toSentenceCase]);
+  //   if (nodes.length > 0 && !readOnly) {
+  //     fixExistingNodes();
+  //   }
+  // }, [nodes, updateMindmapNode, setNodes, toast, readOnly, toSentenceCase]);
 
   const addUser = async (title: string) => {
     const sentenceCaseTitle = toSentenceCase(title);
@@ -179,7 +177,6 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
     if (!node) return;
 
     try {
-      await updateMindmapNode(nodeId, { is_expanded: !node.isExpanded });
       setNodes(prev => toggleNodeExpansion(prev, nodeId));
     } catch (error) {
       console.error('Failed to toggle node expansion:', error);

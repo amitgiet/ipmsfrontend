@@ -22,29 +22,30 @@ export const QATasksSection: React.FC<QATasksSectionProps> = ({ currentUserEmail
     if (!task) return;
 
     // Check if user is assigned to this task
-    if (task.assigned_to && task.assigned_to !== currentUserEmail) {
+    const assignedToEmail = typeof task.assigned_to === 'string' ? task.assigned_to : task.assigned_to?.email;
+    if (assignedToEmail && assignedToEmail !== currentUserEmail) {
       toast.error("You can only change the status of tasks assigned to you");
       return;
     }
 
     // Business logic restrictions
     if ((task.status === 'in_progress' || task.status === 'completed') && newStatus === 'to_do') {
-      console.log('❌ Cannot move task back to "to do" from', task.status);
+   
       return; // Prevent the status change
     }
 
     try {
-      console.log('🔄 Updating task status:', taskId, newStatus);
+      let body = new FormData();
+      body.append('status', newStatus);
+      body.append('_method', 'patch');
 
-      const { error } = await apiCall(allRoutes.tasks.updateTaskStatus(taskId, newStatus), 'put');
+      const { data, error } = await apiCall(allRoutes.tasks.update(taskId), 'patch', body);
 
       if (error) {
         console.error('❌ Error updating task status:', error);
-        toast.error("Failed to update task status");
         return;
       }
-
-      console.log('✅ Task status updated successfully');
+ 
       
       toast.success("Task status updated successfully");
 
@@ -111,21 +112,22 @@ export const QATasksSection: React.FC<QATasksSectionProps> = ({ currentUserEmail
         {tasks.length > 0 ? (
           <div className="space-y-4">
             {tasks.map((task) => {
-              const canChangeStatus = !task.assigned_to || task.assigned_to === currentUserEmail;
+              const assignedToEmail = typeof task.assigned_to === 'string' ? task.assigned_to : task.assigned_to?.email;
+              const canChangeStatus = !assignedToEmail || assignedToEmail === currentUserEmail;
               
               return (
                 <div key={task.id} className="flex items-start justify-between p-4 bg-gray-50 rounded-lg border">
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
-                      {getStatusIcon(task.status)}
-                      <h3 className="font-medium text-gray-900">{task.title}</h3>
+                      {getStatusIcon(task?.status)}
+                      <h3 className="font-medium text-gray-900">{task?.title}</h3>
                       <Badge className={getStatusColor(task.status)}>
                         {task.status.replace('_', ' ').toUpperCase()}
                       </Badge>
                     </div>
                     
-                    {task.description && (
-                      <p className="text-sm text-gray-600">{task.description}</p>
+                    {task?.description && (
+                      <p className="text-sm text-gray-600">{task?.description}</p>
                     )}
 
                     {/* Status change buttons - only show if user can change status */}
@@ -135,7 +137,7 @@ export const QATasksSection: React.FC<QATasksSectionProps> = ({ currentUserEmail
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleStatusChange(task.id, 'in_progress')}
+                            onClick={() => handleStatusChange(task?.id, 'in_progress')}
                             className="text-xs h-6"
                           >
                             <Play className="h-3 w-3 mr-1" />
@@ -169,7 +171,7 @@ export const QATasksSection: React.FC<QATasksSectionProps> = ({ currentUserEmail
 
                     {!canChangeStatus && (
                       <p className="text-xs text-gray-500">
-                        Status can only be changed by assigned user: {task.assigned_to}
+                        Status can only be changed by assigned user: {assignedToEmail}
                       </p>
                     )}
                     
@@ -177,7 +179,7 @@ export const QATasksSection: React.FC<QATasksSectionProps> = ({ currentUserEmail
                       <div className="flex items-center gap-1">
                         <User className="h-3 w-3" />
                         <span>
-                          {task.assigned_to === currentUserEmail ? 'Assigned to me' : `Created by me`}
+                          {assignedToEmail === currentUserEmail ? 'Assigned to me' : `Created by me`}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
@@ -187,7 +189,12 @@ export const QATasksSection: React.FC<QATasksSectionProps> = ({ currentUserEmail
                     </div>
                     
                     <div className="text-xs text-gray-500">
-                      <strong>Story:</strong> {task.user_stories.title} - <strong>Project:</strong> {task.user_stories.projects.project_name}
+                      {task?.user_stories?.title && (
+                        <span><strong>Story:</strong> {task.user_stories.title}</span>
+                      )}
+                      {task?.user_stories?.projects?.project_name && (
+                        <span className="ml-2"><strong>Project:</strong> {task.user_stories.projects.project_name}</span>
+                      )}
                     </div>
                   </div>
                 </div>

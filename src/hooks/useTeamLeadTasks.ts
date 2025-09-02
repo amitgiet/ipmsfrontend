@@ -18,8 +18,7 @@ export const useTeamLeadTasks = (projectIds: string[], userEmail?: string) => {
         setLoading(false);
         return;
       }
-
-      console.log('🔄 Fetching tasks assigned to:', userEmail, 'for projects:', projectIds);
+ 
 
       // Get all user stories for these projects
       const { data: storiesData, error: storiesError } = await apiCall(allRoutes.stories.list, 'get');
@@ -56,8 +55,7 @@ export const useTeamLeadTasks = (projectIds: string[], userEmail?: string) => {
 
       const totalTasks = allTasksData?.length || 0;
       const runningTasksCount = runningTasksData?.length || 0;
-
-      console.log('✅ Tasks assigned to', userEmail, '- Total:', totalTasks, 'Running:', runningTasksCount);
+ 
       setAssignedTasks(totalTasks);
       setRunningTasks(runningTasksCount);
     } catch (error) {

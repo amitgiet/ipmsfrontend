@@ -50,8 +50,7 @@ export const useAdminDashboardMetrics = () => {
 
   const fetchMetrics = async () => {
     try {
-      setLoading(true);
-      console.log('🔄 Fetching admin dashboard metrics');
+      setLoading(true); 
 
       // Fetch all projects
       const { data: projects, error: projectsError } = await apiCall(allRoutes.projects.dashboard, 'get');
@@ -78,8 +77,7 @@ export const useAdminDashboardMetrics = () => {
 
       // if (timeLogsError) throw timeLogsError;
 
-      // Calculate project metrics
-      console.log('projects', projects.data);
+      // Calculate project metrics 
       const totalProjects = projects.data.total_project || 0;
       const projectsPlanned = projects.data.planned || 0;
       const projectsRunning = projects.data.in_progress || 0;
@@ -161,8 +159,7 @@ export const useAdminDashboardMetrics = () => {
         totalHoursLogged:0,
         expectedHours:0,
       });
-
-      console.log('✅ Admin dashboard metrics fetched successfully');
+ 
     } catch (error) {
       console.error('❌ Error fetching admin dashboard metrics:', error);
       toast({

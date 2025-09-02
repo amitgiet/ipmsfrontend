@@ -10,15 +10,13 @@ export const useAuth = () => {
   };
 
   const logout = async () => {
-    try {
-      console.log('🔄 Logging out user...');
+    try { 
       
       // Dispatch the logout action
       const result = await dispatch(logoutUser());
       
       // Additional cleanup
-      if (result.meta.requestStatus === 'fulfilled') {
-        console.log('✅ Logout successful');
+      if (result.meta.requestStatus === 'fulfilled') { 
         
         // Force clear any remaining data
         localStorage.clear();

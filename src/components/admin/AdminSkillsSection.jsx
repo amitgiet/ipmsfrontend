@@ -35,12 +35,10 @@ export const AdminSkillsSection = () => {
 
   const fetchSkills = async (page = 1) => {
     setLoading(true);
-    console.log("🔄 Fetching skills...");
 
     const result = await skillsService.getSkills({ page });
 
     if (result.success) {
-      console.log("✅ Skills fetched successfully:", result.data);
       const skillsData = result.data.data || result.data || [];
       const meta = result.data.meta || {};
       
@@ -134,15 +132,13 @@ export const AdminSkillsSection = () => {
       return;
     }
 
-    setIsAdding(true);
-    console.log("🔄 Adding new skill:", newSkill.trim());
+    setIsAdding(true); 
 
     const addResult = await skillsService.createSkill({
       name: newSkill.trim(),
     });
 
-    if (addResult.success) {
-      console.log("✅ Skill added successfully:", addResult.data);
+    if (addResult.success) { 
       toast.success("Skill added successfully");
       // Add the new skill to the local state
       fetchSkills(); // Re-fetch skills to update pagination and list

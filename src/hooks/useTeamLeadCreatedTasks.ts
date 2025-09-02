@@ -4,26 +4,9 @@ import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
 import { toast } from 'react-toastify';
 
-interface Task {
-  id: string;
-  title: string;
-  description?: string;
-  status: 'to_do' | 'in_progress' | 'completed';
-  assigned_to?: string;
-  created_at: string;
-  updated_at: string;
-  story_id: string;
-  user_stories: {
-    title: string;
-    project_id: string;
-    projects: {
-      project_name: string;
-    };
-  };
-}
 
 export const useTeamLeadCreatedTasks = (currentUserEmail: string) => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchCreatedTasks = async () => {
@@ -34,21 +17,14 @@ export const useTeamLeadCreatedTasks = (currentUserEmail: string) => {
         return;
       }
 
-      console.log('🔄 Fetching tasks created by:', currentUserEmail);
-
-      const { data: tasksData, error: tasksError } = await apiCall(allRoutes.tasks.list(), 'get');
-
-
+      const { data: tasksData, error: tasksError } = await apiCall(allRoutes.tasks.list(null, null, true), 'get');
 
       if (tasksError) {
         console.error('❌ Error fetching created tasks:', tasksError);
         throw tasksError;
       }
 
-      console.log('✅ Created tasks fetched:', tasksData?.length || 0);
-
-      // Type assertion to ensure status is properly typed
-      const typedTasks = (tasksData.data || []).map(task => ({
+      const typedTasks = (tasksData?.data || []).map(task => ({
         ...task,
         status: task.status as 'to_do' | 'in_progress' | 'completed'
       }));

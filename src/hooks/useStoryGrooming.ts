@@ -32,8 +32,7 @@ export const useStoryGrooming = () => {
   // Use the detailed story if available, otherwise fall back to the basic story
   const storyToUse = story1 || story; // Prioritize story1 (detailed story)
   const loadingToUse = detailedLoading || loading;
-
-  console.log('🔄 useStoryGrooming - story1:', story1, 'story:', story);
+ 
   
   // Safe access to story points - handle both property names
   const storyPoints = storyToUse ? 

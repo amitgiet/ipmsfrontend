@@ -73,8 +73,7 @@ export const TestCaseCommentDialog: React.FC<TestCaseCommentDialogProps> = ({
     if (!testCase?.id) return;
     
     setLoading(true);
-    try {
-      console.log('🔄 Loading test case comments for:', testCase.id);
+    try { 
 
       const { data, error } = await apiCall(allRoutes.comments.get(projectId, 'test_case', testCase.id), 'get');
 
@@ -83,8 +82,7 @@ export const TestCaseCommentDialog: React.FC<TestCaseCommentDialogProps> = ({
         toast.error("Failed to load comments");
         return;
       }
-
-      console.log('✅ Loaded test case comments:', data?.length || 0, data);
+ 
       setComments(data.data || []);
     } catch (error) {
       console.error('❌ Error in loadComments:', error);
@@ -123,8 +121,7 @@ export const TestCaseCommentDialog: React.FC<TestCaseCommentDialogProps> = ({
         toast.error(`Failed to add comment: ${error.message}`);
         return;
       }
-
-      console.log('✅ Comment added successfully:', data);
+ 
 
       // If this is a reopen comment, also update the test case status
       if (commentType === 'reopen' && canReopen) {

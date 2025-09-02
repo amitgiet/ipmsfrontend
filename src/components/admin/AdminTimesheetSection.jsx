@@ -134,13 +134,13 @@ export const AdminTimesheetSection = () => {
 
   const fetchTeamMembers = async () => {
     try {
-      console.log('🔄 Fetching team members for admin timesheet...');
+ 
       
       // Mock API call - replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
       
       setTeamMembers(mockTeamMembers);
-      console.log('✅ Team members loaded:', mockTeamMembers.length);
+ 
     } catch (error) {
       console.error('❌ Error in fetchTeamMembers:', error);
       toast({
@@ -153,14 +153,14 @@ export const AdminTimesheetSection = () => {
 
   const fetchTodayTotal = async () => {
     try {
-      console.log('🔄 Fetching today\'s total logged hours...');
+     
       
       // Mock API call - replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 300)); // Simulate API delay
       
       const total = mockTimeLogs.reduce((sum, log) => sum + log.time_spent_minutes, 0);
       setTodayTotal(total);
-      console.log('✅ Today\'s total minutes:', total);
+ 
     } catch (error) {
       console.error('❌ Error in fetchTodayTotal:', error);
       toast({
@@ -173,13 +173,13 @@ export const AdminTimesheetSection = () => {
 
   const fetchUnderperformers = async () => {
     try {
-      console.log('🔄 Fetching underperformers for last 3 days...');
+ 
       
       // Mock API call - replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 400)); // Simulate API delay
       
       setUnderperformers(mockUnderperformers);
-      console.log('✅ Underperformers found:', mockUnderperformers.length);
+ 
     } catch (error) {
       console.error('❌ Error in fetchUnderperformers:', error);
       toast({
@@ -192,7 +192,7 @@ export const AdminTimesheetSection = () => {
 
   const fetchMemberTimeLogs = async (memberEmail, date) => {
     try {
-      console.log('🔄 Fetching time logs for member:', memberEmail, 'date:', format(date, 'yyyy-MM-dd'));
+ 
       
       // Mock API call - replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 600)); // Simulate API delay
@@ -205,7 +205,7 @@ export const AdminTimesheetSection = () => {
       );
 
       setTimeLogs(filteredLogs);
-      console.log('✅ Member time logs loaded:', filteredLogs.length);
+ 
     } catch (error) {
       console.error('❌ Error in fetchMemberTimeLogs:', error);
       toast({

@@ -2,30 +2,17 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ProductOwnerTimeLogForm } from './ProductOwnerTimeLogForm';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { productOwnerService } from '@/services/ProductOwner/productOwner';
-import { CloudCog } from 'lucide-react';
 
-// Only these activity types are accepted
 const VALID_ACTIVITY_TYPES = ['grooming', 'meeting', 'sprint_management', 'planning', 'review'];
-
-interface Project {
-  id: string;
-  project_name: string;
-}
-
-interface ProductOwnerTimeLogProps {
-  open: boolean;
-  onClose: () => void;
-  projects: Project[];
-  onTimeLogged: () => void;
-}
 
 export const ProductOwnerTimeLog = ({
   open,
   onClose,
   projects,
-  onTimeLogged
+  onTimeLogged,
+  refetchTimeLogs
 }) => {
   const [projectId, setProjectId] = useState('');
   const [activityType, setActivityType] = useState('');
@@ -33,7 +20,6 @@ export const ProductOwnerTimeLog = ({
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (open) {
@@ -85,45 +71,25 @@ export const ProductOwnerTimeLog = ({
       const formattedStartTime = formatTimeToHIS(startTime);
       const formattedEndTime = formatTimeToHIS(endTime);
 
-      console.log('Time Formatting:', {
-        original: { startTime, endTime },
-        formatted: { startTime: formattedStartTime, endTime: formattedEndTime }
-      });
-
-      console.log('Sending to API:', {
+     const result = await productOwnerService.addTimeLog({
         project_id: projectId,
         activity_type: activityType,
         description: description || null,
         start_time: formattedStartTime,
         end_time: formattedEndTime,
-      });
-
-      await productOwnerService.addTimeLog({
-        project_id: projectId,
-        activity_type: activityType,
-        description: description || null,
-        start_time: formattedStartTime,
-        end_time: formattedEndTime,
+        is_project_log: 0,
       });
 
       setIsSubmitting(false);
-      return true;
+      return result.success;
     } catch (error) {
       console.error('Time log submission error:', error);
 
       // Show error toast
       if (error instanceof Error) {
-        toast({
-          title: "Validation Error",
-          description: error.message,
-          variant: "destructive",
-        });
+        toast.error(error.message);
       } else {
-        toast({
-          title: "Error",
-          description: "Failed to submit time log",
-          variant: "destructive",
-        });
+        toast.error("Failed to submit time log");
       }
 
       setIsSubmitting(false);
@@ -135,32 +101,20 @@ export const ProductOwnerTimeLog = ({
     e.preventDefault();
 
     if (!projectId || !activityType || !startTime || !endTime) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
+      toast.error("Please fill in all required fields");
       return;
     }
 
     // Validate time format (H:i or H:i:s)
     const timeFormatRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
     if (!timeFormatRegex.test(startTime) || !timeFormatRegex.test(endTime)) {
-      toast({
-        title: "Validation Error",
-        description: "Time must be in format HH:MM or HH:MM:SS (e.g., 17:52 or 17:52:00)",
-        variant: "destructive",
-      });
+      toast.error("Time must be in format HH:MM or HH:MM:SS (e.g., 17:52 or 17:52:00)");
       return;
     }
 
     // Validate activity type - only these are accepted
     if (!VALID_ACTIVITY_TYPES.includes(activityType)) {
-      toast({
-        title: "Invalid Activity Type",
-        description: `Only these activity types are allowed: ${VALID_ACTIVITY_TYPES.join(', ')}`,
-        variant: "destructive",
-      });
+      toast.error(`Only these activity types are allowed: ${VALID_ACTIVITY_TYPES.join(', ')}`);
       return; // Modal stays open, form doesn't submit
     }
 
@@ -168,11 +122,7 @@ export const ProductOwnerTimeLog = ({
     const start = new Date(`2000-01-01T${startTime}`);
     const end = new Date(`2000-01-01T${endTime}`);
     if (start >= end) {
-      toast({
-        title: "Validation Error",
-        description: "End time must be after start time",
-        variant: "destructive",
-      });
+      toast.error("End time must be after start time");
       return;
     }
 
@@ -185,13 +135,9 @@ export const ProductOwnerTimeLog = ({
     );
 
     if (success) {
-      toast({
-        title: "Success",
-        description: "Time log submitted successfully",
-      });
-      // Call the callback to notify parent component
+      toast.success("Time log submitted successfully");
       onTimeLogged();
-      // Form will be reset when dialog closes due to the effect
+      refetchTimeLogs();
       onClose();
     }
   };

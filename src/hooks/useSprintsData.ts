@@ -65,8 +65,7 @@ export const useSprintsData = (projectId: string) => {
         toast.error("Failed to create sprint: " + error.message);
         return null;
       }
-
-      console.log('✅ Sprint created successfully:', data);
+ 
       
       toast.success("Sprint created successfully");
 

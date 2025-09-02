@@ -33,7 +33,8 @@ const CreateSprintPageWrapper = lazy(() => import('../components/sprints/CreateS
 const DeveloperTasksPage = lazy(() => import('../components/developer/DeveloperTasksPage'));
 const QAStoriesPage = lazy(() => import('../components/qa/QAStoriesPage'));
 const ClientDashboard = lazy(() => import('../pages/dashboard/ClientDashboard/ClientDashboard'));
-// const TimeLogsPage = lazy(() => import('../components/TimeLogsPage'));
+const TimeLogsPage = lazy(() => import('../components/TimeLogsPage'));
+const ChangeRequest = lazy(() => import('../components/ChangeRequest/ChangeRequest'));  
 
 // App Routes
 export const childrenComponents = [
@@ -49,11 +50,12 @@ export const childrenComponents = [
   // Project-specific routes
   { path: 'project/:projectId', element: withSuspense(ProjectDashboardPage)() },
   { path: 'client-project/:projectId', element: withSuspense(ClientDashboard)() },
-  // { path: 'project/:projectId/time-logs', element: withSuspense(TimeLogsPage)() },
+  { path: 'project/:projectId/time-logs', element: withSuspense(TimeLogsPage)() },
   { path: 'project/:projectId/sprints/create', element: withSuspense(CreateSprintPageWrapper)() },
   { path: 'project/:projectId/story/:storyId/groom', element: withSuspense(UserStoryGrooming)() },
   { path: 'project/:projectId/story/:storyId/details', element: withSuspense(StoryDetailsPage)() },
   { path: 'project/:projectId/sprint/:sprintId/manage', element: withSuspense(SprintManagementPage)() },
+  { path: 'change-request/:projectId', element: withSuspense(ChangeRequest)() },
   
   // Developer and QA routes
   { path: 'my-tasks', element: withSuspense(DeveloperTasksPage)() },

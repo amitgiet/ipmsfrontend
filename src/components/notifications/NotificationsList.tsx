@@ -33,8 +33,7 @@ export const NotificationsList = ({ onClose }: NotificationsListProps) => {
     unreadCount 
   } = useNotifications();
 
-  console.log('🔔 NotificationsList render - notifications:', notifications.length, 'unread:', unreadCount);
-
+  
   const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
       case 'project_assigned':
@@ -54,8 +53,7 @@ export const NotificationsList = ({ onClose }: NotificationsListProps) => {
     }
   };
 
-  const handleNotificationClick = (notification: Notification) => {
-    console.log('🔔 Notification clicked:', notification.id, 'is_read:', notification.is_read);
+  const handleNotificationClick = (notification: Notification) => { 
     if (!notification.is_read) {
       markAsRead(notification.id);
     }

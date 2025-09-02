@@ -19,11 +19,7 @@ interface DeveloperStatsProps {
 export const DeveloperStats = ({ projects, currentUserEmail }: DeveloperStatsProps) => {
   const { tasks } = useDeveloperTasks(currentUserEmail || '');
   const navigate = useNavigate();
-
-  console.log('🎯 DeveloperStats - currentUserEmail:', currentUserEmail);
-  console.log('🎯 DeveloperStats - tasks received:', tasks);
-  console.log('🎯 DeveloperStats - tasks length:', tasks.length);
-
+ 
   // Count tasks by status
   const activeTasks = projects.my_tasks_to_do_count;
   const inProgressTasks = projects.my_tasks_in_progress_count;

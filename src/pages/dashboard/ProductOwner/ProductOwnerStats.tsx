@@ -29,12 +29,7 @@ export const ProductOwnerStats = ({ projects }: ProductOwnerStatsProps) => {
       currency: currency || 'USD',
     }).format(amount);
   };
-
-  const handleRefresh = () => {
-    // Demo refresh - just log to console
-    console.log('Refreshing Product Owner stats...');
-    // In a real app, this would trigger a data refetch
-  };
+ 
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

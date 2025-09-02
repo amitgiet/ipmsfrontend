@@ -84,20 +84,7 @@ export const TestCasesSection: React.FC<TestCasesSectionProps> = ({
     loadTestCases();
   }, [storyId]);
 
-  // Debug logging for test cases
-  useEffect(() => {
-    if (testCases.length > 0) {
-      testCases.forEach(testCase => {
-        console.log('🔍 TestCase Debug:', {
-          tcId: testCase.tc_id,
-          userRole,
-          unitTested: testCase.unit_tested,
-          canEdit,
-          shouldShowButtons: (userRole === 'developer' || userRole === 'team_lead') && !testCase.unit_tested
-        });
-      });
-    }
-  }, [testCases, userRole, canEdit]);
+  // Debug logging for test cases 
 
   const handleUnitTest = async (testCaseId: string, passed: boolean) => {
     try {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { allRoutes } from '@/services/routes';
 import { apiCall } from '@/services/apiCall';
 
@@ -39,39 +39,32 @@ export interface ChangeRequestComment {
 
 export const useChangeRequests = (projectId: string) => {
   const [changeRequests, setChangeRequests] = useState<ChangeRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [lastViewedComments, setLastViewedComments] = useState<Record<string, string>>({});
   const [commentsCounts, setCommentsCounts] = useState<Record<string, number>>({});
-  const { toast } = useToast();
 
   const loadChangeRequests = async () => {
     if (!projectId) return;
 
     try {
-      setLoading(true);
-      console.log('🔄 Loading change requests for project:', projectId);
+      setLoading(true); 
 
-        const { data, error } = await apiCall(allRoutes.comments.get(projectId, 'change_request'), 'get');
+        const { data, error } = await apiCall(allRoutes.clients.loadChangeRequests(projectId), 'get');
 
       if (error) {
         console.error('❌ Error loading change requests:', error);
         throw error;
       }
-
-      console.log('✅ Loaded change requests:', data?.length || 0);
-      setChangeRequests((data || []) as ChangeRequest[]);
+ 
+      setChangeRequests((data.data || []) as ChangeRequest[]);
       
       // Load comments counts for each request
-      if (data && data.length > 0) {
-        await loadCommentsCounts(data.map(req => req.id));
-      }
+      // if (data && data.length > 0) {
+      //   await loadCommentsCounts(data.map(req => req.id));
+      // }
     } catch (error) {
       console.error('❌ Error loading change requests:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load change requests",
-        variant: "destructive",
-      });
+      toast.error("Failed to load change requests");
     } finally {
       setLoading(false);
     }
@@ -130,53 +123,39 @@ export const useChangeRequests = (projectId: string) => {
     reviewedBy?: string
   ) => {
     try {
-      const updateData: any = {
-        status,
-        updated_at: new Date().toISOString()
-      };
-
-      // Set appropriate approval fields based on status
+      let apiError: any = null;
+  
       if (status === 'po_approved') {
-        updateData.po_approved_by = reviewedBy;
-        updateData.po_approved_at = new Date().toISOString();
-      } else if (status === 'client_approved') {
-        updateData.client_approved_by = reviewedBy;
-        updateData.client_approved_at = new Date().toISOString();
-      } else if (status === 'processed') {
-        updateData.processed_by = reviewedBy;
-        updateData.processed_at = new Date().toISOString();
-      } else if (status === 'rejected') {
-        updateData.reviewed_by = reviewedBy;
-        updateData.reviewed_at = new Date().toISOString();
-        updateData.response_message = responseMessage;
+        const { error } = await apiCall(allRoutes.clients.po_approved(requestId, projectId), 'patch');
+        apiError = error;
+      } 
+      else if (status === 'client_approved') {
+        const { error } = await apiCall(allRoutes.clients.client_approved(requestId, projectId), 'patch');
+        apiError = error;
+      } 
+      else if (status === 'processed') {
+        const { error } = await apiCall(allRoutes.clients.po_processed(requestId, projectId), 'patch');
+        apiError = error;
+      } 
+      else if (status === 'rejected') {
+        const { error } = await apiCall(allRoutes.clients.po_reject(requestId, projectId), 'patch' );
+        apiError = error;
       }
-
-      const { error } = await apiCall(allRoutes.comments.update(requestId), 'put', updateData);
-
-      if (error) {
-        console.error('❌ Error updating change request:', error);
-        throw error;
+  
+      // ✅ unified error handling
+      if (apiError) {
+        console.error('❌ Error updating change request:', apiError);
+        return;
       }
-
-      setChangeRequests(prev => prev.map(req => 
-        req.id === requestId 
-          ? { ...req, ...updateData }
-          : req
-      ));
-
-      toast({
-        title: "Success",
-        description: "Change request updated successfully",
-      });
+  
+      await loadChangeRequests()
+      toast.success("Change request updated successfully");
     } catch (error) {
       console.error('❌ Error updating change request:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update change request",
-        variant: "destructive",
-      });
+      toast.error("Failed to update change request");
     }
   };
+  
 
   const addComment = async (requestId: string, content: string, authorEmail: string, authorName: string, authorRole: string) => {
     try {
@@ -199,17 +178,10 @@ export const useChangeRequests = (projectId: string) => {
         [requestId]: (prev[requestId] || 0) + 1
       }));
 
-      toast({
-        title: "Success",
-        description: "Comment added successfully",
-      });
+      toast.success("Comment added successfully");
     } catch (error) {
       console.error('❌ Error adding comment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add comment",
-        variant: "destructive",
-      });
+      toast.error("Failed to add comment");
     }
   };
 
@@ -217,21 +189,9 @@ export const useChangeRequests = (projectId: string) => {
     try {
       // First update the status to processed
       await updateChangeRequestStatus(requestId, 'processed', undefined, processedBy);
-      
-      // Here you would add logic to create an epic in the mindmap/backlog
-      // This would integrate with the existing mindmap functionality
-      
-      toast({
-        title: "Success",
-        description: "Change request processed as epic",
-      });
     } catch (error) {
       console.error('❌ Error processing as epic:', error);
-      toast({
-        title: "Error",
-        description: "Failed to process as epic",
-        variant: "destructive",
-      });
+      toast.error("Failed to process as epic");
     }
   };
 
@@ -255,12 +215,9 @@ export const useChangeRequests = (projectId: string) => {
   //   loadLastViewedFromStorage();
   // }, []);
 
-  // useEffect(() => {
-  //   loadChangeRequests();
-  //   return () => {
-  //     apiCall(allRoutes.comments.get(projectId, 'change_request'), 'get');
-  //   };
-  // }, [projectId]);
+  useEffect(() => {
+    loadChangeRequests();
+  }, [projectId]);
 
   return {
     changeRequests,

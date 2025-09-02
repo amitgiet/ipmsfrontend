@@ -4,16 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, Play, CheckCircle, ArrowRight } from 'lucide-react';
 import { useDeveloperTasks } from '@/hooks/useDeveloperTasks';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 
-interface DeveloperTasksSectionProps {
-  currentUserEmail: string;
-  onLogTimeClick?: (task: any) => void;
-}
-
-export const DeveloperTasksSection = ({ currentUserEmail, onLogTimeClick }: DeveloperTasksSectionProps) => {
+export const DeveloperTasksSection = ({ currentUserEmail, onLogTimeClick }) => {
   const { tasks, loading, updateTaskStatus } = useDeveloperTasks(currentUserEmail);
-  const { toast } = useToast();
 
   const todoTasks = tasks.filter(task => task.status === 'to_do');
   const inProgressTasks = tasks.filter(task => task.status === 'in_progress');
@@ -51,11 +45,7 @@ export const DeveloperTasksSection = ({ currentUserEmail, onLogTimeClick }: Deve
 
     // Check if user is assigned to this task
     if (task.assignedTo && task.assignedTo !== currentUserEmail) {
-      toast({
-        title: "Permission Denied",
-        description: "You can only change the status of tasks assigned to you",
-        variant: "destructive",
-      });
+      toast.error("You can only change the status of tasks assigned to you");
       return;
     }
 
@@ -78,9 +68,8 @@ export const DeveloperTasksSection = ({ currentUserEmail, onLogTimeClick }: Deve
     );
   }
 
-  const TaskCard = ({ task }: { task: any }) => {
-    const canChangeStatus = !task.assignedTo || task.assignedTo === currentUserEmail;
-    
+  const TaskCard = ({ task }) => {
+    const canChangeStatus = !task.assigned_to || task.assigned_to.email === currentUserEmail;
     return (
       <div className="p-3 border rounded-lg hover:bg-gray-50">
         <div className="flex items-start justify-between mb-2">
@@ -158,14 +147,14 @@ export const DeveloperTasksSection = ({ currentUserEmail, onLogTimeClick }: Deve
 
         {!canChangeStatus && (
           <p className="text-xs text-gray-500 mb-2">
-            Status can only be changed by assigned user: {task.assignedTo}
+            Status can only be changed by assigned user: {task.assigned_to.name}
           </p>
         )}
         
         <p className="text-xs text-gray-500">
           Created: {new Date(task.created_at).toLocaleDateString()}
           {task.created_by && (
-            <span className="ml-2">by {task.created_by}</span>
+            <span className="ml-2">by {task.created_by.name}</span>
           )}
         </p>
       </div>

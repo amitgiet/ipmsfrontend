@@ -59,7 +59,7 @@ export const ClientProjectCard: React.FC<ClientProjectCardProps> = ({ project, o
           <CardTitle className="text-lg">{project.name}</CardTitle>
           {project.status && (
             <Badge className={getStatusColor(project.status)}>
-              {project.status.replace('_', ' ')}
+              {project.status.slice(0, 1).toUpperCase() + project.status?.slice(1).replace('_', ' ').toUpperCase() || 'Unknown'}
             </Badge>
           )}
         </div>

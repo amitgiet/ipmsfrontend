@@ -53,8 +53,7 @@ export const useStoryDocuments = (
     if (!allowedTypes.includes(file.type)) {
       toast.error("Invalid File Type");
       return;
-    }
-    console.log(story, file, projectId, 'story')
+    } 
     setUploading(true);
 
     let formData = new FormData();

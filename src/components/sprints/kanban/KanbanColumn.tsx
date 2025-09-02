@@ -34,8 +34,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
 }) => {
   const [random,setRandom] = useState(0);
   const totalPoints = stories.reduce((sum, story) => sum + (story.story_points || 0), 0);
-
-  console.log(status,stories);
+ 
    useEffect(() => {
     setTimeout(() => {
       setRandom(Math.random());

@@ -47,16 +47,15 @@ export const ProductOwnerTimeLogForm: React.FC<ProductOwnerTimeLogFormProps> = (
   onCancel
 }) => {
   const durationMinutes = calculateDurationMinutes(startTime, endTime);
-  const durationFormatted = formatDurationDisplay(durationMinutes);
-
+  const durationFormatted = formatDurationDisplay(durationMinutes); 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <ScrollArea className="max-h-[60vh] pr-4">
         <div className="grid gap-4 py-2">
           <div className="grid gap-2">
             <Label htmlFor="project">Project *</Label>
-            <Select 
-              value={projectId} 
+            <Select
+              value={projectId || ""}   // always provide a string
               onValueChange={setProjectId}
             >
               <SelectTrigger id="project">
@@ -65,7 +64,7 @@ export const ProductOwnerTimeLogForm: React.FC<ProductOwnerTimeLogFormProps> = (
               <SelectContent>
                 {projects.length > 0 ? (
                   projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
+                    <SelectItem key={project.id} value={String(project.id)}>  {/* force string */}
                       {project.project_name}
                     </SelectItem>
                   ))
@@ -76,6 +75,7 @@ export const ProductOwnerTimeLogForm: React.FC<ProductOwnerTimeLogFormProps> = (
                 )}
               </SelectContent>
             </Select>
+
           </div>
 
           <div className="grid gap-2">
@@ -93,7 +93,7 @@ export const ProductOwnerTimeLogForm: React.FC<ProductOwnerTimeLogFormProps> = (
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="startTime">Start Time *</Label>
             <Input
@@ -104,7 +104,7 @@ export const ProductOwnerTimeLogForm: React.FC<ProductOwnerTimeLogFormProps> = (
               required
             />
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="endTime">End Time *</Label>
             <Input
@@ -137,13 +137,13 @@ export const ProductOwnerTimeLogForm: React.FC<ProductOwnerTimeLogFormProps> = (
           </div>
         </div>
       </ScrollArea>
-      
+
       <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4 mt-4 border-t">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           disabled={!projectId || !activityType || !startTime || !endTime || durationMinutes <= 0 || isSubmitting}
         >
           {isSubmitting ? 'Logging...' : 'Log Time'}

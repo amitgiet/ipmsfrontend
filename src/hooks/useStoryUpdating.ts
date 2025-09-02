@@ -24,8 +24,7 @@ export const useStoryUpdating = () => {
   const updateStory = async (story: Story, updates: Partial<Story>, setStory: (story: Story | null) => void) => {
     if (!story) return;
 
-    try {
-      console.log('🔄 Updating story:', updates);
+    try { 
 
       const { error } = await apiCall(allRoutes.stories.update(story.id), 'put', {
         ...updates,
@@ -39,8 +38,7 @@ export const useStoryUpdating = () => {
 
       // Update local state with the updated story object
       const updatedStory = { ...story, ...updates };
-      setStory(updatedStory);
-      console.log('✅ Story updated successfully');
+      setStory(updatedStory); 
       
       toast.success("Story updated successfully");  
     } catch (error) {
@@ -52,8 +50,7 @@ export const useStoryUpdating = () => {
   const updateStoryStatus = async (story: Story, status: Story['status'], setStory: (story: Story | null) => void) => {
     if (!story) return;
 
-    try {
-      console.log('🔄 Updating story status to:', status);
+    try { 
 
       const { error } = await apiCall(allRoutes.stories.update(story.id), 'put', { 
         status,
@@ -67,8 +64,7 @@ export const useStoryUpdating = () => {
 
       // Update local state with the updated story object
       const updatedStory = { ...story, status };
-      setStory(updatedStory);
-      console.log('✅ Story status updated successfully');
+      setStory(updatedStory); 
     } catch (error) {
       console.error('❌ Error in updateStoryStatus:', error);
       toast.error("Failed to update story status");

@@ -28,10 +28,7 @@ export const useQAStories = (currentUserEmail: string) => {
         setLoading(false);
         return;
       }
-
-      console.log('🔄 Fetching QA stories for:', currentUserEmail);
-
-      // First, get the team member data
+ 
       const { data: teamMemberData, error: teamMemberError } = await apiCall(allRoutes.auth.get_team_member, 'get', { email: currentUserEmail.toLowerCase() });
 
       if (teamMemberError) {
@@ -39,8 +36,7 @@ export const useQAStories = (currentUserEmail: string) => {
         throw teamMemberError;
       }
 
-      if (!teamMemberData) {
-        console.log('❌ No QA found with email:', currentUserEmail);
+      if (!teamMemberData) { 
         setStories([]);
         setLoading(false);
         return;
@@ -54,8 +50,7 @@ export const useQAStories = (currentUserEmail: string) => {
         throw assignmentError;
       }
 
-      if (!assignmentData || assignmentData.length === 0) {
-        console.log('❌ No projects assigned to this QA');
+      if (!assignmentData || assignmentData.length === 0) { 
         setStories([]);
         setLoading(false);
         return;
@@ -66,8 +61,6 @@ export const useQAStories = (currentUserEmail: string) => {
 
       // Fetch stories with status 'qa' in these projects, joined with project info
       const { data: storiesData, error: storiesError } = await apiCall(allRoutes.stories.getStoriesByProjectIds(projectIds), 'get');
-
-      console.log('📥 Raw API response:', storiesData.data);
 
       if (storiesError) {
         console.error('❌ Error fetching stories:', storiesError);
@@ -80,7 +73,6 @@ export const useQAStories = (currentUserEmail: string) => {
       //   project_name: story.projects?.project_name
       // }));
 
-      console.log('✅ QA stories fetched:', storiesData.data.length);
       setStories(storiesData);
     } catch (error) {
       console.error('❌ Error in fetchQAStories:', error);

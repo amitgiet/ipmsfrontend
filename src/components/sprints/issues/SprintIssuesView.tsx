@@ -73,12 +73,13 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
   const fetchBugs = async () => {
     try {
       setLoading(true);
-  
-      const [openBugsRes, closedBugsRes] = await Promise.all([
+
+      const [openBugsRes, closedBugsRes, resolvedBugsRes] = await Promise.all([
         apiCall(allRoutes.sprints.getBugs(projectId, sprintId, "open"), "get"),
         apiCall(allRoutes.sprints.getBugs(projectId, sprintId, "closed"), "get"),
+        apiCall(allRoutes.sprints.getBugs(projectId, sprintId, "resolved"), "get"),
       ]);
-  
+
       const enrichBugs = (bugs: any[] = []) => {
         return bugs.map((bug) => {
           const story = stories.find((s) => s.id === bug.story.id);
@@ -100,12 +101,13 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
           };
         });
       };
-  
+
       const enrichedOpen = enrichBugs(openBugsRes?.data?.data || []);
       const enrichedClosed = enrichBugs(closedBugsRes?.data?.data || []);
-  
-      const allBugs = [...enrichedOpen, ...enrichedClosed];
-  
+      const enrichedResolved = enrichBugs(resolvedBugsRes?.data?.data || []);
+
+      const allBugs = [...enrichedOpen, ...enrichedClosed, ...enrichedResolved];
+
       setBugs(allBugs);
     } catch (error) {
       console.error("Error fetching bugs:", error);
@@ -126,7 +128,7 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
 
       fetchBugs(); // Refresh the list
     } catch (error) {
-      console.log(" error ", error);
+      console.error(" error ", error);
     }
   };
 
@@ -143,7 +145,23 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
 
       fetchBugs(); // Refresh the list
     } catch (error) {
-      console.log(" error ", error);
+      console.error(" error ", error);
+    }
+  };
+
+  const handleCloseBug = async (bugId: string) => {
+    try {
+      const { error } = await apiCall(allRoutes.sprints.closeBug(bugId, projectId), 'post');
+
+      if (error) {
+        return;
+      }
+
+      toast.success("Bug closed");
+
+      fetchBugs(); // Refresh the list
+    } catch (error) {
+      console.error(" error ", error);
     }
   };
 
@@ -179,16 +197,17 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
     fetchBugs();
   }, [sprintId]);
 
-  // if (loading) {
-  //   return (
-  //     <div className="flex justify-center items-center py-8">
-  //       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-  //     </div>
-  //   );
-  // }
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   const openBugs = bugs.filter(bug => bug.status === 'open' || bug.status === 'reopened');
-  const resolvedBugs = bugs.filter(bug => bug.status === 'closed' || bug.status === 'resolved');
+  const resolvedBugs = bugs.filter(bug => bug.status === 'resolved');
+  const closedBugs = bugs.filter(bug => bug.status === 'closed');
 
   return (
     <>
@@ -310,8 +329,75 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
                               <span>Story: {bug.story_title}</span>
                               <span className="mx-2">•</span>
                               <span>Resolved by: {bug.resolved_by?.name || 'Unknown'}</span>
+                              {/* <span className="mx-2">•</span>
+                              <span>{bug.resolved_at ? new Date(bug.resolved_at).toLocaleDateString() : 'Unknown'}</span> */}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setSelectedBug(bug)}
+                            >
+                              View Details
+                            </Button>
+                            {isQA && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleCloseBug(bug.id)}
+                              >
+                                Approve
+                              </Button>
+                            )}
+                            {isQA && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleReopenBug(bug.id)}
+                                className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                              >
+                                <Clock className="h-4 w-4 mr-1" />
+                                Reopen
+                              </Button>
+                            )}
+
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {closedBugs.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    Closed Issues ({closedBugs.length})
+                  </h3>
+                  <div className="space-y-3">
+                    {closedBugs.map(bug => (
+                      <div key={bug.id} className="border rounded-lg p-4 bg-green-50">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-medium text-gray-900">{bug.title}</h4>
+                              <Badge className={getSeverityColor(bug.severity)}>
+                                {bug.severity.toUpperCase()}
+                              </Badge>
+                              <Badge className={getStatusColor(bug.status)}>
+                                {bug.status.toUpperCase()}
+                              </Badge>
+                            </div>
+                            {bug.description && (
+                              <p className="text-gray-600 text-sm mb-2">{bug.description}</p>
+                            )}
+                            <div className="text-xs text-gray-500">
+                              <span>Story: {bug.story_title}</span>
                               <span className="mx-2">•</span>
-                              <span>{bug.resolved_at ? new Date(bug.resolved_at).toLocaleDateString() : 'Unknown'}</span>
+                              <span>Closed by: {bug.resolved_by?.name || 'Unknown'}</span>
+                              {/* <span className="mx-2">•</span>
+                              <span>{bug.resolved_at ? new Date(bug.resolved_at).toLocaleDateString() : 'Unknown'}</span> */}
                             </div>
                           </div>
                           <div className="flex gap-2">
@@ -333,6 +419,7 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
                                 Reopen
                               </Button>
                             )}
+
                           </div>
                         </div>
                       </div>

@@ -9,10 +9,8 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Health check function to test API connectivity
 export const checkApiHealth = async () => {
-  try {
-    console.log('Checking API health...');
-    const response = await api.get('/health');
-    console.log('API Health Check Success:', response);
+  try { 
+    const response = await api.get('/health'); 
     return { success: true, data: response.data };
   } catch (error) {
     console.error('API Health Check Failed:', error);
@@ -49,12 +47,12 @@ export const apiCall = async (
     const errors = axiosError?.response?.data?.errors;
     const message = axiosError?.response?.data?.message || axiosError.message;
 
-    if (errors && Object.keys(errors).length > 0) {
+    if (message) {
+      toast.error(message);
+    } else if (errors && Object.keys(errors).length > 0) {
       const firstKey = Object.keys(errors)[0];
       const firstErrorMessage = errors[firstKey];
       toast.error(firstErrorMessage);
-    } else if (message) {
-      toast.error(message);
     } else {
       toast.error("Something went wrong, please try again.");
     }

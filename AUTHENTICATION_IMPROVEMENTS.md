@@ -118,9 +118,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const { isAuthenticated, user, teamUser, login, logout } = useAuth();
 
-// Check authentication status
-console.log('Is authenticated:', isAuthenticated);
-console.log('Current user:', user);
+// Check authentication status 
 ```
 
 ### Manual Data Cleanup
@@ -199,15 +197,7 @@ npm run test:guards
 **Solution**: Ensure all localStorage operations use ipms_ prefixed keys
 
 ### Debug Tools
-```javascript
-// Check IPMS keys
-console.log('IPMS keys:', getIpmsKeys());
-
-// Check authentication state
-console.log('Auth state:', useSelector(state => state.auth));
-
-// Check localStorage
-console.log('IPMS token:', localStorage.getItem('ipms_token'));
+```javascript 
 ```
 
 ## Future Enhancements

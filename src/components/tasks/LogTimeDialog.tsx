@@ -4,17 +4,24 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/hooks/useAuth';
 
 interface LogTimeDialogProps {
   open: boolean;
   onClose: () => void;
-  onLogTime: (timeData: { startTime: string; endTime: string; timeSpentMinutes: number }) => Promise<void>;
+  onLogTime: (timeData: { startTime: string; endTime: string; timeSpentMinutes: number; taskId: string }) => Promise<void>;
   taskTitle: string;
-  taskAssignedTo?: string;
+  taskAssignedTo?: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
   currentUserEmail: string;
   userRole: string;
   sprintStatus?: 'created' | 'running' | 'completed';
   projectStatus?: string; // Add project status prop
+  taskId: string;
 }
 
 export const LogTimeDialog: React.FC<LogTimeDialogProps> = ({
@@ -23,11 +30,13 @@ export const LogTimeDialog: React.FC<LogTimeDialogProps> = ({
   onLogTime,
   taskTitle,
   taskAssignedTo,
-  currentUserEmail,
-  userRole,
   sprintStatus,
-  projectStatus
+  projectStatus,
+  taskId
 }) => {
+    const { user } = useAuth();
+    const userRole = user?.role;
+    const currentUserEmail = user?.email;
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,37 +61,11 @@ export const LogTimeDialog: React.FC<LogTimeDialogProps> = ({
     ? `${Math.floor(timeSpentMinutes / 60)}h ${timeSpentMinutes % 60}m`
     : '0h 0m';
 
-  // Check if the current user can log time to this task
-  const canLogTime = () => {
-    // Check if project is in progress
-    if (projectStatus && projectStatus !== 'in-progress') {
-      return false;
-    }
-
-    // Only allow time logging if sprint is running
-    if (sprintStatus && sprintStatus !== 'running') {
-      return false;
-    }
-
-    // Team leads can log time to any task
-    if (userRole === 'team_lead') return true;
-    
-    // QA and developers can only log time to tasks assigned to them
-    if ((userRole === 'qa' || userRole === 'developer') && taskAssignedTo) {
-      return taskAssignedTo === currentUserEmail;
-    }
-    
-    // If no assignment, allow (for backward compatibility)
-    return !taskAssignedTo;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!canLogTime()) {
-      return;
-    }
-    
+
     if (!startTime || !endTime || timeSpentMinutes <= 0) return;
 
     setIsSubmitting(true);
@@ -90,7 +73,8 @@ export const LogTimeDialog: React.FC<LogTimeDialogProps> = ({
       await onLogTime({
         startTime,
         endTime,
-        timeSpentMinutes
+        timeSpentMinutes,
+        taskId: taskId
       });
       
       // Reset form
@@ -108,55 +92,6 @@ export const LogTimeDialog: React.FC<LogTimeDialogProps> = ({
     setEndTime('');
     onClose();
   };
-
-  if (!canLogTime()) {
-    let errorMessage = "You can only log time to tasks assigned to you.";
-    let details = `This task is assigned to: ${taskAssignedTo || 'No one'}`;
-    
-    if (projectStatus && projectStatus !== 'in-progress') {
-      errorMessage = "Time logging is only available when the project is in progress.";
-      details = `Project status: ${projectStatus}`;
-    } else if (sprintStatus && sprintStatus !== 'running') {
-      errorMessage = "Time logging is only available when the sprint is in progress.";
-      details = `Sprint status: ${sprintStatus}`;
-    }
-
-    return (
-      <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Cannot Log Time</DialogTitle>
-            <DialogDescription>
-              {errorMessage}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-gray-600">
-              {details}
-            </p>
-            {projectStatus !== 'in-progress' ? (
-              <p className="text-sm text-gray-600 mt-2">
-                Time logging is only allowed when the project is in progress.
-              </p>
-            ) : sprintStatus !== 'running' ? (
-              <p className="text-sm text-gray-600 mt-2">
-                Time logging is only allowed during active sprints.
-              </p>
-            ) : (
-              <p className="text-sm text-gray-600 mt-2">
-                Only the assigned team member can log time to this task.
-              </p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button type="button" onClick={handleClose}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>

@@ -73,7 +73,7 @@ export const StoryCard: React.FC<StoryCardProps> = ({
               <div className="flex flex-wrap gap-1">
                 {/* Priority badge */}
                 <Badge className={priorityColors[story.priority]} variant="outline">
-                  {story.priority}
+                  {story.priority.toUpperCase()}
                 </Badge>
                 
                 {/* Overworked badge */}

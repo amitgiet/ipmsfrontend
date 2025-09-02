@@ -4,7 +4,7 @@ import { ProjectHeader } from '@/components/dashboard/ProjectHeader';
 import { ProjectOverviewCards } from '@/components/dashboard/ProjectOverviewCards';
 import { ProjectInfoCard } from '@/components/dashboard/ProjectInfoCard';
 import { ProjectTabs } from '@/components/dashboard/ProjectTabs';
-// import { TeamVelocityChart } from '@/components/sprints/TeamVelocityChart';
+import { TeamVelocityChart } from '@/components/sprints/TeamVelocityChart';
 // import { useUserStoryIntegration } from '@/hooks/useUserStoryIntegration';
 
 const ProjectDashboard = ({ project, onBack }) => {
@@ -22,8 +22,8 @@ const ProjectDashboard = ({ project, onBack }) => {
 
         <ProjectTabs projectId={project.id} />
 
-        <div className="mt-6">
-          {/* <TeamVelocityChart projectId={project.id} /> */}
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm mt-6">
+          <TeamVelocityChart projectId={project.id} />
         </div>
       </div>
     </div>

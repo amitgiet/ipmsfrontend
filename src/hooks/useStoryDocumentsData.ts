@@ -35,11 +35,9 @@ export const useStoryDocumentsData = () => {
           uploaded_at: doc.uploaded_at || doc.created_at || new Date().toISOString()
         }));
         
-        setDocuments(transformedDocuments);
-        console.log('✅ Loaded documents:', transformedDocuments.length);
+        setDocuments(transformedDocuments); 
       } else {
-        setDocuments([]);
-        console.log('✅ No documents found');
+        setDocuments([]); 
       }
     } catch (error) {
       console.error('❌ Error loading documents:', error);

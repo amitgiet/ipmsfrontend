@@ -18,7 +18,7 @@ const Login = () => {
             </div>
             <div>
               <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                ProjectHub
+                IPMS
               </h1>
               <p className="text-lg text-gray-500 font-medium">Next-gen project management</p>
             </div>
@@ -96,7 +96,7 @@ const Login = () => {
                 <Building2 className="h-6 w-6 text-white" />
               </div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                ProjectHub
+                IPMS
               </h1>
             </div>
             <p className="text-gray-600">Transform your team's productivity</p>

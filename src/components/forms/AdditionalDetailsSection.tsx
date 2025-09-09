@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { FileImage, File, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { MilestoneSection } from './MilestoneSection';
 
 export const AdditionalDetailsSection = ({ formData, onInputChange }) => {
   const { toast } = useToast();
@@ -141,16 +142,10 @@ export const AdditionalDetailsSection = ({ formData, onInputChange }) => {
       </div>
 
       {/* Milestones */}
-      <div className="space-y-2">
-        <Label htmlFor="milestones">Milestones</Label>
-        <Textarea
-          id="milestones"
-          value={formData.milestones}
-          onChange={(e) => onInputChange('milestones', e.target.value)}
-          placeholder="Enter project milestones"
-          rows={3}
-        />
-      </div>
+      <MilestoneSection 
+        formData={formData} 
+        onInputChange={onInputChange} 
+      />
 
       {/* Client Dependencies */}
       <div className="space-y-2">

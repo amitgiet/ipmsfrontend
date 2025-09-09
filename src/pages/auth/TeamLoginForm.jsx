@@ -68,7 +68,7 @@ export const TeamLoginForm = () => {
           Welcome Back
         </CardTitle>
         <CardDescription>
-          Sign in to access your ProjectHub dashboard
+          Sign in to access your IPMS dashboard
         </CardDescription>
       </CardHeader>
       <CardContent>

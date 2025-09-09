@@ -26,43 +26,15 @@ import { useToast } from '@/hooks/use-toast';
 import { AddProjectForm } from '@/pages/dashboard/Modal/AddProjectForm';
 import { EditProjectForm } from '@/pages/dashboard/Modal/EditProjectForm';
 import { projectService } from '@/services/ProjectService/projectService';
-import { AdminHeader } from '@/components/admin/AdminHeader';
 import { useNavigate } from 'react-router-dom';
-
-interface Project {
-  id: string;
-  project_name: string;
-  project_id: string | null;
-  project_status: string | null;
-  project_type: string | null;
-  priority: string | null;
-  client_name: string | null;
-  client_email: string | null;
-  client_phone: string | null;
-  backup_contact: string | null;
-  allow_client_access: boolean | null;
-  estimated_budget: number | null;
-  budget_currency: string | null;
-  actual_budget_used: number | null;
-  budgeted_hours: number | null;
-  logged_hours: number | null;
-  start_date: string | null;
-  end_date: string | null;
-  duration: number | null;
-  documents: string | null;
-  milestones: string | null;
-  client_dependencies: string | null;
-  tags_labels: string | null;
-  created_at: string;
-  created_by: string | null;
-  progress_percent: number | null;
-}
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import AddClientModal from '@/pages/dashboard/Modal/AddClientModal';
 
 export const AdminProjectsSection = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState([]);
+  const [filteredProjects, setFilteredProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -73,7 +45,8 @@ export const AdminProjectsSection = () => {
   const [addProjectModalOpen, setAddProjectModalOpen] = useState(false);
   const [editProjectModalOpen, setEditProjectModalOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editingProject, setEditingProject] = useState(null);
+  const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -87,7 +60,7 @@ export const AdminProjectsSection = () => {
       setLoading(true);
       try {
         // Prepare API parameters with filters
-        const apiParams: { [key: string]: any } = {
+        const apiParams = {
           page: pagination.current_page,
           limit: pagination.per_page
         };
@@ -114,18 +87,19 @@ export const AdminProjectsSection = () => {
           const meta = response.data.meta || {};
 
           // Transform the data to match our Project interface if needed
-          const transformedProjects = projectsData.map((item: any) => ({
+          const transformedProjects = projectsData.map(item => ({
             id: item.id?.toString() || Date.now().toString(),
             project_name: item.name || item.title || item.project_name || 'Untitled Project',
             project_id: item.project_code || item.project_id || item.id?.toString(),
             project_status: item.status || 'planned',
-            project_type: item.type || 'Web Development',
+            project_type: item.types || [],
+            project_nature: item.natures || [],
             priority: item.priority || 'medium',
-            client_name: item.client_name || item.customer_name || 'Unknown Client',
+            client_name: item.client_name || item.customer_name || 'Client Not Assigned',
             client_email: item.client_email || item.email || '',
             allow_client_access: item.is_client_dashboard_access_enabled == true || item.allow_client_access || false,
             estimated_budget: parseFloat(item.estimated_budget) || 0,
-            budget_currency: 'USD',
+            budget_currency: item.currency || 'USD',
             actual_budget_used: 0,
             budgeted_hours: parseFloat(item.budgeted_hours) || 0,
             logged_hours: parseFloat(item.logged_hours) || 0,
@@ -133,6 +107,7 @@ export const AdminProjectsSection = () => {
             end_date: item.end_date || null,
             duration: parseInt(item.duration_days) || null,
             documents: item.documents || '',
+            all_clients: item.client || [],
             client_phone: item.client_phone || '',
             backup_contact: item.backup_contact || '',
             milestones: item.milestones || '',
@@ -151,11 +126,6 @@ export const AdminProjectsSection = () => {
               last_page: 1,
               per_page: 10,
               total: 0
-            });
-            toast({
-              title: "No Projects",
-              description: "No projects found. Create your first project to get started!",
-              variant: "default"
             });
           } else {
             setProjects(transformedProjects);
@@ -199,9 +169,6 @@ export const AdminProjectsSection = () => {
   }, [pagination.current_page, pagination.per_page, searchTerm, clientFilter, statusFilter, priorityFilter]);
 
   useEffect(() => {
-    // Reset to first page when filters change
-    setPagination(prev => ({ ...prev, current_page: 1 }));
-
     // Apply client-side filtering for immediate UI feedback
     const filtered = projects.filter((project) => {
       const matchesSearch = !searchTerm ||
@@ -225,110 +192,75 @@ export const AdminProjectsSection = () => {
     setFilteredProjects(filtered);
   }, [projects, searchTerm, statusFilter, priorityFilter, clientFilter, projectIdFilter]);
 
-
-  // useEffect(() => {
-  //   const timeoutId = setTimeout(() => {
-  //     if (searchTerm || clientFilter || statusFilter !== 'all' || priorityFilter !== 'all') {
-  //       handleRefreshProjects();
-  //     }
-  //   }, 500); // 500ms delay
-
-  //   return () => clearTimeout(timeoutId);
-  // }, [searchTerm, clientFilter, statusFilter, priorityFilter]);
-
-  const handlePageChange = (newPage) => {
+  const handlePageChange = newPage => {
     if (newPage >= 1 && newPage <= pagination.last_page) {
       setPagination(prev => ({ ...prev, current_page: newPage }));
     }
   };
 
-    const loadProjects = async () => {
-      setLoading(true);
+  const loadProjects = async () => {
+    setLoading(true);
 
-      try {
-        // Prepare API parameters with filters
-        const apiParams: { [key: string]: any } = {
-          page: pagination.current_page,
-          limit: pagination.per_page
-        };
+    try {
+      // Prepare API parameters with filters
+      const apiParams = {
+        page: pagination.current_page,
+        limit: pagination.per_page
+      };
 
-        // Add filters to API call if they have values
-        if (searchTerm.trim()) {
-          apiParams.search = searchTerm.trim();
-        }
-        if (clientFilter.trim()) {
-          apiParams.client_name = clientFilter.trim();
-        }
-        if (statusFilter !== 'all') {
-          apiParams.status = statusFilter;
-        }
-        if (priorityFilter !== 'all') {
-          apiParams.priority = priorityFilter;
-        }
+      // Add filters to API call if they have values
+      if (searchTerm.trim()) {
+        apiParams.search = searchTerm.trim();
+      }
+      if (clientFilter.trim()) {
+        apiParams.client_name = clientFilter.trim();
+      }
+      if (statusFilter !== 'all') {
+        apiParams.status = statusFilter;
+      }
+      if (priorityFilter !== 'all') {
+        apiParams.priority = priorityFilter;
+      }
 
-        const response = await projectService.getProjects(apiParams);
+      const response = await projectService.getProjects(apiParams);
 
-        if (response.success) {
-          const projectsData = response.data.data || [];
-          const meta = response.data.meta || {};
+      if (response.success) {
+        const projectsData = response.data.data || [];
+        const meta = response.data.meta || {};
 
-          // Transform the data to match our Project interface if needed
-          const transformedProjects = projectsData.map((item: any) => ({
-            id: item.id?.toString() || Date.now().toString(),
-            project_name: item.name || item.title || item.project_name || 'Untitled Project',
-            project_id: item.project_code || item.project_id || item.id?.toString(),
-            project_status: item.status || 'planned',
-            project_type: item.type || 'Web Development',
-            priority: item.priority || 'medium',
-            client_name: item.client_name || item.customer_name || 'Unknown Client',
-            client_email: item.client_email || item.email || '',
-            client_phone: item.client_phone || '',
-            backup_contact: item.backup_contact || '',
-            allow_client_access: item.is_client_dashboard_access_enabled == true || item.allow_client_access || false,
-            estimated_budget: parseFloat(item.estimated_budget) || 0,
-            budget_currency: 'USD',
-            actual_budget_used: 0,
-            budgeted_hours: parseFloat(item.budgeted_hours) || 0,
-            logged_hours: parseFloat(item.logged_hours) || 0,
-            start_date: item.start_date || item.created_at,
-            end_date: item.end_date || null,
-            duration: parseInt(item.duration_days) || null,
-            documents: item.documents || '',
-            milestones: item.milestones || '',
-            client_dependencies: item.client_dependencies || '',
-            tags_labels: item.tags || item.tags_labels || '',
-            created_at: item.created_at || new Date().toISOString(),
-            created_by: item.created_by || 'admin',
-            progress_percent: item.progress_percent || 0
-          }));
+        // Transform the data to match our Project interface if needed
+        const transformedProjects = projectsData.map(item => ({
+          id: item.id?.toString() || Date.now().toString(),
+          project_name: item.name || item.title || item.project_name || 'Untitled Project',
+          project_id: item.project_code || item.project_id || item.id?.toString(),
+          project_status: item.status || 'planned',
+          project_type: item.types || [],
+          all_clients: item.client || [],
+          project_nature: item.natures || [],
+          priority: item.priority || 'medium',
+          client_name: item.client_name || item.customer_name || 'Client Not Assigned',
+          client_email: item.client_email || item.email || '',
+          client_phone: item.client_phone || '',
+          backup_contact: item.backup_contact || '',
+          allow_client_access: item.is_client_dashboard_access_enabled == true || item.allow_client_access || false,
+          estimated_budget: parseFloat(item.estimated_budget) || 0,
+          budget_currency: item.currency || 'USD',
+          actual_budget_used: 0,
+          budgeted_hours: parseFloat(item.budgeted_hours) || 0,
+          logged_hours: parseFloat(item.logged_hours) || 0,
+          start_date: item.start_date || item.created_at,
+          end_date: item.end_date || null,
+          duration: parseInt(item.duration_days) || null,
+          documents: item.documents || '',
+          milestones: item.milestones || '',
+          client_dependencies: item.client_dependencies || '',
+          tags_labels: item.tags || item.tags_labels || '',
+          created_at: item.created_at || new Date().toISOString(),
+          created_by: item.created_by || 'admin',
+          progress_percent: item.progress_percent || 0
+        }));
 
-          if (transformedProjects.length === 0) {
-            setProjects([]);
-            setFilteredProjects([]);
-            setPagination({
-              current_page: 1,
-              last_page: 1,
-              per_page: 10,
-              total: 0
-            });
-            toast({
-              title: "No Projects",
-              description: "No projects found. Create your first project to get started!",
-              variant: "default"
-            });
-          } else {
-            setProjects(transformedProjects);
-            setFilteredProjects(transformedProjects);
-            setPagination({
-              current_page: meta.current_page || 1,
-              last_page: meta.last_page || 1,
-              per_page: meta.per_page || 10,
-              total: meta.total || transformedProjects.length
-            });
-          }
-        } else {
-          console.error("❌ Failed to refresh projects:", response.message || response.error);
-          // If API fails, show empty state
+        if (transformedProjects.length === 0) {
           setProjects([]);
           setFilteredProjects([]);
           setPagination({
@@ -337,10 +269,24 @@ export const AdminProjectsSection = () => {
             per_page: 10,
             total: 0
           });
+          toast({
+            title: "No Projects",
+            description: "No projects found. Create your first project to get started!",
+            variant: "default"
+          });
+        } else {
+          setProjects(transformedProjects);
+          setFilteredProjects(transformedProjects);
+          setPagination({
+            current_page: meta.current_page || 1,
+            last_page: meta.last_page || 1,
+            per_page: meta.per_page || 10,
+            total: meta.total || transformedProjects.length
+          });
         }
-      } catch (error) {
-        console.error("❌ Error refreshing projects:", error);
-        // If any error occurs, show empty state
+      } else {
+        console.error("❌ Failed to refresh projects:", response.message || response.error);
+        // If API fails, show empty state
         setProjects([]);
         setFilteredProjects([]);
         setPagination({
@@ -350,9 +296,21 @@ export const AdminProjectsSection = () => {
           total: 0
         });
       }
+    } catch (error) {
+      console.error("❌ Error refreshing projects:", error);
+      // If any error occurs, show empty state
+      setProjects([]);
+      setFilteredProjects([]);
+      setPagination({
+        current_page: 1,
+        last_page: 1,
+        per_page: 10,
+        total: 0
+      });
+    }
 
-      setLoading(false);
-    };
+    setLoading(false);
+  };
 
   const handleRefreshProjects = () => {
     loadProjects();
@@ -365,9 +323,6 @@ export const AdminProjectsSection = () => {
     setClientFilter('');
     setProjectIdFilter('');
 
-    // Reset pagination to first page when clearing filters
-    setPagination(prev => ({ ...prev, current_page: 1 }));
-
     // Refresh projects with cleared filters
     handleRefreshProjects();
   };
@@ -376,7 +331,7 @@ export const AdminProjectsSection = () => {
     setAddProjectModalOpen(true);
   };
 
-  const handleProjectSubmit = async (newProject) => {
+  const handleProjectSubmit = () => {
     try {
       loadProjects();
     } catch (error) {
@@ -389,7 +344,7 @@ export const AdminProjectsSection = () => {
     }
   };
 
-  const handleEditProjectSubmit = async (updatedProject) => {
+  const handleEditProjectSubmit = () => {
     try {
       loadProjects();
     } catch (error) {
@@ -402,12 +357,12 @@ export const AdminProjectsSection = () => {
     }
   };
 
-  const handleEditProject = (project: Project) => {
+  const handleEditProject = (project) => {
     setEditingProject(project);
     setEditProjectModalOpen(true);
   };
 
-  const getProjectStatusColor = (status: string | null) => {
+  const getProjectStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'planned':
         return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -424,7 +379,7 @@ export const AdminProjectsSection = () => {
     }
   };
 
-  const getPriorityColor = (priority: string | null) => {
+  const getPriorityColor = (priority) => {
     switch (priority?.toLowerCase()) {
       case 'urgent':
         return 'bg-red-100 text-red-800 border-red-200';
@@ -439,12 +394,12 @@ export const AdminProjectsSection = () => {
     }
   };
 
-  const formatCurrency = (amount: number | null, currency: string | null) => {
+  const formatCurrency = (amount, currency) => {
     if (!amount) return 'N/A';
-    return `${currency || 'USD'} ${amount.toLocaleString()}`;
+    return `${currency || ''} ${amount.toLocaleString()}`;
   };
 
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
   };
@@ -615,7 +570,9 @@ export const AdminProjectsSection = () => {
                         Project ID: {project.project_id || project.id}
                       </p>
                       <p className="text-sm text-gray-500">
-                        Type: {project.project_type || 'Not specified'}
+                        Type: {Array.isArray(project.project_type) && project.project_type.length > 0
+                          ? project.project_type.map(type => type.name || type).join(', ')
+                          : (typeof project.project_type === 'string' ? project.project_type : 'Not specified')}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -644,12 +601,31 @@ export const AdminProjectsSection = () => {
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Users className="h-4 w-4" />
-                        <span className="font-medium">Client</span>
+                        <span className="font-medium">Client <button className="text-blue-500 px-2 py-1 text-xs" onClick={() => { setEditingProject(project); setShowAddClientModal(true) }}>+ Add Client</button></span>
                       </div>
                       <div className="text-sm">
-                        <p className="font-medium">{project.client_name || 'No client assigned'}</p>
-                        {project.client_email && (
-                          <p className="text-gray-500">{project.client_email}</p>
+                        {project.all_clients && project.all_clients.length > 0 ? (
+                          project.all_clients.slice(0, 3).map((client, index) => (
+                            <>
+                              <p className="font-medium">{index + 1}. {client.name || 'Client Not Assigned'}</p>
+                            </>
+                          ))
+                        ) : (
+                          <p className="font-medium">{project.client_name || 'Client Not Assigned'}</p>
+                        )}
+                        {project.all_clients.length > 3 && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <p className="font-medium">+{project.all_clients.length - 3}</p>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {project.all_clients.slice(3).map((client, index) => (
+                                  <p className="font-medium">{index + 4}. {client.name || 'Client Not Assigned'}</p>
+                                ))}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                       </div>
                     </div>
@@ -672,7 +648,6 @@ export const AdminProjectsSection = () => {
                     {/* Budget & Hours */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <DollarSign className="h-4 w-4" />
                         <span className="font-medium">Budget & Hours</span>
                       </div>
                       <div className="text-sm">
@@ -786,19 +761,27 @@ export const AdminProjectsSection = () => {
           setAddProjectModalOpen(false);
           handleRefreshProjects();
         }}
-        onSubmit={handleProjectSubmit}
+        onSubmitForAdmin={(val) => handleProjectSubmit(val)}
+      />
+
+      <AddClientModal
+        open={showAddClientModal}
+        onOpenChange={() => setShowAddClientModal(false)}
+        onSubmitForAdmin={(val) => handleProjectSubmit(val)}
+        project={editingProject}
       />
 
       <EditProjectForm
-        loadProjects={loadProjects}
+        loadProjects={handleRefreshProjects}
         open={editProjectModalOpen}
         onOpenChange={() => {
           setEditProjectModalOpen(false);
           handleRefreshProjects();
         }}
-        onSubmit={(val)=>handleEditProjectSubmit(val)}
+        onSubmit={(val) => handleEditProjectSubmit(val)}
         project={editingProject}
       />
+
 
     </div>
   );

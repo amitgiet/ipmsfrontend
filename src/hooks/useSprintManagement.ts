@@ -46,7 +46,6 @@ export const useSprintManagement = (sprintId?: string, projectId?: string) => {
 
       if (sprintError) {
         console.error('❌ Error fetching sprint:', sprintError);
-        toast.error("Failed to fetch sprint details");
         return;
       }
 

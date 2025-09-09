@@ -14,11 +14,14 @@ interface ClientProject {
   start_date: string | null;
   end_date: string | null;
   estimated_budget: number | null;
-  budget_currency: string | null;
+  currency: string | null;
   progress: number | null;
   priority: string | null;
   type: string | null;
   created_at: string;
+  currency: string | null;
+  actual_budget_used: number | null;
+  logged_hours: number | null;
 }
 
 interface ClientProjectCardProps {
@@ -80,9 +83,8 @@ export const ClientProjectCard: React.FC<ClientProjectCardProps> = ({ project, o
           
           {project.estimated_budget && (
             <div className="flex items-center">
-              <DollarSignIcon className="h-4 w-4 mr-2 text-gray-500" />
               <span className="text-gray-700">
-                {project.estimated_budget} {project.budget_currency || 'USD'}
+                {project.estimated_budget} {project.currency || 'USD'}
               </span>
             </div>
           )}

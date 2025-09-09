@@ -135,7 +135,7 @@ export const TaskKanbanView: React.FC<TaskKanbanViewProps> = ({
                                   <Clock className="h-3 w-3" />
                                 </Button>
                               )}
-                              {userRole !== 'developer' && (
+                              {userRole !== 'developer' && userRole !== 'client' && (
                                 <>
                                   <Button
                                     variant="ghost"

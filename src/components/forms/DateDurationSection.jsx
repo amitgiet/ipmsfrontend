@@ -8,7 +8,7 @@ export const DateDurationSection = ({ formData, errors, onInputChange }) => {
   useEffect(() => {
     if (formData.startDate && formData.duration && formData.duration > 0) {
       const calculatedEndDate = addDays(formData.startDate, parseInt(formData.duration) - 1);
-      onInputChange('endDate', calculatedEndDate);
+      // onInputChange('endDate', calculatedEndDate);
     }
   }, [formData.startDate, formData.duration, onInputChange]);
 
@@ -77,12 +77,6 @@ export const DateDurationSection = ({ formData, errors, onInputChange }) => {
             </p>
           )}
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <p className="text-xs text-gray-500">
-          💡 <strong>How it works:</strong> Enter the start date and duration, and the end date will be automatically calculated for you.
-        </p>
       </div>
     </div>
   );

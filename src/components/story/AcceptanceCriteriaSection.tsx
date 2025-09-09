@@ -2,13 +2,14 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+// import { Textarea } from '@/components/ui/textarea';
 import { Edit, Save, X } from 'lucide-react';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useUserRole } from '@/hooks/useUserRole';
+import QuillEditor from '../common/QuillEditor';
 
 interface AcceptanceCriteriaSectionProps {
   storyId: string;
@@ -81,12 +82,18 @@ export const AcceptanceCriteriaSection: React.FC<AcceptanceCriteriaSectionProps>
       <CardContent>
         {isEditing ? (
           <div className="space-y-4">
-            <Textarea
+            {/* <Textarea
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
               placeholder="Define the acceptance criteria for this story..."
               rows={6}
               disabled={isLoading}
+            /> */}
+            <QuillEditor
+              text={editValue}
+              setText={setEditValue}
+              placeholder="Define the acceptance criteria for this story..."
+              limit={1000}
             />
             <div className="flex gap-2">
               <Button
@@ -96,7 +103,7 @@ export const AcceptanceCriteriaSection: React.FC<AcceptanceCriteriaSectionProps>
               >
                 <Save className="h-4 w-4 mr-2" />
                 Save
-              </Button>
+              </Button> 
               <Button
                 variant="outline"
                 onClick={handleCancel}

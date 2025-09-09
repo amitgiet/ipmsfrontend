@@ -1,6 +1,8 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { logoutUser } from '../../features/auth/authSlice';
+import { User, LogOut, Mail } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -18,19 +20,25 @@ const Header = () => {
           <div className="flex items-center">
             <h1 className="text-xl font-semibold text-gray-900">IPMS</h1>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             {currentUser && (
               <>
-                <span className="text-sm text-gray-700">
-                  Welcome, {currentUser.name}
+                <span className=" flex flex-col items-start justify-start text-sm text-gray-700">
+                  <p className="flex items-center gap-2"><User className="h-4 w-4" /> {currentUser.name} ({user.role.replace('_', ' ').replace('-', ' ').toUpperCase()})</p>
+                  <p className="flex items-center gap-2 text-sm text-gray-700"><Mail className="h-4 w-4" /> {currentUser.email}</p>
                 </span>
-                <button
-                  onClick={handleLogout}
-                  className="btn-secondary text-sm"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    handleLogout();
+                  }}
+                  className="flex items-center gap-2"
                 >
+                  <LogOut className="h-4 w-4" />
                   Logout
-                </button>
+                </Button>
               </>
             )}
           </div>

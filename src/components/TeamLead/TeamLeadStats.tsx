@@ -59,7 +59,7 @@ export const TeamLeadStats = ({ projects, currentUserEmail }: TeamLeadStatsProps
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {projects.sprints_about_to_end_count + projects.my_tasks_completed_count}
+            {projects.sprints_need_attention_count ?? 0}
           </div>
           <p className="text-xs text-muted-foreground">
             Ending soon or overrun

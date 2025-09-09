@@ -1,21 +1,30 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, X, User } from 'lucide-react';
 
 export const ClientInfoSection = ({ formData, errors, onInputChange }) => {
-  const [clients, setClients] = useState([
-    {
+  // Get clients from formData or create default
+  const getClients = () => {
+    if (formData.allClients && formData.allClients.length > 0) {
+      return formData.allClients;
+    }
+    
+    return [{
       id: 1,
       name: formData.clientName || '',
       email: formData.clientEmail || '',
       phone: formData.clientPhone || '',
-      backupContact: formData.backupContact || ''
-    }
-  ]);
+      backup_contact: formData.backupContact || '',
+      is_client_dashboard_access_enabled: formData.allowClientAccess || false
+    }];
+  };
+
+  const clients = getClients();
 
   const addClient = () => {
     const newClient = {
@@ -23,16 +32,17 @@ export const ClientInfoSection = ({ formData, errors, onInputChange }) => {
       name: '',
       email: '',
       phone: '',
-      backupContact: ''
+      backup_contact: '',
+      is_client_dashboard_access_enabled: false
     };
-    setClients([...clients, newClient]);
+    const updatedClients = [...clients, newClient];
+    onInputChange('allClients', updatedClients);
   };
 
   const removeClient = (clientId) => {
     if (clients.length > 1) {
       const updatedClients = clients.filter(client => client.id !== clientId);
-      setClients(updatedClients);
-      updateFormData(updatedClients);
+      onInputChange('allClients', updatedClients);
     }
   };
 
@@ -40,20 +50,7 @@ export const ClientInfoSection = ({ formData, errors, onInputChange }) => {
     const updatedClients = clients.map(client => 
       client.id === clientId ? { ...client, [field]: value } : client
     );
-    setClients(updatedClients);
-    updateFormData(updatedClients);
-  };
-
-  const updateFormData = (clientsList) => {
-    // Update the main form data with the first client as primary
-    const primaryClient = clientsList[0] || {};
-    onInputChange('clientName', primaryClient.name || '');
-    onInputChange('clientEmail', primaryClient.email || '');
-    onInputChange('clientPhone', primaryClient.phone || '');
-    onInputChange('backupContact', primaryClient.backupContact || '');
-    
-    // Store all clients in formData for API submission
-    onInputChange('allClients', clientsList);
+    onInputChange('allClients', updatedClients);
   };
 
   const formatPhoneNumber = (value) => {
@@ -83,28 +80,28 @@ export const ClientInfoSection = ({ formData, errors, onInputChange }) => {
         </Button>
       </div>
 
-      {clients.map((client, index) => (
-        <Card key={client.id} className="relative">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <User className="h-4 w-4" />
-                {index === 0 ? 'Primary Client' : `Additional Client ${index}`}
-                {index === 0 && <Badge variant="secondary">Primary</Badge>}
-              </CardTitle>
-              {clients.length > 1 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeClient(client.id)}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </CardHeader>
+             {clients.map((client, index) => (
+         <Card key={client.id} className="relative">
+           <CardHeader className="pb-3">
+             <div className="flex items-center justify-between">
+               <CardTitle className="text-base flex items-center gap-2">
+                 <User className="h-4 w-4" />
+                 Client {index + 1}
+                 {index === 0 && <Badge variant="secondary">Primary</Badge>}
+               </CardTitle>
+               {clients.length > 1 && (
+                 <Button
+                   type="button"
+                   variant="ghost"
+                   size="sm"
+                   onClick={() => removeClient(client.id)}
+                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                 >
+                   <X className="h-4 w-4" />
+                 </Button>
+               )}
+             </div>
+           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -156,37 +153,38 @@ export const ClientInfoSection = ({ formData, errors, onInputChange }) => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor={`backupContact-${client.id}`}>Backup Contact</Label>
-                <Input
-                  id={`backupContact-${client.id}`}
-                  type="text"
-                  value={client.backupContact}
-                  onChange={(e) => {
-                    const formattedValue = formatPhoneNumber(e.target.value);
-                    updateClient(client.id, 'backupContact', formattedValue);
-                  }}
-                  placeholder="Enter backup contact"
-                />
-              </div>
+                             <div className="space-y-2">
+                 <Label htmlFor={`backupContact-${client.id}`}>Backup Contact</Label>
+                 <Input
+                   id={`backupContact-${client.id}`}
+                   type="text"
+                   value={client.backup_contact}
+                   onChange={(e) => {
+                     const formattedValue = formatPhoneNumber(e.target.value);
+                     updateClient(client.id, 'backup_contact', formattedValue);
+                   }}
+                   placeholder="Enter backup contact"
+                 />
+               </div>
             </div>
+
+                         {/* Client Access Checkbox */}
+             <div className="flex items-center space-x-2">
+               <Checkbox
+                 id={`clientAccess-${client.id}`}
+                 checked={client.is_client_dashboard_access_enabled}
+                 onCheckedChange={(checked) => updateClient(client.id, 'is_client_dashboard_access_enabled', checked)}
+               />
+               <Label htmlFor={`clientAccess-${client.id}`} className="text-sm">
+                 Allow this client access to the project dashboard
+               </Label>
+               {client.is_client_dashboard_access_enabled && (
+                 <span className="text-xs text-gray-500">(Password: Dots123)</span>
+               )}
+             </div>
           </CardContent>
         </Card>
       ))}
-
-      <div className="flex items-center space-x-2">
-        <input
-          type="checkbox"
-          id="allowClientAccess"
-          checked={formData.allowClientAccess || false}
-          onChange={(e) => onInputChange('allowClientAccess', e.target.checked)}
-          className="rounded border-gray-300"
-        />
-        <Label htmlFor="allowClientAccess">Allow Client Access</Label>
-        {formData.allowClientAccess && (
-          <span className="text-sm text-gray-600">(Password: Dots123)</span>
-        )}
-      </div>
 
       {clients.length > 1 && (
         <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">

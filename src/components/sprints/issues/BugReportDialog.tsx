@@ -145,7 +145,7 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
       body.append('title', formData.title.trim());
       body.append('description', formData.description.trim() || '');
       body.append('severity', formData.severity);
-
+      
       // Add bug label if selected
       if (bugLabelSelected && !isOthersSelected) {
         body.append('label', bugLabelSelected);
@@ -157,28 +157,10 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
 
       if (error) {
         console.error('❌ Error creating bug:', error);
-        throw error;
+        return;
       }
 
-      // Upload images if any
-      if (attachedImages.length > 0) {
-        await uploadImages(bugData.id);
-      }
-
-      // Update story status back to in_progress since a bug was found 
-      const { error: statusError } = await apiCall(allRoutes.stories.update(formData.storyId), 'PUT', {
-        status: 'in_progress',
-        updated_at: new Date().toISOString()
-      });
-
-      if (statusError) {
-        console.error('❌ Error updating story status:', statusError);
-        // Don't throw here, bug was created successfully
-      } else {
-        console.info('✅ Story status updated to in_progress');
-      }
-
-      toast.success(`Bug reported successfully${attachedImages.length > 0 ? ` with ${attachedImages.length} image(s)` : ''}. Story moved back to In Progress.`);
+      toast.success(`Bug reported successfully !`);
 
       // Reset form and close dialog
       setFormData({

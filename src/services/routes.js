@@ -11,10 +11,22 @@ export const allRoutes = {
     teamLogin: '/team-login'
   },
   master:{
-    types_create_or_get: '/master/project-types',
+    types_create_or_get:(isActive) => {
+      let url = `/master/project-types`
+      if(isActive){
+        url += `?active=${isActive}`
+      }
+      return url
+    },
     types_update_or_delete: (id) => `/master/project-types/${id}`,
 
-    natures_create_or_get: '/master/project-natures',
+    natures_create_or_get:(isActive) => {
+      let url = `/master/project-natures`
+      if(isActive){
+        url += `?active=${isActive}`
+      }
+      return url
+    },
     natures_update_or_delete: (id) => `/master/project-natures/${id}`,
   },
   projects: {

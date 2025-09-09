@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Plus, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Edit, Trash2, Plus, X, AlertTriangle, Info } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
@@ -18,12 +19,16 @@ export const AdminTypeAndNatureSection = () => {
   const [natures, setNatures] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  
-  console.log(types, natures);
-  
-  // Form states
-  const [typeForm, setTypeForm] = useState({ name: '', active: "" });
-  const [natureForm, setNatureForm] = useState({ name: '', active: "" });
+  const [typeForm, setTypeForm] = useState({ name: '', active: "1" });
+  const [natureForm, setNatureForm] = useState({ name: '', active: "1" });
+  const [updateConfirmationDialog, setUpdateConfirmationDialog] = useState({
+    open: false,
+    formType: null,
+    oldName: '',
+    newName: '',
+    oldStatus: '',
+    newStatus: ''
+  });
 
   useEffect(() => {
     fetchData();
@@ -35,8 +40,8 @@ export const AdminTypeAndNatureSection = () => {
       
       // Fetch types and natures
       const [typesResponse, naturesResponse] = await Promise.all([
-        apiCall(allRoutes.master.types_create_or_get, 'get'),
-        apiCall(allRoutes.master.natures_create_or_get, 'get')
+        apiCall(allRoutes.master.types_create_or_get(null), 'get'),
+        apiCall(allRoutes.master.natures_create_or_get(null), 'get')
       ]);
 
       if (typesResponse.data) {
@@ -65,6 +70,30 @@ export const AdminTypeAndNatureSection = () => {
       return;
     }
 
+    // If editing, show confirmation dialog
+    if (isEditing) {
+      const currentItem = formType === 'type' 
+        ? types.find(item => item.id === editingId)
+        : natures.find(item => item.id === editingId);
+      
+      if (currentItem) {
+        setUpdateConfirmationDialog({
+          open: true,
+          formType: formType,
+          oldName: currentItem.name,
+          newName: formData.name,
+          oldStatus: currentItem.active === 1 ? 'Active' : 'Inactive',
+          newStatus: formData.active === "1" ? 'Active' : 'Inactive'
+        });
+      }
+      return;
+    }
+
+    // For new items, proceed directly
+    await performSubmit(formType, formData, false);
+  };
+
+  const performSubmit = async (formType, formData, isEditing) => {
     try {
       setLoading(true);
       
@@ -102,6 +131,12 @@ export const AdminTypeAndNatureSection = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const confirmUpdate = async () => {
+    const formData = updateConfirmationDialog.formType === 'type' ? typeForm : natureForm;
+    await performSubmit(updateConfirmationDialog.formType, formData, true);
+    setUpdateConfirmationDialog({ open: false, formType: null, oldName: '', newName: '', oldStatus: '', newStatus: '' });
   };
 
   const handleEdit = (item, formType) => {
@@ -143,9 +178,9 @@ export const AdminTypeAndNatureSection = () => {
   const resetForm = (formType) => {
     setEditingId(null);
     if (formType === 'type') {
-      setTypeForm({ name: '', active: "" });
+      setTypeForm({ name: '', active: "1" });
     } else {
-      setNatureForm({ name: '', active: "" });
+      setNatureForm({ name: '', active: "1" });
     }
   };
 
@@ -157,7 +192,7 @@ export const AdminTypeAndNatureSection = () => {
     const form = formType === 'type' ? typeForm : natureForm;
     const setForm = formType === 'type' ? setTypeForm : setNatureForm;
     const isEditing = editingId !== null;
-    console.log(form);
+
     return (
       <Card className="mb-6">
         <CardHeader>
@@ -319,6 +354,66 @@ export const AdminTypeAndNatureSection = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Update Confirmation Dialog */}
+      <Dialog open={updateConfirmationDialog.open} onOpenChange={(open) => setUpdateConfirmationDialog({ open, formType: null, oldName: '', newName: '', oldStatus: '', newStatus: '' })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              Update {updateConfirmationDialog.formType === 'type' ? 'Type' : 'Nature'}
+            </DialogTitle>
+            <DialogDescription>
+              <div className="space-y-4">
+                
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="font-medium text-sm mb-2">Changes Summary:</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Name:</span>
+                        <span className="font-medium">
+                          <span className="text-red-600 line-through">{updateConfirmationDialog.oldName}</span>
+                          <span className="mx-2">→</span>
+                          <span className="text-green-600">{updateConfirmationDialog.newName}</span>
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Status:</span>
+                        <span className="font-medium">
+                          <span className="text-red-600 line-through">{updateConfirmationDialog.oldStatus}</span>
+                          <span className="mx-2">→</span>
+                          <span className="text-green-600">{updateConfirmationDialog.newStatus}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Impact:</strong> All existing projects using this {updateConfirmationDialog.formType} will be updated with the new information.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setUpdateConfirmationDialog({ open: false, formType: null, oldName: '', newName: '', oldStatus: '', newStatus: '' })}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmUpdate}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              Update {updateConfirmationDialog.formType === 'type' ? 'Type' : 'Nature'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -10,11 +10,8 @@ import { TasksSection } from '@/components/tasks/TasksSection';
 import { RoleIndicator } from '@/components/common/RoleIndicator';
 import { QAStoryActions } from '@/components/qa/QAStoryActions';
 import { StoryEstimationCard } from '@/components/estimation/StoryEstimationCard';
-import { PermissionWrapper } from '@/components/common/PermissionWrapper';
-import { SprintEditRestriction } from '@/components/common/SprintEditRestriction';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useStoryDetailsData } from '@/hooks/useStoryDetailsData';
-import { useSprintStatus } from '@/hooks/useSprintStatus';
 import { EstimationReviewCard } from '@/components/estimation/EstimationReviewCard';
 import { AcceptanceCriteriaSection } from '@/components/story/AcceptanceCriteriaSection';
 import { TestCasesSection } from '@/components/testcases/TestCasesSection';
@@ -284,7 +281,7 @@ export const StoryDetailsPage: React.FC = () => {
               <TasksSection 
                 storyId={storyId!} 
                 projectId={effectiveProjectId}
-                canEdit={true}
+                canEdit={ userRole !== 'client' } 
               />
             ) : (
               <Card>

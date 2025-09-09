@@ -67,7 +67,7 @@ export const ProductOwnerDashboard = () => {
 
         <ProductOwnerStats projects={dashboard} />
         
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-8">
+        <div className="grid grid-cols-1 xl:grid-cols-1 gap-8 mt-8">
           <ProductOwnerProjectsTable 
             projects={assignedProjects} 
             loading={false} 

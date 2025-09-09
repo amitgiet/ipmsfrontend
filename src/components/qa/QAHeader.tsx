@@ -8,5 +8,5 @@ interface QAHeaderProps {
 }
 
 export const QAHeader: React.FC<QAHeaderProps> = ({ currentUser, onLogout }) => {
-  return <UnifiedHeader title="ProjectHub" />;
+  return <UnifiedHeader title="IPMS" />;
 };

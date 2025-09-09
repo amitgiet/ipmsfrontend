@@ -2,6 +2,7 @@
 import React from 'react';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ProjectTableRow } from './ProjectTableRow';
+import { TableLoader, TableEmptyState } from '@/components/common/TableLoader';
 
 interface Project {
   id: string;
@@ -31,37 +32,43 @@ interface Project {
 
 interface ProjectTableProps {
   projects: Project[];
+  loading?: boolean;
   onViewProject: (project: Project) => void;
 }
 
-export const ProjectTable = ({ projects, onViewProject }: ProjectTableProps) => {
+export const ProjectTable = ({ projects, loading = false, onViewProject }: ProjectTableProps) => {
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="min-w-[200px]">Project</TableHead>
-              <TableHead className="min-w-[150px]">Client</TableHead>
-              <TableHead className="min-w-[100px]">Status</TableHead>
-              <TableHead className="min-w-[80px]">Priority</TableHead>
-              <TableHead className="min-w-[120px]">Progress</TableHead>
-              <TableHead className="min-w-[100px]">Budget</TableHead>
-              <TableHead className="min-w-[160px]">Timeline</TableHead>
-              <TableHead className="min-w-[80px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {projects.map((project) => (
-              <ProjectTableRow 
-                key={project.id} 
-                project={project} 
-                onViewProject={onViewProject} 
-              />
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+    <TableLoader loading={loading} loadingMessage="Loading projects...">
+      {!projects || projects.length === 0 ? (
+        <TableEmptyState message="No projects found" />
+      ) : (
+        <div className="border rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[200px]">Project</TableHead>
+                  <TableHead className="min-w-[150px]">Client</TableHead>
+                  <TableHead className="min-w-[100px]">Status</TableHead>
+                  <TableHead className="min-w-[80px]">Priority</TableHead>
+                  <TableHead className="min-w-[120px]">Progress</TableHead>
+                  <TableHead className="min-w-[160px]">Timeline</TableHead>
+                  <TableHead className="min-w-[80px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {projects.map((project) => (
+                  <ProjectTableRow 
+                    key={project.id} 
+                    project={project} 
+                    onViewProject={onViewProject} 
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
+    </TableLoader>
   );
 };

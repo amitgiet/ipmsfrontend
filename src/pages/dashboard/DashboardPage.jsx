@@ -30,11 +30,11 @@ const DashboardPage = () => {
     const roleComponents = {
       "super-admin": <AdminDashboard />,
       admin: <AdminDashboard />,
+      client: <ClientDashboard />,
       product_owner: <ProductOwnerDashboard />,
       team_lead: <TeamLeadDashboard />,
       developer: <DeveloperDashboard />,
       qa: <QADashboard />,
-      client: <ClientDashboard />,
     };
     return roleComponents[role] || <DefaultDashboard />;
   };

@@ -12,6 +12,7 @@ import { toast } from 'react-toastify';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTestCaseNotifications } from '@/hooks/useTestCaseNotifications';
 import { useParams } from 'react-router-dom';
+import { Search, X } from 'lucide-react';
   
 interface AddTaskDialogProps {
   open: boolean;
@@ -39,6 +40,8 @@ export const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
   const [assignedTo, setAssignedTo] = useState('');
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingTeamMembers, setLoadingTeamMembers] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { userRole, currentUser } = useUserRole();
   const { createTaskAssignmentNotification } = useTestCaseNotifications();
 
@@ -71,19 +74,42 @@ export const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
 
   
   const loadProjectTeamMembers = async () => {
+    setLoadingTeamMembers(true);
     try {
-        const { data, error } = await apiCall(allRoutes.projects.getTeamMembersDropdown(projectId), 'get');
+      let allTeamMembers: TeamMember[] = [];
+      let currentPage = 1;
+      let hasMorePages = true;
 
-      if (error) {
-        console.error('Error loading team members:', error);
-        return;
+      while (hasMorePages) {
+        const { data, error } = await apiCall(
+          `${allRoutes.projects.getTeamMembersDropdown(projectId)}?page=${currentPage}&per_page=100&for_task=1`, 
+          'get'
+        );
+
+        if (error) {
+          console.error('Error loading team members:', error);
+          break;
+        }
+
+        if (data && data.data) {
+          allTeamMembers = [...allTeamMembers, ...data.data];
+          
+          // Check if there are more pages
+          if (data.meta && currentPage < data.meta.last_page) {
+            currentPage++;
+          } else {
+            hasMorePages = false;
+          }
+        } else {
+          hasMorePages = false;
+        }
       }
 
-      if (data) {
-        setTeamMembers(data.data);
-      }
+      setTeamMembers(allTeamMembers);
     } catch (error) {
       console.error('Error loading team members:', error);
+    } finally {
+      setLoadingTeamMembers(false);
     }
   };
 
@@ -128,6 +154,7 @@ export const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
     setTitle('');
     setDescription('');
     setAssignedTo('');
+    setSearchQuery('');
     onClose();
   };
 
@@ -143,6 +170,27 @@ export const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
       return "Select team member (optional)...";
     }
     return "Automatically assigned to you";
+  };
+
+  const getSelectedMemberName = () => {
+    if (!assignedTo) return "";
+    const selectedMember = teamMembers.find(member => member.id == assignedTo);
+    return selectedMember ? `${selectedMember.name} (${selectedMember.role.toUpperCase()})` : "";
+  };
+
+  const getFilteredTeamMembers = () => {
+    if (!searchQuery.trim()) return teamMembers;
+    
+    const query = searchQuery.toLowerCase();
+    return teamMembers.filter(member => 
+      member.name.toLowerCase().includes(query) ||
+      member.email.toLowerCase().includes(query) ||
+      member.role.toLowerCase().includes(query)
+    );
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
   };
 
   return (
@@ -182,28 +230,80 @@ export const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
             {canAssignToOthers && (
               <div className="grid gap-2">
                 <Label htmlFor="assignedTo">{getAssignmentLabel()}</Label>
-                <Select value={assignedTo} onValueChange={setAssignedTo}>
+                <Select value={assignedTo} onValueChange={setAssignedTo} disabled={loadingTeamMembers}>
                   <SelectTrigger>
-                    <SelectValue placeholder={getAssignmentPlaceholder()} />
+                    <SelectValue placeholder={loadingTeamMembers ? "Loading team members..." : getAssignmentPlaceholder()}>
+                      {assignedTo ? getSelectedMemberName() : null}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent 
                     position="popper" 
                     side="bottom" 
                     align="start"
-                    className="max-h-[150px] overflow-y-auto z-[9999] bg-popover border shadow-md"
+                    className="max-h-[300px] overflow-y-auto z-[9999] bg-popover border shadow-md"
                     sideOffset={4}
                     avoidCollisions={true}
                     sticky="always"
                   >
-                    {teamMembers.map((member) => (
-                      <SelectItem 
-                        key={member.id} 
-                        value={member.id}
-                        className="cursor-pointer"
-                      >
-                        {member.name} ({member.role.toUpperCase()})
-                      </SelectItem>
-                    ))}
+                    {loadingTeamMembers ? (
+                      <div className="p-2 text-center text-sm text-gray-500">
+                        Loading team members...
+                      </div>
+                    ) : (
+                      <>
+                        {/* Search Input */}
+                        <div className="p-2 border-b">
+                          <div className="relative">
+                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                            <Input
+                              placeholder="Search team members..."
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="pl-8 pr-8 h-8 text-sm"
+                            />
+                            {searchQuery && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={clearSearch}
+                                className="absolute right-1 top-1 h-6 w-6 p-0 hover:bg-gray-100"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Team Members List */}
+                        <div className="max-h-[200px] overflow-y-auto">
+                          {getFilteredTeamMembers().length > 0 ? (
+                            getFilteredTeamMembers().map((member) => (
+                              <SelectItem 
+                                key={member.id} 
+                                value={member.id}
+                                className="cursor-pointer"
+                              >
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{member.name}</span>
+                                  <span className="text-xs text-gray-500">
+                                    {member.email} • {member.role.toUpperCase()}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          ) : searchQuery ? (
+                            <div className="p-2 text-center text-sm text-gray-500">
+                              No team members found matching "{searchQuery}"
+                            </div>
+                          ) : (
+                            <div className="p-2 text-center text-sm text-gray-500">
+                              No team members found
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

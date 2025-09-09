@@ -21,19 +21,19 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit, loadPro
     clientEmail: '',
     clientPhone: '',
     backupContact: '',
-    allClients: [], // Store all clients
+    allClients: [], // Store all clients as array
     allowClientAccess: false,
     duration: '',
     startDate: undefined,
     endDate: undefined,
     projectStatus: '',
-    projectType: '',
-    projectNature: '',
+    projectType: [], // Store as array
+    projectNature: [], // Store as array
     documents: '',
     documentFiles: [],
     existingDocuments: [], // Store existing documents from API
     removedDocumentIds: [], // Track removed document IDs
-    milestones: '',
+    milestones: [], // Store as array
     clientDependencies: '',
     estimatedBudget: '',
     budgetCurrency: 'USD',
@@ -57,60 +57,38 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit, loadPro
     }
   }, [formData.startDate, formData.duration]);
 
-  // Load project data when modal opens
   useEffect(() => {
     if (project && open) {
       // Map API response structure to form fields
       setFormData({
         projectName: project.project_name || '',
-        projectId: project.project_id || '',
-        clientName: project.client_name || '',
-        clientEmail: project.client_email || '',
-        clientPhone: project.client_phone || '',
-        backupContact: project.backup_contact || '',
-        allClients: project.additional_clients ? [
-          {
-            id: 1,
-            name: project.client_name || '',
-            email: project.client_email || '',
-            phone: project.client_phone || '',
-            backupContact: project.backup_contact || ''
-          },
-          ...JSON.parse(project.additional_clients).map((client, index) => ({
-            id: index + 2,
-            name: client.name || '',
-            email: client.email || '',
-            phone: client.phone || '',
-            backupContact: client.backupContact || ''
-          }))
-        ] : [
-          {
-            id: 1,
-            name: project.client_name || '',
-            email: project.client_email || '',
-            phone: project.client_phone || '',
-            backupContact: project.backup_contact || ''
-          }
-        ],
-        allowClientAccess: project.allow_client_access || false,
+        projectId: project.id || '',
+        allClients: project.all_clients && project.all_clients.length > 0 ? project.all_clients.map((client, index) => ({
+          id: client.id || index + 1,
+          name: client.name || '',
+          email: client.email || '',
+          phone: client.phone || '',
+          backup_contact: client.backup_contact || '',
+          is_client_dashboard_access_enabled: client.is_client_dashboard_access_enabled || false
+        })) : [],
         duration: project.duration?.toString() || '',
         startDate: project.start_date ? new Date(project.start_date) : undefined,
         endDate: project.end_date ? new Date(project.end_date) : undefined,
         projectStatus: project.project_status || '',
-        projectType: project.project_type || '',
-        projectNature: project.project_nature || '',
+        projectType: project.project_type && project.project_type.length > 0 ? project.project_type.map(type => type.id) : [],
+        projectNature: project.project_nature && project.project_nature.length > 0 ? project.project_nature.map(nature => nature.id) : [],
         documents: '',
         documentFiles: [], // New files to upload
         existingDocuments: project.documents || [], // Existing documents from API
         removedDocumentIds: [], // Initialize empty array for removed documents
-        milestones: project.milestones || '',
+        milestones: project.milestones && project.milestones.length > 0 ? project.milestones : [],
         clientDependencies: project.client_dependencies || '',
         estimatedBudget: project.estimated_budget?.toString() || '',
         budgetCurrency: project.budget_currency || 'USD',
         priority: project.priority || '',
         budgetedHours: project.budgeted_hours?.toString() || '',
         loggedHours: project.logged_hours?.toString() || '',
-        tagsLabels: project.tags_labels || '',
+        tagsLabels: project.tags || '',
       });
       setErrors({});
     }
@@ -145,46 +123,48 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit, loadPro
       const formDataToSend = new FormData();
       formDataToSend.append('name', formData.projectName || '');
       formDataToSend.append('project_code', formData.projectId || '');
-      formDataToSend.append('type', formData.projectType || '');
-      formDataToSend.append('nature', formData.projectNature || '');
       formDataToSend.append('priority', formData.priority || '');
       formDataToSend.append('status', formData.projectStatus || '');
-      
-      // Handle multiple clients
-      if (formData.allClients && formData.allClients.length > 0) {
-        // Primary client (first client)
-        const primaryClient = formData.allClients[0];
-        formDataToSend.append('client_name', primaryClient.name || '');
-        formDataToSend.append('client_email', primaryClient.email || '');
-        formDataToSend.append('client_phone', primaryClient.phone || '');
-        formDataToSend.append('backup_contact', primaryClient.backupContact || '');
-        
-        // Additional clients (if any)
-        if (formData.allClients.length > 1) {
-          const additionalClients = formData.allClients.slice(1);
-          formDataToSend.append('additional_clients', JSON.stringify(additionalClients));
-        }
-      } else {
-        // Fallback to single client data
-        formDataToSend.append('client_name', formData.clientName || '');
-        formDataToSend.append('client_email', formData.clientEmail || '');
-        formDataToSend.append('client_phone', formData.clientPhone || '');
-        formDataToSend.append('backup_contact', formData.backupContact || '');
-      }
-      
-      formDataToSend.append('_method', 'put');
-      formDataToSend.append('is_client_dashboard_access_enabled', formData.allowClientAccess ? '1' : '0');
       formDataToSend.append('duration_days', formData.duration || '');
       formDataToSend.append('start_date', formData.startDate ? formData.startDate.toISOString().split('T')[0] : '');
       formDataToSend.append('end_date', formData.endDate ? formData.endDate.toISOString().split('T')[0] : '');
       formDataToSend.append('estimated_budget', formData.estimatedBudget || '');
+      formDataToSend.append('currency', formData.budgetCurrency || 'USD');
       formDataToSend.append('budgeted_hours', formData.budgetedHours || '');
       formDataToSend.append('logged_hours', formData.loggedHours || '');
-      formDataToSend.append('milestones', formData.milestones || '');
       formDataToSend.append('client_dependencies', formData.clientDependencies || '');
-      formDataToSend.append('tags_labels', formData.tagsLabels || '');
-      formDataToSend.append('natures', formData.projectNature || '');
-      formDataToSend.append('type', formData.projectType || '');
+      formDataToSend.append('tags', formData.tagsLabels || '');
+      
+      if(formData.projectType){
+         formData.projectType.forEach((type, index) => {
+          formDataToSend.append(`types[${index}]`, type || '');
+         });
+      }
+      if(formData.projectNature){
+        formData.projectNature.forEach((nature, index) => { 
+          formDataToSend.append(`natures[${index}]`, nature || '');
+        });
+      }
+      if(formData.allClients && formData.allClients.length > 0){
+        formData.allClients.forEach((client, index) => {
+          formDataToSend.append(`client[${index}][name]`, client.name || '');
+          formDataToSend.append(`client[${index}][email]`, client.email || '');
+          formDataToSend.append(`client[${index}][phone]`, client.phone || '');
+          formDataToSend.append(`client[${index}][backup_contact]`, client.backup_contact || '');
+          formDataToSend.append(`client[${index}][is_client_dashboard_access_enabled]`, client.is_client_dashboard_access_enabled ? '1' : '0');
+        });
+      }
+      if( formData.milestones && formData.milestones.length > 0){
+        formData.milestones.forEach((milestone, index) => {
+          formDataToSend.append(`milestones[${index}][deliverable]`, milestone.deliverable || '');
+          formDataToSend.append(`milestones[${index}][amount]`, milestone.amount || '');
+          formDataToSend.append(`milestones[${index}][currency]`, milestone.currency || '');
+          formDataToSend.append(`milestones[${index}][client_dependency]`, milestone.client_dependency || '');
+          formDataToSend.append(`milestones[${index}][estimated_completion_date]`, milestone.estimated_completion_date || '');
+          formDataToSend.append(`milestones[${index}][name]`, milestone.name || '');
+        });
+      } 
+      formDataToSend.append('_method', 'put');
 
       // Handle new document files - append each document file
       if (formData.documentFiles && formData.documentFiles.length > 0) {
@@ -203,13 +183,20 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit, loadPro
         });
       }
 
+      let toastId = toast.loading("Updating project...");
       // Make API call to update project
       const response = await projectService.updateProject(project.id, formDataToSend);
 
       if (response.success) {
-        toast.success("Project updated successfully!");
+        toast.update(toastId, {
+          render: "Project updated successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+          closeOnClick: true,
+        });
       
-        onOpenChange(false);
+        onOpenChange();
       } else {
         // Handle API validation errors
         if (response.errors) {
@@ -279,10 +266,22 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit, loadPro
           });
 
           setErrors(apiErrors);
-          toast.error(response.message || "Please fix the validation errors below.");
+          toast.update(toastId, {
+            render: response.message || "Please fix the validation errors below.",
+            type: "error",
+            isLoading: false,
+            autoClose: 5000,
+            closeOnClick: true,
+          });
         } else {
           // General API error
-          toast.error(response.message || "Failed to update project. Please try again.");
+          toast.update(toastId, {
+            render: response.message || "Failed to update project. Please try again.",
+            type: "error",
+            isLoading: false,
+            autoClose: 5000,
+            closeOnClick: true,
+          });
         }
       }
 

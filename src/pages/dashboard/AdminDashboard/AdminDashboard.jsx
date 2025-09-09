@@ -11,7 +11,7 @@ import { AdminSkillsSection } from '@/components/admin/AdminSkillsSection';
 import { AdminTimesheetSection } from '@/components/admin/AdminTimesheetSection';
 import { AdminTypeAndNatureSection } from '@/components/admin/AdminTypeAndNatureSection';
 
-const AppLayout = () => {
+export const AppLayout = () => {
   const { logout } = useAuth();
   const handleLogout = async () => {
     try {

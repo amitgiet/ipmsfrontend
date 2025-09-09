@@ -17,6 +17,11 @@ interface MindmapComment {
   author_email: string;
   author_role: string;
   created_at: string;
+  user_id?: string;
+  user?: {
+    name: string;
+    role: string;
+  };
 }
 
 interface MindmapCommentsProps {
@@ -29,7 +34,17 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
   const currentUser = user || teamUser;
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<MindmapComment[]>([]);
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
+  
+  const MAX_CHARACTERS = 500;
+  
+  const getCharacterCount = (text: string) => {
+    return text.length;
+  };
+  
+  const characterCount = getCharacterCount(commentText);
+  const isOverLimit = characterCount > MAX_CHARACTERS;
+  const isNearLimit = characterCount > MAX_CHARACTERS * 0.8; // 80% of limit 
   const handleDeleteComment = async (commentId: string) => {
     // Remove comment from local state
     setComments(prev => prev.filter(comment => comment.id !== commentId));
@@ -37,7 +52,7 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
 
   const canDeleteComment = (comment: MindmapComment) => {
     if (!currentUser) return false;
-    return currentUser.id === comment.user_id;
+    return currentUser.id === comment.user_id || currentUser.email === comment.author_email;
   };
 
   const getTimestamp = (dateString: string) => {
@@ -103,17 +118,28 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
       <CardContent className="space-y-4">
         {currentUser ? (
             <form onSubmit={addComment} className="space-y-2">
-            <Textarea 
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Add a comment..."
-              className="min-h-[80px]"
-            />
+            <div className="space-y-2">
+              <Textarea 
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Add a comment..."
+                className={`min-h-[80px] ${isOverLimit ? 'border-red-500 focus:border-red-500' : ''}`}
+              />
+              <div className="flex justify-between items-center">
+                <div className={`text-sm ${isOverLimit ? 'text-red-600' : isNearLimit ? 'text-yellow-600' : 'text-gray-500'}`}>
+                  {characterCount} / {MAX_CHARACTERS} characters
+                  {isOverLimit && (
+                    <span className="ml-2 font-medium">Character limit exceeded!</span>
+                  )}
+                </div>
+              </div>
+            </div>
             <div className="flex justify-end">
               <Button 
                 type="submit" 
-                disabled={!commentText.trim()}
+                disabled={!commentText.trim() || isOverLimit}
                 size="sm"
+                className={isOverLimit ? 'opacity-50 cursor-not-allowed' : ''}
               >
                 <Send className="mr-2 h-4 w-4" />
                 Send
@@ -137,9 +163,9 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
               <div key={comment.id} className="border rounded-lg p-3 bg-gray-50">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{comment.user.name}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${getRoleBadgeColor(comment.user.role)}`}>
-                      {comment.user.role.replace('_', ' ').toUpperCase()}
+                    <span className="font-medium">{comment.user?.name || comment.author_name}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${getRoleBadgeColor(comment.user?.role || comment.author_role)}`}>
+                      {(comment.user?.role || comment.author_role).replace('_', ' ').replace('-', ' ').toUpperCase()}
                     </span>
                   </div>
                   <div className="flex items-center text-xs text-gray-500 gap-2">

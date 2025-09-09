@@ -4,7 +4,7 @@ import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
 import { toast } from 'react-toastify';
 
-interface ClientProject {
+export interface ClientProject {
   id: string;
   project_name: string;
   project_id: string | null;
@@ -18,10 +18,13 @@ interface ClientProject {
   priority: string | null;
   project_type: string | null;
   created_at: string;
+  currency: string | null;
+  actual_budget_used: number | null;
+  logged_hours: number | null;
 }
 
 export const useClientProjects = (user: any) => {
-  const [projects, setProjects] = useState<ClientProject[]>([]);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

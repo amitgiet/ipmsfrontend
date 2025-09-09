@@ -8,5 +8,5 @@ interface DeveloperHeaderProps {
 }
 
 export const DeveloperHeader = ({ currentUser, onLogout }: DeveloperHeaderProps) => {
-  return <UnifiedHeader title="ProjectHub - Developer Dashboard" />;
+  return <UnifiedHeader title="IPMS - Developer Dashboard" />;
 };

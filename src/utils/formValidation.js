@@ -11,14 +11,20 @@ export const validateProjectForm = (formData) => {
     errors.projectId = 'Project ID is required';
   }
 
-  if (!formData.clientName?.trim()) {
-    errors.clientName = 'Client name is required';
-  }
-
-  if (!formData.clientEmail?.trim()) {
+  // Client validation - check first client (primary client)
+  if (!formData.allClients || formData.allClients.length === 0) {
+    errors.clientName = 'At least one client is required';
     errors.clientEmail = 'Client email is required';
-  } else if (!isValidEmail(formData.clientEmail)) {
-    errors.clientEmail = 'Please enter a valid email address';
+  } else {
+    const primaryClient = formData.allClients[0];
+    if (!primaryClient.name?.trim()) {
+      errors.clientName = 'Primary client name is required';
+    }
+    if (!primaryClient.email?.trim()) {
+      errors.clientEmail = 'Primary client email is required';
+    } else if (!isValidEmail(primaryClient.email)) {
+      errors.clientEmail = 'Please enter a valid email address';
+    }
   }
 
   if (!formData.startDate) {
@@ -39,12 +45,14 @@ export const validateProjectForm = (formData) => {
     errors.projectStatus = 'Project status is required';
   }
 
-  if (!formData.projectType) {
-    errors.projectType = 'Project type is required';
+  // Project type validation - check if array has items
+  if (!formData.projectType ) {
+    errors.projectType = 'At least one project type is required';
   }
 
+  // Project nature validation - check if array has items
   if (!formData.projectNature) {
-    errors.projectNature = 'Project nature is required';
+    errors.projectNature = 'At least one project nature is required';
   }
 
   if (!formData.priority) {
@@ -79,6 +87,31 @@ export const validateProjectForm = (formData) => {
     } else if (estimatedBudget > 999999999.99) {
       errors.estimatedBudget = 'Estimated budget cannot exceed 999,999,999.99';
     }
+  }
+
+  // Validate milestones if they exist
+  if (formData.milestones && formData.milestones.length > 0) {
+    formData.milestones.forEach((milestone, index) => {
+      if (!milestone.name?.trim()) {
+        errors[`milestone_${index}_name`] = `Milestone ${index + 1} name is required`;
+      }
+      
+      // Validate milestone amount if provided
+      if (milestone.amount && milestone.amount.trim()) {
+        const amount = parseFloat(milestone.amount);
+        if (isNaN(amount) || amount < 0) {
+          errors[`milestone_${index}_amount`] = `Milestone ${index + 1} amount must be a positive number`;
+        }
+      }
+      
+      // Validate milestone date if provided
+      if (milestone.estimated_completion_date && milestone.estimated_completion_date.trim()) {
+        const date = new Date(milestone.estimated_completion_date);
+        if (isNaN(date.getTime())) {
+          errors[`milestone_${index}_date`] = `Milestone ${index + 1} date must be a valid date`;
+        }
+      }
+    });
   }
 
   return errors;

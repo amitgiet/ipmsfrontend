@@ -59,6 +59,7 @@ export const BacklogControls = ({
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="to_do">To Do</SelectItem>
             <SelectItem value="in_grooming">In Grooming</SelectItem>
+            <SelectItem value="estimated">Estimated</SelectItem>
             <SelectItem value="ready_for_estimate">Ready for Estimate</SelectItem>
             <SelectItem value="ready">Ready</SelectItem>
             <SelectItem value="in_progress">In Progress</SelectItem>

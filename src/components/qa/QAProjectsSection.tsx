@@ -85,11 +85,6 @@ export const QAProjectsSection: React.FC<QAProjectsSectionProps> = ({ projects, 
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" />
-                    <span>{project.estimated_budget}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
                     <span>{project.duration_days ? `${project.duration_days} days` : 'No duration'}</span>
                   </div>

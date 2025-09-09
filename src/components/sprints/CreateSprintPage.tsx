@@ -29,7 +29,7 @@ interface CreateSprintPageProps {
 export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateSprintPageProps) => {
   const [sprintName, setSprintName] = useState('');
   const [startDate, setStartDate] = useState<Date | null>(null);
-  const [duration, setDuration] = useState(14);
+  const [duration, setDuration] = useState(0);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [readyStories, setReadyStories] = useState<UserStory[]>([]);
   const [selectedStories, setSelectedStories] = useState<string[]>([]);
@@ -110,10 +110,16 @@ export const CreateSprintPage = ({ projectId, onBack, onSprintCreated }: CreateS
       selectedStories.forEach(storyId => {
         sprintData.append('user_stories[]', storyId);
       });
-
+      let toastId = toast.loading("Creating sprint...");
       const { data: sprint, error: sprintError } = await apiCall(allRoutes.sprints.create, 'post', sprintData);
       if (!sprintError) {
-        toast.success(`Sprint "${sprint.data.name}" created successfully`);
+        toast.update(toastId, {
+          render: `Sprint "${sprint.data.name}" created successfully`,
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+          closeOnClick: true, 
+        });
         onSprintCreated();
       }
 

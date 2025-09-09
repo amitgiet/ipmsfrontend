@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Plus, X, Users, Check, Search } from 'lucide-react';
+import { Plus, X, Users, Check, Search, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
@@ -20,6 +20,10 @@ export const ProjectTeamManagement = ({ projectId }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmationDialog, setConfirmationDialog] = useState({
+    open: false,
+    member: null
+  });
 
   const fetchProjectTeamMembers = async () => {
     try {
@@ -115,7 +119,29 @@ export const ProjectTeamManagement = ({ projectId }) => {
       }
     } catch (error) {
       console.error('Error removing team member:', error);
-      toast.error("Failed to remove team member from project");
+    }
+  };
+
+  const handleRemoveTeamMember = (member) => {
+    setConfirmationDialog({
+      open: true,
+      member: member
+    });
+  };
+
+  const confirmRemoveTeamMember = async () => {
+    if (!confirmationDialog.member) return;
+    
+    try {
+      const { error } = await apiCall(allRoutes.projects.removeTeamMember(projectId, confirmationDialog.member.id), 'delete');
+      if (!error) {
+        toast.success("Team member removed from project successfully");
+        fetchProjectTeamMembers();
+      }
+    } catch (error) {
+      console.error('Error removing team member:', error);
+    } finally {
+      setConfirmationDialog({ open: false, member: null });
     }
   };
 
@@ -362,7 +388,7 @@ export const ProjectTeamManagement = ({ projectId }) => {
                 {member.id !== user.id && (user.role === 'admin' || user.role === 'super-admin' || user.role === 'team_lead' || user.role === 'product_owner') && <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => removeTeamMember(member.id)}
+                  onClick={() => handleRemoveTeamMember(member)}
                   className="ml-2 text-red-600 hover:text-red-800 hover:bg-red-50"
                 >
                   <X className="h-4 w-4" />
@@ -378,6 +404,39 @@ export const ProjectTeamManagement = ({ projectId }) => {
           </div>
         )}
       </CardContent>
+      
+      {/* Confirmation Dialog for Removing Team Member */}
+      <Dialog open={confirmationDialog.open} onOpenChange={(open) => setConfirmationDialog({ open, member: null })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              Remove Team Member
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove <strong>{confirmationDialog.member?.name}</strong> from this project?
+              <br />
+              <span className="text-sm text-gray-500 mt-2 block">
+                This action cannot be undone. The team member will lose access to this project.
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setConfirmationDialog({ open: false, member: null })}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmRemoveTeamMember}
+            >
+              Remove Member
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

@@ -56,7 +56,6 @@ export const BudgetSection = ({ formData, onInputChange, errors = {} }) => {
         {errors.estimatedBudget && (
           <p className="text-xs text-red-500">{errors.estimatedBudget}</p>
         )}
-        <p className="text-xs text-gray-500">Max: 999,999,999.99</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

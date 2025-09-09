@@ -3,23 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem
-} from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover';
-import { Check, ChevronsUpDown, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Check, Loader2, Eye, EyeOff, Search, X } from 'lucide-react';
 import { UserRole } from '@/components/types/auth';
 import { TeamMember } from '@/components/types/team';
 import { skillsService } from '@/services/skillsService';
-import { cn } from '@/lib/utils';
 
 interface TeamMemberFormProps {
   formData: {
@@ -36,6 +24,7 @@ interface TeamMemberFormProps {
   onFormDataChange: (data: any) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
+  loading?: boolean;
 }
 
 export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
@@ -43,7 +32,8 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
   editingMember,
   onFormDataChange,
   onSubmit,
-  onCancel
+  onCancel,
+  loading = false
 }) => {
   // Password validation state
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
@@ -56,7 +46,6 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
   const [loadingSkills, setLoadingSkills] = useState(false);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [open, setOpen] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -164,12 +153,10 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     return errors.length === 0;
   };
 
-  // Fetch skills when search, page or popover open changes
+  // Fetch skills when search or page changes
   useEffect(() => {
-    if (open) {
-      fetchSkills(search, page);
-    }
-  }, [search, page, open]);
+    fetchSkills(search, page);
+  }, [search, page]);
 
   // Fetch initial skills when editing a member or component mounts
   useEffect(() => {
@@ -322,20 +309,6 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             <p className="text-sm text-red-500 mt-1">{mobileError}</p>
               )}
         </div>
-        {/* <div>
-          <Label htmlFor="emergency_contact">Emergency Contact</Label>
-          <Input
-            id="emergency_contact"
-            value={formData.emergency_contact}
-            onChange={(e) =>
-              onFormDataChange((prev: any) => ({
-                ...prev,
-                emergency_contact: e.target.value
-              }))
-            }
-            placeholder="Name and phone number"
-          />
-        </div> */}
       </div>
 
       {/* Password + Role */}
@@ -343,7 +316,6 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
         <div>
           <Label htmlFor="password">
             Password {editingMember && '(leave empty to keep current)'} {!editingMember && <span className="text-red-500">*</span>}
-            {!editingMember && <span className="text-xs text-gray-500 ml-2">(min 8 chars, uppercase, lowercase, number, special)</span>}
           </Label>
           <div className="relative">
             <Input
@@ -456,93 +428,119 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             <option value="product_owner">Product Owner</option>
             <option value="developer">Developer</option>
             <option value="qa">QA</option>
-            <option value="client">Client</option>
+            {/* <option value="client">Client</option> */}
           </select>
         </div>
       </div>
 
-      {/* Skills dropdown with search + pagination */}
+      {/* Skills multi-select with checkboxes */}
       <div>
         <Label>Skills <span className="text-red-500">*</span></Label>
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              className="w-full justify-between"
-              aria-expanded={open}
-            >
-              {formData.skills.length > 0
-                ? (() => {
-                    const skillNames = formData.skills
-                      .map(skillId => 
-                        availableSkills.find(skill => skill.id == skillId)?.name || editingMember?.skills.find((skill: any) => skill.id == skillId)?.name || skillId
-                      )
-                      .join(', ');
-                    
-                    // Limit to 75 characters and add ellipsis if longer
-                    return skillNames.length > 75 
-                      ? skillNames.substring(0, 75) + '...' 
-                      : skillNames;
-                  })()
-                : 'Select skills...'}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[300px] p-0">
-            <Command>
-              <CommandInput
-                placeholder="Search skills..."
-                value={search}
-                onValueChange={(value) => {
-                  setSearch(value);
+        
+        {/* Selected Skills Display */}
+        {formData.skills.length > 0 && (
+          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-800">
+                  {formData.skills.length} skill(s) selected
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onFormDataChange((prev: any) => ({ ...prev, skills: [] }))}
+                className="h-6 px-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+              >
+                Clear
+              </Button>
+            </div>
+            <p className="text-xs text-blue-700 break-words">
+              {formData.skills
+                .map(skillId => 
+                  availableSkills.find(skill => skill.id == skillId)?.name || 
+                  editingMember?.skills.find((skill: any) => skill.id == skillId)?.name || 
+                  skillId
+                )
+                .join(', ')}
+            </p>
+          </div>
+        )}
+        
+        {/* Search Bar */}
+        <div className="mt-3 relative">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search skills..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="pl-10 pr-10"
+            />
+            {search && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearch('');
                   setPage(1);
                 }}
-                autoFocus
-              />
-              <CommandEmpty>No skills found.</CommandEmpty>
-              <CommandGroup
-                style={{
-                  maxHeight: '250px',  // fixed max height
-                  overflowY: 'auto',   // vertical scroll when content overflows
-                }}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 px-2 text-gray-500 hover:text-gray-700"
               >
-                {availableSkills.map((skill) => (
-                  <CommandItem
-                    key={skill.id}
-                    onSelect={() => toggleSkill(skill.id)}
-                  >
-                    <Check
-                      className={cn(
-                        'mr-2 h-4 w-4',
-                        formData.skills.includes(skill.id) ? 'opacity-100' : 'opacity-0'
-                      )}
-                    />
-                    {skill.name}
-                  </CommandItem>
-                ))}
-
-                {loadingSkills && (
-                  <div className="flex items-center justify-center p-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  </div>
-                )}
-
-                {!loadingSkills && hasMore && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full"
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    Load more
-                  </Button>
-                )}
-              </CommandGroup>
-            </Command>
-          </PopoverContent>
-
-        </Popover>
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        </div>
+        
+        {/* Search Results Info */}
+        {search && (
+          <div className="mt-2 text-xs text-gray-500">
+            Found {availableSkills.filter(skill => 
+              skill.name.toLowerCase().includes(search.toLowerCase())
+            ).length} skill(s) matching "{search}"
+          </div>
+        )}
+        
+        {/* Multi-Select Checkbox List */}
+        <div className="mt-3 min-h-[200px] max-h-[200px] overflow-y-auto border rounded-lg p-2 space-y-2">
+          {availableSkills
+            .filter(skill => !search || skill.name.toLowerCase().includes(search.toLowerCase()))
+            .map((skill) => (
+              <div key={skill.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+                <Checkbox
+                  id={`skill-${skill.id}`}
+                  checked={formData.skills.includes(skill.id)}
+                  onCheckedChange={(checked) => toggleSkill(skill.id)}
+                />
+                <label htmlFor={`skill-${skill.id}`} className="flex-1 cursor-pointer">
+                  <span className="font-medium text-sm">{skill.name}</span>
+                </label>
+              </div>
+            ))}
+                  {availableSkills.filter(skill => 
+          !search || skill.name.toLowerCase().includes(search.toLowerCase())
+        ).length === 0 && search && (
+          <div className="text-center py-4 text-gray-500">
+            <Search className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+            <p className="text-sm">No skills found matching "{search}"</p>
+            <p className="text-xs">Try adjusting your search terms</p>
+          </div>
+        )}
+        </div>
+        
+  
+        
+        {availableSkills.length === 0 && !search && (
+          <p className="text-sm text-gray-500 mt-2">
+            No skills available.
+          </p>
+        )}
       </div>
 
       {/* Active toggle */}
@@ -562,10 +560,19 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
 
       {/* Actions */}
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
           Cancel
         </Button>
-        <Button type="submit">{editingMember ? 'Update' : 'Add'} Team Member</Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              {editingMember ? 'Updating...' : 'Adding...'}
+            </>
+          ) : (
+            `${editingMember ? 'Update' : 'Add'} Team Member`
+          )}
+        </Button>
       </div>
     </form>
   );

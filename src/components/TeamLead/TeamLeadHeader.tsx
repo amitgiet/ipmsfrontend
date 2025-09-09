@@ -8,5 +8,5 @@ interface TeamLeadHeaderProps {
 }
 
 export const TeamLeadHeader = ({ currentUser, onLogout }: TeamLeadHeaderProps) => {
-  return <UnifiedHeader title="ProjectHub - Team Lead Dashboard" />;
+  return <UnifiedHeader title="IPMS - Team Lead Dashboard" />;
 };

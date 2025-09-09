@@ -71,14 +71,6 @@ export const ProjectTableRow = ({ project, onViewProject }: ProjectTableRowProps
         </div>
       </TableCell>
       <TableCell>
-        <div className="flex items-center gap-1 max-w-[100px]">
-          <DollarSign className="h-4 w-4 text-gray-400 flex-shrink-0" />
-          <span className="text-sm truncate" title={formatBudget(project.estimated_budget, project.budget_currency)}>
-            {project.estimated_budget}
-          </span>
-        </div>
-      </TableCell>
-      <TableCell>
         <div className="text-sm max-w-[160px]">
           <div className="flex items-center gap-1 mb-1">
             <Calendar className="h-3 w-3 text-gray-400 flex-shrink-0" />

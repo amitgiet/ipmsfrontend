@@ -92,11 +92,6 @@ export const DeveloperProjectsTable = ({ projects, loading, currentUserEmail }: 
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4" />
-                      <span>{project.estimated_budget}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
                       <span className="font-medium">Client:</span>
                       <span>{project.client_name}</span>
                     </div>

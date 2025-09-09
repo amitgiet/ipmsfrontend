@@ -54,10 +54,10 @@ export const TeamManagement = () => {
     fetchTeamMembers(1);
   }, []);
 
-  const fetchTeamMembers = async (page = 1, pageSize = pagination.per_page) => {
+  const fetchTeamMembers = async (page = 1, pageSize = pagination.per_page, searchQuery = '') => {
     setLoading(true);
     try {
-      const result = await apiCall(`${allRoutes.teams.list}?page=${page}&per_page=${pageSize}`, 'get');
+      const result = await apiCall(`${allRoutes.teams.list}?page=${page}&per_page=${pageSize}&search=${searchQuery}`, 'get');
 
       if (result.success) {
         const members = result.data.data || result.data || [];
@@ -83,14 +83,14 @@ export const TeamManagement = () => {
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= pagination.last_page) {
-      fetchTeamMembers(newPage, pagination.per_page);
+      fetchTeamMembers(newPage, pagination.per_page, searchQuery);
     }
   };
 
   const handlePageSizeChange = (newPageSize) => {
     const newSize = parseInt(newPageSize);
     // Reset to first page when changing page size
-    fetchTeamMembers(1, newSize);
+    fetchTeamMembers(1, newSize, searchQuery);
   };
 
   // Sorting functions
@@ -119,13 +119,13 @@ export const TeamManagement = () => {
       filteredMembers = teamMembers.filter(member => {
         // Search in name
         if (member.name?.toLowerCase().includes(query)) return true;
-        
+
         // Search in email
         if (member.email?.toLowerCase().includes(query)) return true;
-        
+
         // Search in role
         if (member.role?.toLowerCase().includes(query)) return true;
-        
+
         // Search in skills
         if (member.skills && Array.isArray(member.skills)) {
           const hasMatchingSkill = member.skills.some(skill => {
@@ -134,7 +134,7 @@ export const TeamManagement = () => {
           });
           if (hasMatchingSkill) return true;
         }
-        
+
         return false;
       });
     }
@@ -221,7 +221,7 @@ export const TeamManagement = () => {
 
 
         // Refresh the team members list
-        await fetchTeamMembers(pagination.current_page, pagination.per_page);
+        await fetchTeamMembers(pagination.current_page, pagination.per_page, searchQuery);
         return true;
       }
     } catch (error) {
@@ -242,7 +242,7 @@ export const TeamManagement = () => {
         toast.success("Team member deleted successfully");
 
         // Refresh the team members list
-        await fetchTeamMembers(pagination.current_page, pagination.per_page);
+        await fetchTeamMembers(pagination.current_page, pagination.per_page, searchQuery);
       } else {
         toast.error(result.error?.message || "Failed to delete team member. Please try again.");
       }
@@ -263,7 +263,7 @@ export const TeamManagement = () => {
         toast.success(`Team member ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
 
         // Refresh the team members list
-        await fetchTeamMembers(pagination.current_page, pagination.per_page);
+        await fetchTeamMembers(pagination.current_page, pagination.per_page, searchQuery || '');
       } else {
         toast.error(result.error?.message || "Failed to update team member status. Please try again.");
       }
@@ -296,7 +296,12 @@ export const TeamManagement = () => {
   };
 
   const handleEdit = (member) => {
-    // Handle different skills data structures
+
+    if (member?.role == 'client') {
+      toast.error("Client cannot be edited");
+      return;
+    }
+
     let extractedSkills = [];
     if (member.skills && Array.isArray(member.skills)) {
       extractedSkills = member.skills.map(skill => {
@@ -347,7 +352,21 @@ export const TeamManagement = () => {
     return successCount > 0;
   };
 
+  const debounce = (func, delay) => {
+    let timer;
+    return function (...args) {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        func.apply(this, args);
+      }, delay);
+    };
+  };
 
+  const debouncedSearchQuery = debounce((page, pageSize, query) => {
+    setSearchQuery(query);
+    fetchTeamMembers(page, pageSize, query);
+  }, 500);
+  
   return (
     <div className="space-y-6 w-full p-6">
       <div className="flex items-center justify-between">
@@ -363,8 +382,8 @@ export const TeamManagement = () => {
                 Add Team Member
               </Button>
             </DialogTrigger>
-            <DialogContent 
-              className="max-w-2xl"
+            <DialogContent
+              className="max-w-2xl "
               onPointerDownOutside={(e) => e.preventDefault()}
               onEscapeKeyDown={(e) => e.preventDefault()}
             >
@@ -378,13 +397,15 @@ export const TeamManagement = () => {
                     : 'Add a new team member to your organization'}
                 </DialogDescription>
               </DialogHeader>
-              <TeamMemberForm
-                formData={formData}
-                editingMember={editingMember}
-                onFormDataChange={setFormData}
-                onSubmit={handleSubmit}
-                onCancel={() => setIsAddDialogOpen(false)}
-              />
+              <div className="max-h-[80vh] overflow-y-auto">
+                <TeamMemberForm
+                  formData={formData}
+                  editingMember={editingMember}
+                  onFormDataChange={setFormData}
+                  onSubmit={handleSubmit}
+                  onCancel={() => setIsAddDialogOpen(false)}
+                />
+              </div>
             </DialogContent>
           </Dialog>
         </div>
@@ -399,15 +420,15 @@ export const TeamManagement = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   placeholder="Search by name, email, role, or skills..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  // value={searchQuery}
+                  onChange={(e) => debouncedSearchQuery(1, pagination.per_page, e.target.value)}
                   className="w-80 pl-10 pr-10"
                 />
                 {searchQuery && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setSearchQuery('')}
+                    onClick={() => debouncedSearchQuery(1, pagination.per_page, '')}
                     className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
                   >
                     <X className="h-3 w-3 text-gray-500" />
@@ -448,7 +469,7 @@ export const TeamManagement = () => {
             sortConfig={sortConfig}
             getSortIcon={getSortIcon}
           />
-          
+
           {/* No results message */}
           {getFilteredAndSortedTeamMembers().length === 0 && (
             <div className="text-center py-8 text-gray-500">

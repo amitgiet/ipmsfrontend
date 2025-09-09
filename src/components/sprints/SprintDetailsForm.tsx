@@ -80,8 +80,8 @@ export const SprintDetailsForm = ({
             id="duration"
             type="number"
             value={duration}
-            onChange={(e) => setDuration(parseInt(e.target.value) || 14)}
-            min="1"
+            onChange={(e) => setDuration(parseInt(e.target.value))}
+            min="0" 
             max="90"
           />
         </div>

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { X } from 'lucide-react';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
 
@@ -9,33 +11,57 @@ export const ProjectInfoSection = ({ formData, errors, onInputChange, isEditMode
   const [projectTypes, setProjectTypes] = useState([]);
   const [projectNatures, setProjectNatures] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [selectedNatures, setSelectedNatures] = useState([]);
 
-  useEffect(() => {
-    const fetchMasterData = async () => {
-      setLoading(true);
-      try {
-        // Fetch project types and natures
-        const [typesResponse, naturesResponse] = await Promise.all([
-          apiCall(allRoutes.master.types_create_or_get, 'get'),
-          apiCall(allRoutes.master.natures_create_or_get, 'get')
-        ]);
+  const fetchMasterData = async () => {
+    setLoading(true);
+    try {
+      // Fetch project types and natures
+      const [typesResponse, naturesResponse] = await Promise.all([
+        apiCall(allRoutes.master.types_create_or_get(1), 'get'),
+        apiCall(allRoutes.master.natures_create_or_get(1), 'get')
+      ]);
 
-        if (typesResponse.data) {
-          setProjectTypes(typesResponse.data.data);
-        }
-        
-        if (naturesResponse.data) {
-          setProjectNatures(naturesResponse.data.data);
-        }
-      } catch (error) {
-        console.error('Error fetching master data:', error);
-      } finally {
-        setLoading(false);
+      if (typesResponse.data) {
+        setProjectTypes(typesResponse.data.data);
       }
-    };
-
+      
+      if (naturesResponse.data) {
+        setProjectNatures(naturesResponse.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching master data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchMasterData();
   }, []);
+
+  // Initialize selected types and natures from form data
+  useEffect(() => {
+    if (formData.projectType) {
+      setSelectedTypes(Array.isArray(formData.projectType) ? formData.projectType : [formData.projectType]);
+    }
+    if (formData.projectNature) {
+      setSelectedNatures(Array.isArray(formData.projectNature) ? formData.projectNature : [formData.projectNature]);
+    }
+  }, [formData.projectType, formData.projectNature]);
+
+  const removeType = (typeId) => {
+    const newSelectedTypes = selectedTypes.filter(t => t !== typeId);
+    setSelectedTypes(newSelectedTypes);
+    onInputChange('projectType', newSelectedTypes);
+  };
+
+  const removeNature = (natureId) => {
+    const newSelectedNatures = selectedNatures.filter(n => n !== natureId);
+    setSelectedNatures(newSelectedNatures);
+    onInputChange('projectNature', newSelectedNatures);
+  };
 
   return (
     <div className="space-y-4">
@@ -70,53 +96,107 @@ export const ProjectInfoSection = ({ formData, errors, onInputChange, isEditMode
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Project Type *</Label>
-          <Select 
-            value={formData?.projectType} 
-            onValueChange={(value) => onInputChange('projectType', value)}
-          >
-            <SelectTrigger className={errors.projectType ? 'border-red-500' : ''}>
-              <SelectValue placeholder="Select project type" />
-            </SelectTrigger>
-            <SelectContent>
-              {loading ? (
-                <SelectItem value="loading" disabled>Loading types...</SelectItem>
-              ) : projectTypes.length > 0 ? (
-                projectTypes.map((type) => (
-                  <SelectItem key={type.id} value={type.name}>
-                    {type.name}
-                  </SelectItem>
-                ))
-              ) : (
-                <SelectItem value="no-types" disabled>No types available</SelectItem>
-              )}
-            </SelectContent>
-          </Select>
+          <div className="space-y-3">
+            <Select 
+              value="" 
+              onValueChange={(value) => {
+                if (value && !selectedTypes.includes(value)) {
+                  const newSelectedTypes = [...selectedTypes, value];
+                  setSelectedTypes(newSelectedTypes);
+                  onInputChange('projectType', newSelectedTypes);
+                }
+              }}
+            >
+              <SelectTrigger className={errors.projectType ? 'border-red-500' : ''}>
+                <SelectValue placeholder="Select project types" />
+              </SelectTrigger>
+              <SelectContent>
+                {loading ? (
+                  <SelectItem value="loading" disabled>Loading types...</SelectItem>
+                ) : projectTypes.length > 0 ? (
+                  projectTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id} disabled={selectedTypes.includes(type.id)}>
+                      {type.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-types" disabled>No types available</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+            {selectedTypes.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {selectedTypes.map((typeId) => {
+                  const type = projectTypes.find(t => t.id === typeId);
+                  return (
+                    <Badge key={typeId} variant="secondary" className="text-xs">
+                      {type ? type.name : typeId}
+                      <button
+                        type="button"
+                        onClick={() => removeType(typeId)}
+                        className="ml-1 hover:text-red-500"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
+          </div>
           {errors.projectType && <p className="text-sm text-red-500">{errors.projectType}</p>}
         </div>
 
         <div className="space-y-2">
           <Label>Project Nature *</Label>
-          <Select 
-            value={formData.projectNature || ''} 
-            onValueChange={(value) => onInputChange('projectNature', value)}
-          >
-            <SelectTrigger className={errors.projectNature ? 'border-red-500' : ''}>
-              <SelectValue placeholder="Select project nature" />
-            </SelectTrigger>
-            <SelectContent>
-              {loading ? (
-                <SelectItem value="loading" disabled>Loading natures...</SelectItem>
-              ) : projectNatures.length > 0 ? (
-                projectNatures.map((nature) => (
-                  <SelectItem key={nature.id} value={nature.name}>
-                    {nature.name}
-                  </SelectItem>
-                ))
-              ) : (
-                <SelectItem value="no-natures" disabled>No natures available</SelectItem>
-              )}
-            </SelectContent>
-          </Select>
+          <div className="space-y-3">
+            <Select 
+              value="" 
+              onValueChange={(value) => {
+                if (value && !selectedNatures.includes(value)) {
+                  const newSelectedNatures = [...selectedNatures, value];
+                  setSelectedNatures(newSelectedNatures);
+                  onInputChange('projectNature', newSelectedNatures);
+                }
+              }}
+            >
+              <SelectTrigger className={errors.projectNature ? 'border-red-500' : ''}>
+                <SelectValue placeholder="Select project natures" />
+              </SelectTrigger>
+              <SelectContent>
+                {loading ? (
+                  <SelectItem value="loading" disabled>Loading natures...</SelectItem>
+                ) : projectNatures.length > 0 ? (
+                  projectNatures.map((nature) => (
+                    <SelectItem key={nature.id} value={nature.id} disabled={selectedNatures.includes(nature.id)}>
+                      {nature.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-natures" disabled>No natures available</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+            {selectedNatures.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {selectedNatures.map((natureId) => {
+                  const nature = projectNatures.find(n => n.id === natureId);
+                  return (
+                    <Badge key={natureId} variant="outline" className="text-xs">
+                      {nature ? nature.name : natureId}
+                      <button
+                        type="button"
+                        onClick={() => removeNature(natureId)}
+                        className="ml-1 hover:text-red-500"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
+          </div>
           {errors.projectNature && <p className="text-sm text-red-500">{errors.projectNature}</p>}
         </div>
       </div>

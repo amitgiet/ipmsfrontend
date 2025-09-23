@@ -148,7 +148,7 @@ export const AdditionalDetailsSection = ({ formData, onInputChange }) => {
       />
 
       {/* Client Dependencies */}
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <Label htmlFor="clientDependencies">Client Dependencies</Label>
         <Textarea
           id="clientDependencies"
@@ -157,7 +157,7 @@ export const AdditionalDetailsSection = ({ formData, onInputChange }) => {
           placeholder="Enter client dependencies"
           rows={2}
         />
-      </div>
+      </div> */}
 
       {/* Tags */}
       <div className="space-y-2">

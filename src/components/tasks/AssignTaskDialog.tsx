@@ -44,7 +44,6 @@ export const AssignTaskDialog: React.FC<AssignTaskDialogProps> = ({
     }
   }, [open]);
 
-  console.log(selectedAssignee)
   const loadProjectTeamMembers = async () => {
     setLoadingTeamMembers(true);
     try {

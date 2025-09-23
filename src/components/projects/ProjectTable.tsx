@@ -48,7 +48,6 @@ export const ProjectTable = ({ projects, loading = false, onViewProject }: Proje
               <TableHeader>
                 <TableRow>
                   <TableHead className="min-w-[200px]">Project</TableHead>
-                  <TableHead className="min-w-[150px]">Client</TableHead>
                   <TableHead className="min-w-[100px]">Status</TableHead>
                   <TableHead className="min-w-[80px]">Priority</TableHead>
                   <TableHead className="min-w-[120px]">Progress</TableHead>

@@ -3,12 +3,13 @@ import { useSelector, useDispatch } from 'react-redux';
 import { logoutUser } from '../../features/auth/authSlice';
 import { User, LogOut, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const dispatch = useDispatch();
   const { user, teamUser } = useSelector((state) => state.auth);
   const currentUser = user || teamUser;
-
+  const navigate = useNavigate();
   const handleLogout = () => {
     dispatch(logoutUser());
   };
@@ -18,7 +19,9 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <h1 className="text-xl font-semibold text-gray-900">IPMS</h1>
+            <h1 className="text-xl font-semibold text-gray-900" onClick={() => {
+              navigate('/dashboard');
+            }}>IPMS</h1>
           </div>
 
           <div className="flex items-center space-x-4">

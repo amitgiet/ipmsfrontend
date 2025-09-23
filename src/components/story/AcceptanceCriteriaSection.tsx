@@ -119,7 +119,10 @@ export const AcceptanceCriteriaSection: React.FC<AcceptanceCriteriaSectionProps>
           <div>
             {acceptanceCriteria ? (
               <div className="prose prose-sm max-w-none">
-                <p className="text-gray-700 whitespace-pre-wrap">{acceptanceCriteria}</p>
+                <div 
+                  className="text-gray-700"
+                  dangerouslySetInnerHTML={{ __html: acceptanceCriteria }}
+                />
               </div>
             ) : (
               <p className="text-gray-500 italic">No acceptance criteria defined</p>

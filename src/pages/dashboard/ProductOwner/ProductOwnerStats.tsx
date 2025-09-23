@@ -16,7 +16,7 @@ interface ProductOwnerStatsProps {
     assigned_project_count: number;
     running_sprint_count: number;
     sprint_about_to_end: number;
-    overrun_sprint_count: number;
+    incomplete_sprint_count: number;
   };
 }
 
@@ -94,12 +94,12 @@ export const ProductOwnerStats = ({ projects }: ProductOwnerStatsProps) => {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Overrun Sprints</CardTitle>
+          <CardTitle className="text-sm font-medium">Incomplete Sprints</CardTitle>
         </CardHeader>
         <CardContent>
             <>
               <div className="text-2xl font-bold">
-                {projects.overrun_sprint_count}
+                {projects.incomplete_sprint_count}
               </div>
               <p className="text-xs text-muted-foreground">
                 Past end date, not completed

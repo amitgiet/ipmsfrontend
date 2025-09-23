@@ -20,7 +20,7 @@ export const DateDurationSection = ({ formData, errors, onInputChange }) => {
       <h3 className="text-lg font-semibold">Dates & Duration</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
+        <div className="space-y-2 w-full">
           <Label htmlFor="startDate">Start Date *</Label>
           <Input
             id="startDate"

@@ -38,14 +38,6 @@ export const ProjectTableRow = ({ project, onViewProject }: ProjectTableRowProps
         </div>
       </TableCell>
       <TableCell>
-        <div className="max-w-[150px]">
-          <div className="font-medium truncate" title={project.client_name || 'Not assigned'}>{project.client_name || 'Not assigned'}</div>
-          {project.client_email && (
-            <div className="text-sm text-gray-500 truncate" title={project.client_email}>{project.client_email}</div>
-          )}
-        </div>
-      </TableCell>
-      <TableCell>
           <Badge className={statusColors[project.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}>
           {project.status?.slice(0, 1).toUpperCase() + project.status?.slice(1).replace('_', ' ').toUpperCase() || 'Unknown'}
         </Badge>

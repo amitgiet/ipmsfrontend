@@ -167,7 +167,7 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmitForAdmin }) => {
           documentFiles: [],
           milestones: [],
           milestoneNotes: '',
-          clientDependencies: '',
+          clientDependencies: 'clientDependencies',
           estimatedBudget: '',
           budgetCurrency: 'USD',
           priority: '',

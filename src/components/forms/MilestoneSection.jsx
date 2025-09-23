@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,13 +8,12 @@ import { X, Plus, Calendar } from 'lucide-react';
 import { CURRENCIES } from '@/constants/projectConstants';
 
 export const MilestoneSection = ({ formData, onInputChange }) => {
-  const [milestones, setMilestones] = useState(() => {
-    // Initialize with existing milestones data if available
+  // Get milestones from formData or create default
+  const getMilestones = () => {
     if (formData.milestones && formData.milestones.length > 0) {
       return formData.milestones;
     }
     
-    // Default milestone structure
     return [
       {
         id: 1,
@@ -26,13 +25,9 @@ export const MilestoneSection = ({ formData, onInputChange }) => {
         estimated_completion_date: ''
       }
     ];
-  });
-  
-
-  const updateMilestonesAndFormData = (newMilestones) => {
-    setMilestones(newMilestones);
-    onInputChange('milestones', newMilestones);
   };
+
+  const milestones = getMilestones();
 
   const addMilestone = () => {
     const newId = Math.max(...milestones.map(m => m.id), 0) + 1;
@@ -48,13 +43,13 @@ export const MilestoneSection = ({ formData, onInputChange }) => {
         estimated_completion_date: ''
       }
     ];
-    updateMilestonesAndFormData(newMilestones);
+    onInputChange('milestones', newMilestones);
   };
 
   const removeMilestone = (id) => {
     if (milestones.length > 1) {
       const newMilestones = milestones.filter(m => m.id !== id);
-      updateMilestonesAndFormData(newMilestones);
+      onInputChange('milestones', newMilestones);
     }
   };
 
@@ -94,7 +89,7 @@ export const MilestoneSection = ({ formData, onInputChange }) => {
     const newMilestones = milestones.map(m => 
       m.id === id ? { ...m, [field]: value } : m
     );
-    updateMilestonesAndFormData(newMilestones);
+    onInputChange('milestones', newMilestones);
   };
 
   return (
@@ -160,11 +155,7 @@ export const MilestoneSection = ({ formData, onInputChange }) => {
                        value={milestone.name}
                        onChange={(e) => updateMilestone(milestone.id, 'name', e.target.value)}
                        placeholder="Enter milestone name"
-                       className={milestone.name === '' ? 'border-red-300' : ''}
                      />
-                     {milestone.name === '' && (
-                       <p className="text-xs text-red-600">Milestone name is required</p>
-                     )}
                    </div>
 
                    <div className="space-y-2">

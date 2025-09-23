@@ -41,7 +41,7 @@ export const allRoutes = {
     getById: (id) => `/projects/dashboard/${id}`,
     addTeamMember: '/user-project/assign-user',
     getAssignedUsers: (id) => `/user-project/assigned-users?project_id=${id}`,
-    getTeamMembersDropdown: (id) => `/teams/dropdown?project_id=${id}`,
+    getTeamMembersDropdown: (id) => `/teams/dropdown?project_id=${id}&per_page=200`,
     removeTeamMember: (id, userId) => `/user-project/remove-user?project_id=${id}&user_id=${userId}`,
     get_assigned_projects: '/user-project/assigned-projects'
   },

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Image, Download } from 'lucide-react';
+import { FileText, Image, Download, Eye } from 'lucide-react';
 import { DescriptionSection } from '@/components/grooming/DescriptionSection';
 import { StoryPointsSection } from '@/components/grooming/StoryPointsSection';
 import { DocumentsSection } from '@/components/grooming/DocumentsSection';
@@ -259,7 +259,7 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
                       size="sm"
                       onClick={() => downloadDocument(doc)}
                     >
-                      <Download className="h-4 w-4" />
+                     <Eye className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}

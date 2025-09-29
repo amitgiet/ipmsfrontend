@@ -120,7 +120,7 @@ export const AcceptanceCriteriaSection: React.FC<AcceptanceCriteriaSectionProps>
             {acceptanceCriteria ? (
               <div className="prose prose-sm max-w-none">
                 <div 
-                  className="text-gray-700"
+                  className="text-gray-700 ql-editor"
                   dangerouslySetInnerHTML={{ __html: acceptanceCriteria }}
                 />
               </div>

@@ -110,17 +110,6 @@ export const ProjectTeamManagement = ({ projectId }) => {
     }
   };
 
-  const removeTeamMember = async (teamMemberId) => {
-    try {
-      const { error } = await apiCall(allRoutes.projects.removeTeamMember(projectId, teamMemberId), 'delete');
-      if (!error) {
-        toast.success("Team member removed from project successfully");
-        fetchProjectTeamMembers();
-      }
-    } catch (error) {
-      console.error('Error removing team member:', error);
-    }
-  };
 
   const handleRemoveTeamMember = (member) => {
     setConfirmationDialog({
@@ -195,6 +184,28 @@ export const ProjectTeamManagement = ({ projectId }) => {
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const canRemoveMember = (memberRole) => {
+    const currentUserRole = user.role;
+    
+    // Admin and super-admin can remove anyone (except themselves)
+    if (currentUserRole === 'admin' || currentUserRole === 'super-admin') {
+      return true;
+    }
+    
+    // Team Lead can only remove developer and qa
+    if (currentUserRole === 'team_lead') {
+      return ['developer', 'qa'].includes(memberRole);
+    }
+    
+    // Product Owner can remove team_lead, developer, and qa
+    if (currentUserRole === 'product_owner') {
+      return ['team_lead', 'developer', 'qa'].includes(memberRole);
+    }
+    
+    // Other roles cannot remove anyone
+    return false;
   };
 
   useEffect(() => {
@@ -385,7 +396,7 @@ export const ProjectTeamManagement = ({ projectId }) => {
                     Assigned: {new Date(member.created_at).toLocaleDateString()}
                   </p>
                 </div>
-                {member.id !== user.id && (user.role === 'admin' || user.role === 'super-admin' || user.role === 'team_lead' || user.role === 'product_owner') && <Button
+                {member.id !== user.id && canRemoveMember(member.role) && <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleRemoveTeamMember(member)}

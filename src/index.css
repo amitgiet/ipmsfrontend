@@ -99,3 +99,37 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* QuillEditor content styling */
+.ql-editor {
+  ul, ol {
+    padding-left: 1px !important;
+  }
+  
+  ul {
+    list-style-type: disc;
+  }
+  
+  ol {
+    list-style-type: decimal;
+  }
+  
+  li {
+    display: list-item;
+    margin-bottom: 0.25rem;
+  }
+  
+  /* Nested lists */
+  ul ul, ol ol, ul ol, ol ul {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  ul ul {
+    list-style-type: circle;
+  }
+  
+  ul ul ul {
+    list-style-type: square;
+  }
+}

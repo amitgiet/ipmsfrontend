@@ -57,26 +57,6 @@ export const useAdminDashboardMetrics = () => {
 
       if (projectsError) throw projectsError;
 
-      // // Fetch all sprints
-      // const { data: sprints, error: sprintsError } = await apiCall(allRoutes.sprints.dashboard, 'get');
-
-      // if (sprintsError) throw sprintsError;
-
-      // // Fetch all team members
-      // const { data: teamMembers, error: teamMembersError } = await apiCall(allRoutes.teams.list, 'get');
-
-      // if (teamMembersError) throw teamMembersError;
-
-      // // Fetch project assignments
-      // const { data: assignments, error: assignmentsError } = await apiCall(allRoutes.projects.addTeamMember, 'get');
-
-      // if (assignmentsError) throw assignmentsError;
-
-      // // Fetch time logs for hours calculation
-      // const { data: timeLogs, error: timeLogsError } = await apiCall(allRoutes.timesheets.list, 'get');
-
-      // if (timeLogsError) throw timeLogsError;
-
       // Calculate project metrics 
       const totalProjects = projects.data.total_project || 0;
       const projectsPlanned = projects.data.planned || 0;

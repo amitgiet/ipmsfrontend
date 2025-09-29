@@ -81,12 +81,12 @@ export const ProjectInfoSection = ({ formData, errors, onInputChange, isEditMode
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="projectId">Project ID *</Label>
+          <Label htmlFor="projectId">Project Code *</Label>
           <Input
             id="projectId"
             value={formData.projectId || ''}
             onChange={(e) => onInputChange('projectId', e.target.value)}
-            placeholder="Enter project ID"
+            placeholder="Enter project code"
             className={errors.projectId ? 'border-red-500' : ''}
           />
           {errors.projectId && <p className="text-sm text-red-500">{errors.projectId}</p>}

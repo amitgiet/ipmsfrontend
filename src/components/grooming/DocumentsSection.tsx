@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { FileText, Image, Download } from 'lucide-react';
+import { FileText, Image, Eye } from 'lucide-react';
 
 interface StoryDocument {
   id: string;
@@ -68,7 +68,7 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                   size="sm"
                   onClick={() => onDownloadDocument(doc)}
                 >
-                  <Download className="h-4 w-4" />
+                  <Eye className="h-4 w-4" />
                 </Button>
               </div>
             ))}

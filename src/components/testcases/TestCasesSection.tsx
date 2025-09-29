@@ -184,7 +184,7 @@ export const TestCasesSection: React.FC<TestCasesSectionProps> = ({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Test Cases</CardTitle>
-          {userRole === 'qa' && canEdit && (
+          {userRole === 'qa' && testCases.length > 0 && canEdit && (
             <Button
               variant="outline"
               size="sm"

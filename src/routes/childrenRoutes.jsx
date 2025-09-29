@@ -59,7 +59,7 @@ export const childrenComponents = [
   
   // Developer and QA routes
   { path: 'my-tasks', element: withSuspense(DeveloperTasksPage)() },
-  { path: 'qa/stories', element: withSuspense(QAStoriesPage)() }
+  // { path: 'qa/stories', element: withSuspense(QAStoriesPage)() }
 ];
 
 export const authChildren = [

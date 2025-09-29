@@ -33,12 +33,14 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmitForAdmin }) => {
     milestones: [], // Store as array
     milestoneNotes: '',
     clientDependencies: '',
+    milestones_remove_ids: [],
     estimatedBudget: '',
     budgetCurrency: 'USD',
     priority: '',
     budgetedHours: '',
     loggedHours: '',
     tagsLabels: '',
+    notes: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -84,6 +86,7 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmitForAdmin }) => {
       formDataToSend.append('budgeted_hours', formData.budgetedHours || '');
       formDataToSend.append('currency', formData.budgetCurrency || 'USD');
       formDataToSend.append('logged_hours', formData.loggedHours || '');
+      formDataToSend.append('milestones_remove_ids', formData.milestones_remove_ids || '');
       if(formData.projectType){
          formData.projectType.forEach((type, index) => {
           formDataToSend.append(`types[${index}]`, type || '');
@@ -111,11 +114,12 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmitForAdmin }) => {
           formDataToSend.append(`milestones[${index}][client_dependency]`, milestone.client_dependency || '');
           formDataToSend.append(`milestones[${index}][estimated_completion_date]`, milestone.estimated_completion_date || '');
           formDataToSend.append(`milestones[${index}][name]`, milestone.name || '');
+          formDataToSend.append(`milestones[${index}][status]`, milestone.status || '');
         });
       } 
       formDataToSend.append('client_dependencies', formData.clientDependencies || '');
       formDataToSend.append('tags', formData.tagsLabels || '');
-      
+      formDataToSend.append('notes', formData.notes || '');
       if (formData.documentFiles && formData.documentFiles.length > 0) {
         formData.documentFiles.forEach((file, index) => {
           if (file instanceof File) {
@@ -168,12 +172,15 @@ export const AddProjectForm = ({ open, onOpenChange, onSubmitForAdmin }) => {
           milestones: [],
           milestoneNotes: '',
           clientDependencies: 'clientDependencies',
+          milestones_remove_ids: [],
           estimatedBudget: '',
+          milestones_remove_ids: [],
           budgetCurrency: 'USD',
           priority: '',
           budgetedHours: '',
           loggedHours: '',
           tagsLabels: '',
+          notes: '',
         });
         setErrors({});
         

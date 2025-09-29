@@ -3,6 +3,7 @@ import React from 'react';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ProjectTableRow } from './ProjectTableRow';
 import { TableLoader, TableEmptyState } from '@/components/common/TableLoader';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface Project {
   id: string;
@@ -37,6 +38,7 @@ interface ProjectTableProps {
 }
 
 export const ProjectTable = ({ projects, loading = false, onViewProject }: ProjectTableProps) => {
+  const { userRole } = useUserRole();
   return (
     <TableLoader loading={loading} loadingMessage="Loading projects...">
       {!projects || projects.length === 0 ? (
@@ -51,6 +53,7 @@ export const ProjectTable = ({ projects, loading = false, onViewProject }: Proje
                   <TableHead className="min-w-[100px]">Status</TableHead>
                   <TableHead className="min-w-[80px]">Priority</TableHead>
                   <TableHead className="min-w-[120px]">Progress</TableHead>
+                { (userRole == 'admin' || userRole == 'product_owner' || userRole == 'super-admin') && <TableHead className="min-w-[120px]">Client</TableHead> }
                   <TableHead className="min-w-[160px]">Timeline</TableHead>
                   <TableHead className="min-w-[80px]">Actions</TableHead>
                 </TableRow>

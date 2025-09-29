@@ -35,6 +35,11 @@ export const ClientProjectCard: React.FC<ClientProjectCardProps> = ({ project, o
     return new Date(dateString).toLocaleDateString();
   };
 
+  const formatBudget = (amount: number | null, currency: string | null) => {
+    if (!amount) return 'Not set';
+    return amount.toLocaleString('en-US') + ' ' + (currency || 'USD');
+  };
+
   const getStatusColor = (status: string | null) => {
     if (!status) return 'bg-gray-100 text-gray-800';
     
@@ -83,8 +88,9 @@ export const ClientProjectCard: React.FC<ClientProjectCardProps> = ({ project, o
           
           {project.estimated_budget && (
             <div className="flex items-center">
+              Budget: 
               <span className="text-gray-700">
-                {project.estimated_budget} {project.currency || 'USD'}
+                &nbsp;{formatBudget(project.estimated_budget, project.currency)}
               </span>
             </div>
           )}

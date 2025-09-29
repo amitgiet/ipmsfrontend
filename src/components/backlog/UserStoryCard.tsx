@@ -71,6 +71,7 @@ export const UserStoryCard: React.FC<UserStoryCardProps> = ({
     navigate(`/project/${projectId}/story/${story.id}/groom`);
   };
 
+  console.log(story);
   return (
     <Card className="group hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
@@ -103,7 +104,7 @@ export const UserStoryCard: React.FC<UserStoryCardProps> = ({
                 </Badge>
               )}
               <Badge className={getStatusColor(story.status)}>
-                {story.status.replace('_', ' ').toUpperCase()}
+                {story.status.replace('_', ' ').replace('_', ' ').toUpperCase()}
               </Badge>
             </div>
             <h3 className="font-semibold text-lg leading-tight">{story.title}</h3>

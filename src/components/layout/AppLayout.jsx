@@ -7,7 +7,7 @@ const AppLayout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-     {! pathname.includes('dashboard' || 'client-project') && <Header />}
+     {!pathname.includes('dashboard') && !pathname.includes('client-project') && !pathname.includes('/settings') && <Header />}
         <main className="">
           <Outlet />
         </main>

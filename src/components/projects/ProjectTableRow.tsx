@@ -3,8 +3,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { Eye, Calendar, DollarSign } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Eye, Calendar, DollarSign, User } from 'lucide-react';
 import { formatBudget, formatDate, statusColors, priorityColors } from '@/utils/projectFormatters';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface Project {
   id: string;
@@ -19,6 +21,7 @@ interface Project {
   progress_percent: number | null;
   priority: string | null;
   client_email: string | null;
+  client: any[];
 }
 
 interface ProjectTableRowProps {
@@ -27,8 +30,10 @@ interface ProjectTableRowProps {
 }
 
 export const ProjectTableRow = ({ project, onViewProject }: ProjectTableRowProps) => {
+  const { userRole } = useUserRole();
   return (
-    <TableRow>
+    <TooltipProvider>
+      <TableRow>
       <TableCell>
         <div className="max-w-[200px]">
           <div className="font-medium truncate" title={project.name}>{project.name}</div>
@@ -62,6 +67,29 @@ export const ProjectTableRow = ({ project, onViewProject }: ProjectTableRowProps
           </span>
         </div>
       </TableCell>
+      {(userRole == 'admin' || userRole == 'product_owner' || userRole == 'super-admin') && (
+        <TableCell>
+          {project.client?.length > 0 ? (
+            project.client?.map((client: any) => (
+              <div key={client.id} className="text-sm max-w-[120px]">
+                <div className="flex items-center gap-1 mb-1">
+                  <User className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="truncate cursor-help">{client.name}</span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{client.name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+            ))
+          ) : (
+            <span className="truncate" title="No client assigned">No client assigned</span>
+          )}
+        </TableCell>
+      )}
       <TableCell>
         <div className="text-sm max-w-[160px]">
           <div className="flex items-center gap-1 mb-1">
@@ -85,6 +113,7 @@ export const ProjectTableRow = ({ project, onViewProject }: ProjectTableRowProps
           <span className="hidden sm:inline">View</span>
         </Button>
       </TableCell>
-    </TableRow>
+      </TableRow>
+    </TooltipProvider>
   );
 };

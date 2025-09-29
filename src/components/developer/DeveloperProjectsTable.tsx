@@ -90,11 +90,6 @@ export const DeveloperProjectsTable = ({ projects, loading, currentUserEmail }: 
                         {formatDate(project.start_date)} - {formatDate(project.end_date)}
                       </span>
                     </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Client:</span>
-                      <span>{project.client_name}</span>
-                    </div>
                   </div>
                 </div>
                 

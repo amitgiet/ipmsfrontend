@@ -90,7 +90,7 @@ export const AdminProjectsSection = () => {
           const transformedProjects = projectsData.map(item => ({
             id: item.id?.toString() || Date.now().toString(),
             project_name: item.name || item.title || item.project_name || 'Untitled Project',
-            project_id: item.project_code || item.project_id || item.id?.toString(),
+            project_code: item.project_code || item.project_id || item.id?.toString(),
             project_status: item.status || 'planned',
             project_type: item.types || [],
             project_nature: item.natures || [],
@@ -115,7 +115,9 @@ export const AdminProjectsSection = () => {
             tags_labels: item.tags || item.tags_labels || '',
             created_at: item.created_at || new Date().toISOString(),
             created_by: item.created_by || 'admin',
-            progress_percent: item.progress_percent || 0
+            progress_percent: item.progress_percent || 0,
+            tags: item.tags || '',
+            notes: item.notes || '',
           }));
 
           if (transformedProjects.length === 0) {
@@ -173,7 +175,7 @@ export const AdminProjectsSection = () => {
     const filtered = projects.filter((project) => {
       const matchesSearch = !searchTerm ||
         project.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.project_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.project_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         project.client_name?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus = statusFilter === 'all' || project.project_status === statusFilter;
@@ -184,7 +186,7 @@ export const AdminProjectsSection = () => {
         project.client_name?.toLowerCase().includes(clientFilter.toLowerCase());
 
       const matchesProjectId = !projectIdFilter ||
-        project.project_id?.toLowerCase().includes(projectIdFilter.toLowerCase());
+        project.project_code?.toLowerCase().includes(projectIdFilter.toLowerCase());
 
       return matchesSearch && matchesStatus && matchesPriority && matchesClient && matchesProjectId;
     });
@@ -232,7 +234,7 @@ export const AdminProjectsSection = () => {
         const transformedProjects = projectsData.map(item => ({
           id: item.id?.toString() || Date.now().toString(),
           project_name: item.name || item.title || item.project_name || 'Untitled Project',
-          project_id: item.project_code || item.project_id || item.id?.toString(),
+          project_code: item.project_code || item.project_id || item.id?.toString(),
           project_status: item.status || 'planned',
           project_type: item.types || [],
           all_clients: item.client || [],
@@ -257,8 +259,10 @@ export const AdminProjectsSection = () => {
           tags_labels: item.tags || item.tags_labels || '',
           created_at: item.created_at || new Date().toISOString(),
           created_by: item.created_by || 'admin',
-          progress_percent: item.progress_percent || 0
-        }));
+          progress_percent: item.progress_percent || 0,
+          tags: item.tags || '',
+          notes: item.notes || '',
+          }));
 
         if (transformedProjects.length === 0) {
           setProjects([]);
@@ -466,10 +470,10 @@ export const AdminProjectsSection = () => {
 
                 {/* Filter by Project ID */}
                 <div>
-                  <Label htmlFor="projectIdFilter">Project ID</Label>
+                  <Label htmlFor="projectIdFilter">Project Code</Label>
                   <Input
                     id="projectIdFilter"
-                    placeholder="Filter by project ID..."
+                    placeholder="Filter by project code..."
                     value={projectIdFilter}
                     onChange={(e) => setProjectIdFilter(e.target.value)}
                   />
@@ -567,7 +571,7 @@ export const AdminProjectsSection = () => {
                         )}
                       </div>
                       <p className="text-sm text-gray-500 mb-1">
-                        Project ID: {project.project_id || project.id}
+                        Project Code: {project.project_code || project.id}
                       </p>
                       <p className="text-sm text-gray-500">
                         Type: {Array.isArray(project.project_type) && project.project_type.length > 0
@@ -652,9 +656,9 @@ export const AdminProjectsSection = () => {
                       </div>
                       <div className="text-sm">
                         <p>Budget: {formatCurrency(project.estimated_budget, project.budget_currency)}</p>
-                        <p>Used: {formatCurrency(project.actual_budget_used, project.budget_currency)}</p>
-                        <p className="text-gray-500">
-                          Hours: {project.logged_hours ? `${project.logged_hours}h` : 'None logged'}
+                        <p>Budget Hours: {project.budgeted_hours ? `${project.budgeted_hours}` : "0"}</p>
+                        <p >
+                          Logged Hours: {project.logged_hours ? `${project.logged_hours}` : '0'}
                         </p>
                       </div>
                     </div>

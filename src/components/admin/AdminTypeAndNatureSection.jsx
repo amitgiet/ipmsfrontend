@@ -65,7 +65,7 @@ export const AdminTypeAndNatureSection = () => {
     const formData = formType === 'type' ? typeForm : natureForm;
     const isEditing = editingId !== null;
     
-    if (!formData.name.trim()) {
+    if (!formData?.name?.trim()) {
       toast.error('Please enter a name');
       return;
     }
@@ -111,8 +111,8 @@ export const AdminTypeAndNatureSection = () => {
       } else {
         // Create new
         const endpoint = formType === 'type' 
-          ? allRoutes.master.types_create_or_get
-          : allRoutes.master.natures_create_or_get;
+          ? allRoutes.master.types_create_or_get(null)
+          : allRoutes.master.natures_create_or_get(null);
           
         const { error } = await apiCall(endpoint, 'post', formData);
         

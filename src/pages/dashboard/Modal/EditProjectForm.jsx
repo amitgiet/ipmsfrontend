@@ -35,12 +35,14 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit, loadPro
     removedDocumentIds: [], // Track removed document IDs
     milestones: [], // Store as array
     clientDependencies: '',
+    milestones_remove_ids: [],
     estimatedBudget: '',
     budgetCurrency: 'USD',
     priority: '',
     budgetedHours: '',
     loggedHours: '',
     tagsLabels: '',
+    notes: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -89,6 +91,7 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit, loadPro
         budgetedHours: project.budgeted_hours?.toString() || '',
         loggedHours: project.logged_hours?.toString() || '',
         tagsLabels: project.tags || '',
+        notes: project.notes || '',
       });
       setErrors({});
     }
@@ -134,7 +137,12 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit, loadPro
       formDataToSend.append('logged_hours', formData.loggedHours || '');
       formDataToSend.append('client_dependencies', formData.clientDependencies || '');
       formDataToSend.append('tags', formData.tagsLabels || '');
-      
+      formDataToSend.append('notes', formData.notes || '');
+      if(formData.milestones_remove_ids){
+        formData.milestones_remove_ids.forEach((milestone_remove_id, index) => {
+          formDataToSend.append(`milestones_remove_ids[${index}]`, milestone_remove_id || '');
+        });
+      }
       if(formData.projectType){
          formData.projectType.forEach((type, index) => {
           formDataToSend.append(`types[${index}]`, type || '');
@@ -156,12 +164,16 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit, loadPro
       }
       if( formData.milestones && formData.milestones.length > 0){
         formData.milestones.forEach((milestone, index) => {
+          if(milestone?.id){
+            formDataToSend.append(`milestones[${index}][id]`, milestone.id || '');
+          }
           formDataToSend.append(`milestones[${index}][deliverable]`, milestone.deliverable || '');
           formDataToSend.append(`milestones[${index}][amount]`, milestone.amount || '');
           formDataToSend.append(`milestones[${index}][currency]`, milestone.currency || '');
           formDataToSend.append(`milestones[${index}][client_dependency]`, milestone.client_dependency || '');
           formDataToSend.append(`milestones[${index}][estimated_completion_date]`, milestone.estimated_completion_date || '');
           formDataToSend.append(`milestones[${index}][name]`, milestone.name || '');
+          formDataToSend.append(`milestones[${index}][status]`, milestone.status || '');
         });
       } 
       formDataToSend.append('_method', 'put');
@@ -257,6 +269,9 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit, loadPro
                 break;
               case 'tags_labels':
                 formField = 'tagsLabels';
+                break;
+              case 'notes':
+                formField = 'notes';
                 break;
               default:
                 formField = apiField;
@@ -389,6 +404,7 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit, loadPro
             <AdditionalDetailsSection
               formData={formData}
               onInputChange={handleInputChange}
+              isEditMode={true}
             />
 
 

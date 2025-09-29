@@ -24,7 +24,7 @@ interface ParsedTestCase {
   description?: string;
   preconditions?: string;
   steps: string;
-  expected_result: string;
+  expected_results: string;
 }
 
 export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
@@ -51,7 +51,7 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
   const parseCSV = (csvContent: string): ParsedTestCase[] => {
     const lines = csvContent.split('\n').filter(line => line.trim());
     const validationErrors: string[] = [];
-    
+
     if (lines.length < 2) {
       validationErrors.push('CSV must contain at least a header row and one data row');
       setErrors(validationErrors);
@@ -59,9 +59,8 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
     }
 
     const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-    const requiredHeaders = ['tc_id', 'title', 'steps', 'expected_result'];
-    const optionalHeaders = ['description', 'preconditions'];
-    
+    const requiredHeaders = ['tc_id', 'title', 'steps', 'expected_results'];
+
     // Check for required headers
     const missingHeaders = requiredHeaders.filter(header => !headers.includes(header));
     if (missingHeaders.length > 0) {
@@ -74,10 +73,10 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
     }
 
     const testCases: ParsedTestCase[] = [];
-    
+
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim().replace(/^"(.*)"$/, '$1'));
-      
+
       if (values.length < headers.length) {
         validationErrors.push(`Row ${i + 1}: Insufficient columns`);
         continue;
@@ -87,12 +86,12 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
         tc_id: '',
         title: '',
         steps: '',
-        expected_result: ''
+        expected_results: ''
       };
 
       headers.forEach((header, index) => {
         const value = values[index] || '';
-        
+
         switch (header) {
           case 'tc_id':
             testCase.tc_id = value;
@@ -109,8 +108,8 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
           case 'steps':
             testCase.steps = value;
             break;
-          case 'expected_result':
-              testCase.expected_result = value;
+          case 'expected_results':
+            testCase.expected_results = value;
             break;
         }
       });
@@ -125,11 +124,11 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
       if (!testCase.steps) {
         validationErrors.push(`Row ${i + 1}: Steps are required`);
       }
-      if (!testCase.expected_result) {
+      if (!testCase.expected_results) {
         validationErrors.push(`Row ${i + 1}: Expected Results are required`);
       }
 
-      if (testCase.tc_id && testCase.title && testCase.steps && testCase.expected_result) {
+      if (testCase.tc_id && testCase.title && testCase.steps && testCase.expected_results) {
         testCases.push(testCase);
       }
     }
@@ -155,11 +154,11 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
       formData.append('project_id', projectId);
       formData.append('file', file);
 
-        const { error } = await apiCall(allRoutes.testCases.create, 'post', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
+      const { error } = await apiCall(allRoutes.testCases.create, 'post', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
 
       if (error) {
         toast.error("Failed to upload test cases");
@@ -192,12 +191,12 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
             Upload a CSV file containing test cases for this user story
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <Alert>
             <FileText className="h-4 w-4" />
             <AlertDescription>
-              CSV should have columns: TC_ID, Title, Steps, Expected_Result, Description (optional), Preconditions (optional)
+              CSV should have columns: TC_ID, Title, Steps, expected_results, Description (optional), Preconditions (optional)
             </AlertDescription>
           </Alert>
 
@@ -225,12 +224,12 @@ export const TestCaseUploadDialog: React.FC<TestCaseUploadDialogProps> = ({
             </Alert>
           )}
         </div>
-        
+
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleUpload}
             disabled={!file || uploading || errors.length > 0}
           >

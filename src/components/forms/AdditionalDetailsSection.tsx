@@ -104,9 +104,9 @@ export const AdditionalDetailsSection = ({ formData, onInputChange }) => {
               multiple
               accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.webp"
               onChange={handleFileUpload}
-              // className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            // className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
-         
+
           </div>
 
           {uploadedFiles.length > 0 && (
@@ -142,22 +142,19 @@ export const AdditionalDetailsSection = ({ formData, onInputChange }) => {
       </div>
 
       {/* Milestones */}
-      <MilestoneSection 
-        formData={formData} 
-        onInputChange={onInputChange} 
+      <MilestoneSection
+        formData={formData}
+        onInputChange={onInputChange}
       />
 
-      {/* Client Dependencies */}
-      {/* <div className="space-y-2">
-        <Label htmlFor="clientDependencies">Client Dependencies</Label>
-        <Textarea
-          id="clientDependencies"
-          value={formData.clientDependencies}
-          onChange={(e) => onInputChange('clientDependencies', e.target.value)}
-          placeholder="Enter client dependencies"
-          rows={2}
+      <div className="space-y-2">
+        <Label className="text-lg font-semibold">Notes</Label>
+        <Input
+          value={formData.notes || ''}
+          onChange={(e) => onInputChange('notes', e.target.value)}
+          placeholder="Add any additional notes about the project..."
         />
-      </div> */}
+      </div>
 
       {/* Tags */}
       <div className="space-y-2">

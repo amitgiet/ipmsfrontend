@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
-import { formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { Send, Trash2 } from 'lucide-react';
 import { apiCall } from '@/services/apiCall';
 import { allRoutes } from '@/services/routes';
@@ -174,7 +174,8 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
                     </span>
                   </div>
                   <div className="flex items-center text-xs text-gray-500 gap-2">
-                    <span>{getTimestamp(comment.created_at)}</span>
+                  {format(new Date(comment.created_at), 'MMM dd, yyyy HH:mm')}
+                    {/* <span>{getTimestamp(comment.created_at)}</span> */}
                     {canDeleteComment(comment) && (
                       <Button 
                         variant="ghost" 

@@ -8,6 +8,7 @@ import { DeveloperTasksSection } from '@/components/developer/DeveloperTasksSect
 import { useDeveloperProjects } from '@/hooks/useDeveloperProjects';
 import { LogTimeDialog } from '@/components/tasks/LogTimeDialog';
 import { useTaskTimeLogs } from '@/hooks/useTaskTimeLogs';
+import { ProductOwnerProjectsTable } from '../ProductOwner/ProductOwnerProjectsTable';
 
 export const DeveloperDashboard = () => {
   const { user, teamUser, logout } = useAuth();
@@ -47,11 +48,16 @@ export const DeveloperDashboard = () => {
         <DeveloperStats projects={dashboardData} currentUserEmail={currentUser.email} />
         
         <div className="grid grid-cols-1 gap-8 mt-8">
-          <DeveloperProjectsTable 
+          <ProductOwnerProjectsTable 
             projects={projects} 
             loading={loading} 
             currentUserEmail={currentUser.email} 
           />
+           {/* <DeveloperProjectsTable 
+            projects={projects} 
+            loading={loading} 
+            currentUserEmail={currentUser.email} 
+          /> */}
           
           <DeveloperTasksSection 
             currentUserEmail={currentUser.email}

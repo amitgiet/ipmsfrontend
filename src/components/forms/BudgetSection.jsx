@@ -28,28 +28,24 @@ export const BudgetSection = ({ formData, onInputChange, errors = {} }) => {
           </Select>
           <Input
             type="number"
-            step="0.01"
+            step="1"
             min="0"
-            max="999999999.99"
+            max="999999999"
             value={formData.estimatedBudget || ''}
             onChange={(e) => {
               const value = e.target.value;
-              // Only allow numeric input with reasonable budget limits
-              if (value === '' || (/^\d{0,9}(\.\d{0,2})?$/.test(value) && parseFloat(value) <= 999999999.99)) {
+              // Only allow whole numbers with reasonable budget limits
+              if (value === '' || (/^\d{0,9}$/.test(value) && parseFloat(value) <= 999999999)) {
                 onInputChange('estimatedBudget', value);
               }
             }}
             onKeyPress={(e) => {
-              // Allow numbers, decimal point, and navigation keys
-              if (!/[0-9.]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
-                e.preventDefault();
-              }
-              // Prevent multiple decimal points
-              if (e.key === '.' && e.target.value.includes('.')) {
+              // Only allow numbers and navigation keys
+              if (!/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
                 e.preventDefault();
               }
             }}
-            placeholder="0.00"
+            placeholder="0"
             className="rounded-l-none"
           />
         </div>

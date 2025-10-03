@@ -64,7 +64,7 @@ export const EditProjectForm = ({ open, onOpenChange, project, onSubmit, loadPro
       // Map API response structure to form fields
       setFormData({
         projectName: project.project_name || '',
-        projectId: project.id || '',
+        projectId: project.project_code || '',
         allClients: project.all_clients && project.all_clients.length > 0 ? project.all_clients.map((client, index) => ({
           id: client.id || index + 1,
           name: client.name || '',

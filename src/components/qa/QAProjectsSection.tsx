@@ -6,13 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Calendar, DollarSign, Users, Clock, FolderOpen, Settings } from 'lucide-react';
 import { formatBudget, formatDate, statusColors, priorityColors } from '@/utils/projectFormatters';
 import { useNavigate } from 'react-router-dom';
+import { ProductOwnerProjectsTable } from '@/pages/dashboard/ProductOwner/ProductOwnerProjectsTable';
 
 interface QAProjectsSectionProps {
   projects: any[];
   loading: boolean;
+  currentUserEmail: string | null;
 }
 
-export const QAProjectsSection: React.FC<QAProjectsSectionProps> = ({ projects, loading }) => {
+export const QAProjectsSection: React.FC<QAProjectsSectionProps> = ({ projects, loading, currentUserEmail = '' }) => {
   const navigate = useNavigate();
   if (loading) {
     return (
@@ -35,18 +37,18 @@ export const QAProjectsSection: React.FC<QAProjectsSectionProps> = ({ projects, 
 
   return (
     <Card>
-      <CardHeader>
+      {/* <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>My Projects</CardTitle>
           <Badge variant="outline" className="text-sm">
             {projects.length} projects
           </Badge>
         </div>
-      </CardHeader>
+      </CardHeader> */}
       <CardContent>
         {projects.length > 0 ? (
           <div className="space-y-4">
-            {projects.map((project) => (
+            {/* {projects.map((project) => (
               <div key={project.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
@@ -62,8 +64,8 @@ export const QAProjectsSection: React.FC<QAProjectsSectionProps> = ({ projects, 
                       )}
                     </div>
                   </div>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => handleManageProject(project.id)}
                     className="ml-4"
@@ -73,24 +75,33 @@ export const QAProjectsSection: React.FC<QAProjectsSectionProps> = ({ projects, 
                   </Button>
                 </div>
 
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-2">
+                  <div className="flex items-center gap-2">
+                    Code:
+                    <span>{project.project_code || 'No code'}</span>
+                  </div>
+
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                  {/* <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    <span>{project.client_name || 'No client'}</span>
-                  </div> */}
-                  
+
+
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     <span>{formatDate(project.start_date)}</span>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
                     <span>{project.duration_days ? `${project.duration_days} days` : 'No duration'}</span>
                   </div>
                 </div>
               </div>
-            ))}
+            ))} */}
+            <ProductOwnerProjectsTable 
+              projects={projects} 
+              loading={loading} 
+              currentUserEmail={currentUserEmail} 
+            />
           </div>
         ) : (
           <div className="text-center py-12 text-gray-500">

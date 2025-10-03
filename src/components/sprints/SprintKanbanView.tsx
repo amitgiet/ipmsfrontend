@@ -49,9 +49,9 @@ export const SprintKanbanView = ({ stories, sprintStatus, onStoryUpdate, sprint 
 
   const updateStoryStatus = async (data: FormData, storyId: number) => {
 
-    const { success } = await apiCall(allRoutes.stories.drag_drop_story(storyId), 'post', data);
+    const { success, data: responseData } = await apiCall(allRoutes.stories.drag_drop_story(storyId), 'post', data);
     if (success) {
-      toast.success("Story status updated successfully");
+      toast.success(responseData.message || "Story status updated successfully");
       return true;
     }
     return false;

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -37,9 +37,11 @@ export const AdminProjectsSection = () => {
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [clientFilter, setClientFilter] = useState('');
+  const [debouncedClientFilter, setDebouncedClientFilter] = useState('');
   const [projectIdFilter, setProjectIdFilter] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [addProjectModalOpen, setAddProjectModalOpen] = useState(false);
@@ -55,22 +57,39 @@ export const AdminProjectsSection = () => {
   });
 
 
+  // Debounce search terms for better performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms debounce delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedClientFilter(clientFilter);
+    }, 300); // 300ms debounce delay
+
+    return () => clearTimeout(timer);
+  }, [clientFilter]);
+
   useEffect(() => {
     const loadProjects = async () => {
       setLoading(true);
       try {
         // Prepare API parameters with filters
-        const apiParams = {
+        const apiParams: any = {
           page: pagination.current_page,
           limit: pagination.per_page
         };
 
-        // Add filters to API call if they have values
-        if (searchTerm.trim()) {
-          apiParams.search = searchTerm.trim();
+        // Add filters to API call if they have values (using debounced values)
+        if (debouncedSearchTerm.trim()) {
+          apiParams.search = debouncedSearchTerm.trim();
         }
-        if (clientFilter.trim()) {
-          apiParams.client_name = clientFilter.trim();
+        if (debouncedClientFilter.trim()) {
+          apiParams.client_name = debouncedClientFilter.trim();
         }
         if (statusFilter !== 'all') {
           apiParams.status = statusFilter;
@@ -168,22 +187,22 @@ export const AdminProjectsSection = () => {
     };
 
     loadProjects();
-  }, [pagination.current_page, pagination.per_page, searchTerm, clientFilter, statusFilter, priorityFilter]);
+  }, [pagination.current_page, pagination.per_page, debouncedSearchTerm, debouncedClientFilter, statusFilter, priorityFilter]);
 
   useEffect(() => {
-    // Apply client-side filtering for immediate UI feedback
+    // Apply client-side filtering using debounced values to prevent local filtering
     const filtered = projects.filter((project) => {
-      const matchesSearch = !searchTerm ||
-        project.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.project_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.client_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = !debouncedSearchTerm ||
+        project.project_name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        project.project_code?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        project.client_name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
 
       const matchesStatus = statusFilter === 'all' || project.project_status === statusFilter;
 
       const matchesPriority = priorityFilter === 'all' || project.priority === priorityFilter;
 
-      const matchesClient = !clientFilter ||
-        project.client_name?.toLowerCase().includes(clientFilter.toLowerCase());
+      const matchesClient = !debouncedClientFilter ||
+        project.client_name?.toLowerCase().includes(debouncedClientFilter.toLowerCase());
 
       const matchesProjectId = !projectIdFilter ||
         project.project_code?.toLowerCase().includes(projectIdFilter.toLowerCase());
@@ -192,7 +211,7 @@ export const AdminProjectsSection = () => {
     });
 
     setFilteredProjects(filtered);
-  }, [projects, searchTerm, statusFilter, priorityFilter, clientFilter, projectIdFilter]);
+  }, [projects, debouncedSearchTerm, statusFilter, priorityFilter, debouncedClientFilter, projectIdFilter]);
 
   const handlePageChange = newPage => {
     if (newPage >= 1 && newPage <= pagination.last_page) {
@@ -205,17 +224,17 @@ export const AdminProjectsSection = () => {
 
     try {
       // Prepare API parameters with filters
-      const apiParams = {
+      const apiParams: any = {
         page: pagination.current_page,
         limit: pagination.per_page
       };
 
-      // Add filters to API call if they have values
-      if (searchTerm.trim()) {
-        apiParams.search = searchTerm.trim();
+      // Add filters to API call if they have values (using debounced values)
+      if (debouncedSearchTerm.trim()) {
+        apiParams.search = debouncedSearchTerm.trim();
       }
-      if (clientFilter.trim()) {
-        apiParams.client_name = clientFilter.trim();
+      if (debouncedClientFilter.trim()) {
+        apiParams.client_name = debouncedClientFilter.trim();
       }
       if (statusFilter !== 'all') {
         apiParams.status = statusFilter;
@@ -322,9 +341,11 @@ export const AdminProjectsSection = () => {
 
   const handleClearFilters = () => {
     setSearchTerm('');
+    setDebouncedSearchTerm('');
     setStatusFilter('all');
     setPriorityFilter('all');
     setClientFilter('');
+    setDebouncedClientFilter('');
     setProjectIdFilter('');
 
     // Refresh projects with cleared filters

@@ -14,6 +14,7 @@ import { AcceptanceCriteriaSection } from '@/components/story/AcceptanceCriteria
 import { StoryEstimationCard } from '@/components/estimation/StoryEstimationCard';
 import { EstimationReviewCard } from '@/components/estimation/EstimationReviewCard';
 import { TestCasesSection } from '@/components/testcases/TestCasesSection';
+import { toast } from 'react-toastify';
 
 interface StoryGroomingContentProps {
   story: any;
@@ -21,6 +22,8 @@ interface StoryGroomingContentProps {
   documents: any[];
   comments: any[];
   description: string;
+  oldDescription: string;
+  setOldDescription: (value: string) => void;
   setDescription: (value: string) => void;
   newComment: string;
   setNewComment: (value: string) => void;
@@ -48,7 +51,9 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
   documents,
   comments,
   description,
+  oldDescription,
   setDescription,
+  setOldDescription,
   newComment,
   setNewComment,
   userRole,
@@ -120,6 +125,10 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
 
   // Enhanced update description handler with refetch
   const handleUpdateDescriptionWithRefresh = async () => {
+       if(description.length === 0) {
+      toast.error("Description cannot be empty");
+      return;
+    }
     await handleUpdateDescription();
     // Refetch data after description update
     handleDataRefresh();
@@ -157,6 +166,8 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
       {canEditContent ? (
         <DescriptionSection
           description={description}
+          oldDescription={oldDescription}
+          setOldDescription={setOldDescription}
           onDescriptionChange={setDescription}
           onUpdateDescription={handleUpdateDescriptionWithRefresh}
         />

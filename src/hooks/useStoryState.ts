@@ -8,6 +8,7 @@ export const useStoryState = () => {
   const location = useLocation();
   
   const [description, setDescription] = useState('');
+  const [oldDescription, setOldDescription] = useState(description);
   const [newComment, setNewComment] = useState('');
 
   const {
@@ -26,8 +27,10 @@ export const useStoryState = () => {
   useEffect(() => {
     if (story?.description) {
       setDescription(story.description);
+      setOldDescription(story.description);
     } else if (location.state?.story?.description) {
       setDescription(location.state.story.description);
+      setOldDescription(location.state.story.description);
     }
   }, [story?.description, location.state?.story?.description]);
 
@@ -51,7 +54,9 @@ export const useStoryState = () => {
     comments,
     loading,
     description,
+    oldDescription,
     setDescription,
+    setOldDescription,
     newComment,
     setNewComment,
     loadDocuments,

@@ -6,15 +6,20 @@ import { Textarea } from '@/components/ui/textarea';
 
 interface DescriptionSectionProps {
   description: string;
+  oldDescription: string;
+  setOldDescription: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onUpdateDescription: () => void;
 }
 
 export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
   description,
+  oldDescription,
+  setOldDescription,
   onDescriptionChange,
   onUpdateDescription
 }) => {
+  console.log("Dasdsadsad, ",description,"SADasdasd", oldDescription);
   return (
     <Card className="mb-6">
       <CardHeader>
@@ -27,7 +32,7 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
           placeholder="Add a detailed description for this user story..."
           className="min-h-32 mb-4"
         />
-        <Button onClick={onUpdateDescription}>
+        <Button onClick={onUpdateDescription} disabled={description.length === 0 || description === oldDescription}>
           Update Description
         </Button>
       </CardContent>

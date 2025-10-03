@@ -17,7 +17,9 @@ const UserStoryGrooming = () => {
     comments,
     loading,
     description,
+    oldDescription,
     setDescription,
+    setOldDescription,
     newComment,
     setNewComment,
     userRole,
@@ -88,6 +90,8 @@ const UserStoryGrooming = () => {
           storyForComponents={storyForComponents}
           documents={documents}
           comments={comments}
+          oldDescription={oldDescription}
+          setOldDescription={setOldDescription}
           description={description}
           setDescription={setDescription}
           newComment={newComment}

@@ -83,6 +83,14 @@ export const DeveloperProjectsTable = ({ projects, loading, currentUserEmail }: 
                     </Badge>
                   </div>
                   
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-2">
+                    <div className="flex items-center gap-2">
+                      Code:
+                      <span>
+                        {project.project_code}
+                      </span>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />

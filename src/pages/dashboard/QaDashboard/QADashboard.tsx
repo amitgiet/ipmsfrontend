@@ -6,6 +6,7 @@ import { QAStats } from '@/components/qa/QAStats';
 import { QATasksSection } from '@/components/qa/QATasksSection';
 import { QAProjectsSection } from '@/components/qa/QAProjectsSection';
 import { useQAProjects } from '@/hooks/useQAProjects';
+import { ProductOwnerProjectsTable } from '../ProductOwner/ProductOwnerProjectsTable';
 
 export const QADashboard = () => {
   const { user, teamUser, logout } = useAuth();
@@ -33,7 +34,12 @@ export const QADashboard = () => {
         <QAStats projects={dashboardData} currentUserEmail={currentUser.email} />
         
         <div className="grid grid-cols-1 gap-8 mt-8">
-          <QAProjectsSection projects={projects} loading={loading} />
+          {/* <QAProjectsSection projects={projects} loading={loading} currentUserEmail={currentUser.email} /> */}
+          <ProductOwnerProjectsTable 
+            projects={projects} 
+            loading={loading} 
+            currentUserEmail={currentUser.email} 
+          />  
           <QATasksSection currentUserEmail={currentUser.email} />
         </div>
       </main>

@@ -6,6 +6,7 @@ import { TeamLeadStats } from '@/components/TeamLead/TeamLeadStats';
 import { TeamLeadProjectsTable } from '@/components/TeamLead/TeamLeadProjectsTable';
 import { TeamLeadTasksSection } from '@/components/TeamLead/TeamLeadTasksSection';
 import { useTeamLeadProjects } from '@/hooks/useTeamLeadProjects';
+import { ProductOwnerProjectsTable } from '../ProductOwner/ProductOwnerProjectsTable';
 // import { PermissionWrapper } from '@/components/common/PermissionWrapper';
 
 export const TeamLeadDashboard = () => {
@@ -34,7 +35,7 @@ export const TeamLeadDashboard = () => {
         <TeamLeadStats projects={dashboardData} currentUserEmail={currentUser.email} />
         
         <div className="grid grid-cols-1 gap-8 mt-8">
-          <TeamLeadProjectsTable 
+          <ProductOwnerProjectsTable 
             projects={projects} 
             loading={loading} 
             currentUserEmail={currentUser.email} 

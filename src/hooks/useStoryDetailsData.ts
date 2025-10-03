@@ -85,12 +85,7 @@ export const useStoryDetailsData = (storyId?: string) => {
 
     try {
       // const { data, error } = await apiCall(allRoutes.stories.get(storyId), 'get');  
-      const demoData = [{
-        id: '1',
-        content: 'Comment 1',
-        created_at: '2021-01-01',
-        author_name: 'John Doe',
-      }]
+      const demoData = []
       const error = null;
       if (error) {
         console.error('❌ Error loading comments:', error);

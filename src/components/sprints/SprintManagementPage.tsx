@@ -95,6 +95,7 @@ import { allRoutes } from '@/services/routes';
           sprint={sprint}
           stories={stories}
           onGoBack={goBack}
+          fetchSprintData={fetchSprintData}
           onStatusChange={handleStatusChange}
           onMoveStoriesToBacklog={moveStoriesToBacklog}
         />

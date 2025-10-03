@@ -87,6 +87,7 @@ export const allRoutes = {
       }
       return url
     },
+    delete: (projectId, type, commentId) => `/comments/${commentId}?project_id=${projectId}&type=${type}`,
     getByStoryId: (storyId, projectId) => `comments?story_id=${storyId}&project_id=${projectId}`
   },
   tasks: {

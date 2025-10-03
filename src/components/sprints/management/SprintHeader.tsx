@@ -24,6 +24,7 @@ interface SprintHeaderProps {
   onGoBack: () => void;
   onStatusChange: () => void;
   onMoveStoriesToBacklog?: (storyIds: string[]) => Promise<void>;
+  fetchSprintData: () => void;
 }
 
 export const SprintHeader: React.FC<SprintHeaderProps> = ({
@@ -31,9 +32,11 @@ export const SprintHeader: React.FC<SprintHeaderProps> = ({
   stories,
   onGoBack,
   onStatusChange,
-  onMoveStoriesToBacklog
+  onMoveStoriesToBacklog,
+  fetchSprintData
 }) => {
   const [showClosureDialog, setShowClosureDialog] = useState(false);
+  const [ isCompleteSprint, setIsCompleteSprint ] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -52,7 +55,7 @@ export const SprintHeader: React.FC<SprintHeaderProps> = ({
     if (sprint.status === 'created') {
       return 'Start Sprint';
     } else if (sprint.status === 'running') {
-      return 'Complete Sprint';
+      return 'Close Sprint';
     }
     return null;
   };
@@ -67,12 +70,16 @@ export const SprintHeader: React.FC<SprintHeaderProps> = ({
   };
 
   const handleStatusChange = () => {
+    if (sprint.status === 'created') {
+      onStatusChange();
+      return;
+    }
     if (sprint.status === 'running') {
       // Show validation dialog for completing sprint
       setShowClosureDialog(true);
-    } else {
-      // For starting sprint, proceed normally
-      onStatusChange();
+      setIsCompleteSprint(true);
+    } else{
+      setShowClosureDialog(true);
     }
   };
 
@@ -85,8 +92,21 @@ export const SprintHeader: React.FC<SprintHeaderProps> = ({
     }
     
     // Close the sprint
-    onStatusChange();
+    onStatusChange(); 
+    setTimeout(() => {
+      fetchSprintData();
+    }, 1000);
     setShowClosureDialog(false);
+  };
+
+  const handleSprintCompletion = () => {
+    // Complete the sprint
+    onStatusChange();
+    setTimeout(() => {
+      fetchSprintData();
+    }, 1000);
+    setShowClosureDialog(false);
+    setIsCompleteSprint(false);
   };
 
   // Categorize stories for validation
@@ -129,9 +149,15 @@ export const SprintHeader: React.FC<SprintHeaderProps> = ({
 
       <SprintClosureDialog
         open={showClosureDialog}
-        onClose={() => setShowClosureDialog(false)}
+        onClose={() => {
+          setShowClosureDialog(false);
+          setIsCompleteSprint(false);
+          fetchSprintData();
+        }}
         onConfirm={handleSprintClosure}
         todoStories={todoStories}
+        onSubmitComplete={handleSprintCompletion}
+        isCompleteSprint={isCompleteSprint}
         inProgressStories={inProgressStories}
         qaStories={qaStories}
       />

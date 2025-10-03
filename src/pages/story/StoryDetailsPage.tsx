@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, FileText, Image, Download } from 'lucide-react';
+import { ArrowLeft, FileText, Image, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { TasksSection } from '@/components/tasks/TasksSection';
 import { RoleIndicator } from '@/components/common/RoleIndicator';
@@ -47,9 +47,7 @@ export const StoryDetailsPage: React.FC = () => {
     story1:story,
     loading,
     comments,
-    documents,
     refetch,
-    downloadDocument
   } = useStoryDetailsData(storyId);
 
   // Get current tab from URL parameter, default to 'story'
@@ -101,7 +99,18 @@ export const StoryDetailsPage: React.FC = () => {
       </div>
     );
   }
-
+ const documents = story.media;
+ 
+  const onDocumentDownload = (url: string) => {
+         const a = globalThis.document.createElement('a');
+         a.href = url;
+         a.download = 'document.pdf';
+         a.target = '_blank';
+         globalThis.document.body.appendChild(a);
+         a.click();
+         globalThis.document.body.removeChild(a);
+         URL.revokeObjectURL(url);
+ }
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-6 py-8">
@@ -221,24 +230,21 @@ export const StoryDetailsPage: React.FC = () => {
                     {documents.map((doc) => (
                       <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center gap-3">
-                          {doc.file_type.startsWith('image/') ? (
+                          {doc.url.endsWith('.jpg') || doc.url.endsWith('.jpeg') || doc.url.endsWith('.png') || doc.url.endsWith('.gif') || doc.url.endsWith('.webp') ? (
                             <Image className="h-5 w-5 text-blue-500" />
                           ) : (
                             <FileText className="h-5 w-5 text-blue-500" />
                           )}
                           <div>
-                            <p className="font-medium">{doc.filename}</p>
-                            <p className="text-sm text-gray-500">
-                              {(doc.file_size / 1024).toFixed(1)} KB • {format(new Date(doc.uploaded_at), 'MMM dd, yyyy')}
-                            </p>
+                            <p className="font-medium">{doc.name}</p>
                           </div>
                         </div>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => downloadDocument(doc)}
+                          onClick={() => onDocumentDownload(doc.url)}
                         >
-                          <Download className="h-4 w-4" />
+                          <Eye className="h-4 w-4" />
                         </Button>
                       </div>
                     ))}

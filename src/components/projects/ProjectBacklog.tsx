@@ -49,7 +49,7 @@ export const ProjectBacklog = ({ projectId, onUserStoryAdded, readOnly = false, 
 
   // Check if user can edit (product owners) or review change requests
   const canEdit = userRole === 'product_owner';
-  const canReviewChangeRequests = userRole === 'product_owner';
+  const canReviewChangeRequests = userRole === 'product_owner' ||  userRole === 'super-admin';
   const canSubmitChangeRequests = userRole === 'client'; // Only clients can submit change requests
 
   // Listen for user stories added from mindmap

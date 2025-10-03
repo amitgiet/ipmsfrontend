@@ -186,7 +186,7 @@ export const StoryGroomingContent: React.FC<StoryGroomingContentProps> = ({
       )}
 
       {/* Test Cases Section - Show for QA and developers */}
-      {(userRole === 'qa' || userRole === 'developer') && story.id && (
+      {(userRole === 'qa' || userRole === 'developer' || userRole === 'team_lead' || userRole === 'super-admin') && story.id && (
         <div className="mb-6">
           <TestCasesSection
             storyId={story.id}

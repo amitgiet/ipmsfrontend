@@ -69,7 +69,7 @@ export const ProjectInfoCard = ({ project }: ProjectInfoCardProps) => {
             </div>
 
             {/* Client Info */}
-            {(userRole == 'admin' || userRole == 'product_owner' | userRole == 'super-admin') && <div className="flex-1 min-w-0">
+            {(userRole == 'admin' || userRole == 'product_owner' || userRole == 'super-admin') && <div className="flex-1 min-w-0">
               <h4 className="font-medium text-gray-900 mb-2 text-sm">Client</h4>
               {project?.client_details?.length > 0 ? (
                 project?.client_details?.map((client: any) => (

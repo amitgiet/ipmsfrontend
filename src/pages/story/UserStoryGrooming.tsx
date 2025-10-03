@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -7,9 +6,7 @@ import { StoryHeader } from '@/components/grooming/StoryHeader';
 import { GroomingHeader } from '@/components/grooming/GroomingHeader';
 import { StoryStatusCards } from '@/components/grooming/StoryStatusCards';
 import { StoryGroomingContent } from '@/components/grooming/StoryGroomingContent';
-import { SprintEditRestriction } from '@/components/common/SprintEditRestriction';
 import { useStoryGrooming } from '@/hooks/useStoryGrooming';
-import { useSprintStatus } from '@/hooks/useSprintStatus';
 
 const UserStoryGrooming = () => {
 
@@ -42,6 +39,9 @@ const UserStoryGrooming = () => {
     setStory
   } = useStoryGrooming();
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   if(loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

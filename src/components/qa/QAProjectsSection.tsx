@@ -74,10 +74,10 @@ export const QAProjectsSection: React.FC<QAProjectsSectionProps> = ({ projects, 
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-2">
+                  {/* <div className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
                     <span>{project.client_name || 'No client'}</span>
-                  </div>
+                  </div> */}
                   
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />

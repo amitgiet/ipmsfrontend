@@ -44,9 +44,14 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
   
   const characterCount = getCharacterCount(commentText);
   const isOverLimit = characterCount > MAX_CHARACTERS;
-  const isNearLimit = characterCount > MAX_CHARACTERS * 0.8; // 80% of limit 
+  const isNearLimit = characterCount > MAX_CHARACTERS * 0.8;
   const handleDeleteComment = async (commentId: string) => {
     // Remove comment from local state
+    const { data, error } = await apiCall(allRoutes.comments.delete(projectId, 'mindmap', commentId), 'delete');
+    if (error) {
+      console.error('❌ Error deleting comment:', error);
+      throw error;
+    }
     setComments(prev => prev.filter(comment => comment.id !== commentId));
   };
 

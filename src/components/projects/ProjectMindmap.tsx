@@ -58,30 +58,6 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
     toSentenceCase
   } = useMindmapHelpers();
 
-  // Fix existing nodes with incorrect casing
-  // useEffect(() => {
-  //   const fixExistingNodes = async () => {
-  //     for (const node of nodes) {
-  //       if (node.type === 'user') {
-  //         const sentenceCaseTitle = toSentenceCase(node.title);
-  //         if (node.title !== sentenceCaseTitle) {
-  //           try {
-  //             await updateMindmapNode(node.id, { title: sentenceCaseTitle });
-  //             setNodes(prev => updateNodeTitle(prev, node.id, sentenceCaseTitle));
-  //             toast.success(`Updated "${node.title}" to "${sentenceCaseTitle}"`);
-  //           } catch (error) {
-  //             console.error('Failed to fix node title:', error);
-  //           }
-  //         }
-  //       }
-  //     }
-  //   };
-
-  //   if (nodes.length > 0 && !readOnly) {
-  //     fixExistingNodes();
-  //   }
-  // }, [nodes, updateMindmapNode, setNodes, toast, readOnly, toSentenceCase]);
-
   const addUser = async (title: string) => {
     const sentenceCaseTitle = toSentenceCase(title);
 
@@ -97,12 +73,13 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
     try {
       const response = await saveMindmapNode(newNode);
       if (response.success) {
-        const newMindmapNode: MindmapNode = {
-          ...response.data.data,
-          type: 'user',
-          children: []
-        };
-        setNodes(prev => [...prev, newMindmapNode]);
+        // const newMindmapNode: MindmapNode = {
+        //   ...response.data.data,
+        //   type: 'user',
+        //   children: []
+        // };
+        // setNodes(prev => [...prev, newMindmapNode]);
+        loadMindmapData();
       }
       toast.success("User added successfully");
     } catch (error) {
@@ -130,7 +107,8 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
         if (!response.success) {
           isAllSuccess = false;
         }
-        setNodes(prev => addNodeToParent(prev, userId, newNode));
+          // setNodes(prev => addNodeToParent(prev, userId, newNode));
+          loadMindmapData();
       }
 
       if (isAllSuccess) {
@@ -157,12 +135,13 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
     try {
       const response = await saveMindmapNode(newNode, selectedParentNode.id);
       if (response.success) {
-        const newMindmapNode: MindmapNode = {
-          ...response.data.data,
-          type: 'child',
-          children: []
-        };
-        setNodes(prev => addNodeToParent(prev, selectedParentNode.id, newMindmapNode));
+          // const newMindmapNode = response.data.data;
+        //     ...response.data.data,
+        //     type: 'child',
+        //     children: []
+        //   };
+        //   setNodes(prev => addNodeToParent(prev, selectedParentNode.id, newMindmapNode));
+        loadMindmapData();
         toast.success("Item added successfully");
       }
 
@@ -229,18 +208,18 @@ export const ProjectMindmap = ({ projectId, readOnly = false }: ProjectMindmapPr
   const userNodes = nodes.filter(node => node.type === 'user');
   const hasUsers = userNodes.length > 0;
 
-  if (loading) {
-    return (
-      <Card>
-        <MindmapHeader readOnly={readOnly} />
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <Card>
+  //       <MindmapHeader readOnly={readOnly} />
+  //       <CardContent>
+  //         <div className="flex items-center justify-center py-8">
+  //           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  //         </div>
+  //       </CardContent>
+  //     </Card>
+  //   );
+  // }
   return (
     <>
       <Card>

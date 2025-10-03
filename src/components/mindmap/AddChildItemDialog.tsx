@@ -103,14 +103,6 @@ export const AddChildItemDialog = ({
                 autoFocus
               />
             </div>
-
-            {/* <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>Will be created as:</span>
-              <Badge className={typeColors[childType]}>
-                {childType === 'user_story' ? 'user story' : childType}
-              </Badge>
-            </div> */}
-
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancel

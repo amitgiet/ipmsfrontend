@@ -23,7 +23,7 @@ export const AppLayout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AdminHeader userName="Admin" onLogout={handleLogout} />
+      {/* <AdminHeader userName="Admin" onLogout={handleLogout} /> */}
       <main className="">
         <Outlet />
       </main>

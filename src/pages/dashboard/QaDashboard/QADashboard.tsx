@@ -20,7 +20,7 @@ export const QADashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <QAHeader currentUser={currentUser} onLogout={logout} />
+      {/* <QAHeader currentUser={currentUser} onLogout={logout} /> */}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">

@@ -35,7 +35,7 @@ export const DeveloperDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <DeveloperHeader currentUser={currentUser} onLogout={logout} />
+      {/* <DeveloperHeader currentUser={currentUser} onLogout={logout} /> */}
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex justify-between items-center mb-8">

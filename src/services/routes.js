@@ -62,7 +62,9 @@ export const allRoutes = {
       },
     add_time_log: '/time-logs',
     dashboard: '/dashboard',  
-    get_assigned_projects: '/user-project/assigned-projects'
+    get_assigned_projects: '/user-project/assigned-projects',
+    mindmaps: '/mindmaps',
+    get_milestones: (projectId) => `/milestones?project_id=${projectId}`
   },
   mindmap: {
     store: '/mindmaps',

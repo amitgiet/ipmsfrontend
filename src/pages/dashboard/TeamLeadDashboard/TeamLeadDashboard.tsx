@@ -21,7 +21,7 @@ export const TeamLeadDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <TeamLeadHeader currentUser={currentUser} onLogout={logout} />
+      {/*   <TeamLeadHeader currentUser={currentUser} onLogout={logout} /> */}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">

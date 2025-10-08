@@ -18,5 +18,9 @@ export const productOwnerService = {
   getAssignedProjects: async () => {
     const url = allRoutes.productOwner.get_assigned_projects;
     return await apiCall(url, 'get');
+  },
+  getMileStone: async (projectId) => {
+    const url = allRoutes.productOwner.get_milestones(projectId);
+    return await apiCall(url, 'get');
   }
 }; 

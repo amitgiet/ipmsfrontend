@@ -50,7 +50,7 @@ export const ProductOwnerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ProductOwnerHeader currentUser={currentUser} onLogout={logout} />
+      {/* <ProductOwnerHeader currentUser={currentUser} onLogout={logout} /> */}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">

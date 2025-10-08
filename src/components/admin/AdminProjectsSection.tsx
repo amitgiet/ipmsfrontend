@@ -688,20 +688,20 @@ export const AdminProjectsSection = () => {
                   {/* Footer */}
                   <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-xs text-gray-500">
                     <span>Created: {new Date(project.created_at).toLocaleDateString()}</span>
-                    {/* {project.tags_labels && (
+                    {project.tags && (
                       <div className="flex gap-1">
-                        {project.tags_labels.split(',').slice(0, 3).map((tag, index) => (
+                        {project.tags.split(',').slice(0, 3).map((tag, index) => (
                           <Badge key={index} variant="outline" className="text-xs">
                             {tag.trim()}
                           </Badge>
                         ))}
-                        {project.tags_labels.split(',').length > 3 && (
+                        {project.tags.split(',').length > 3 && (
                           <Badge variant="outline" className="text-xs">
-                            +{project.tags_labels.split(',').length - 3}
+                            +{project.tags.split(',').length - 3}
                           </Badge>
                         )}
                       </div>
-                    )} */}
+                    )}
                   </div>
                 </div>
               </CardContent>

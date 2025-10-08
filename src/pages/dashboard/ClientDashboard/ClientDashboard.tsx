@@ -56,7 +56,8 @@ interface ClientProject {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ClientDashboardHeader user={user} onLogout={logout} />
+      {/* <ClientDashboardHeader user={user} onLogout={logout} /> */}
+      
       
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">

@@ -44,45 +44,12 @@ export const PasswordUpdateForm = () => {
     return true;
   };
 
-  const updateAdminPassword = async () => {
-    const { error } = await apiCall(allRoutes.auth.update_password, 'post', {
-      password: formData.newPassword
-    });
-
-    if (error) {
-      throw error;
-    }
-  };
-
-  const updateTeamMemberPassword = async () => {
-    if (!teamUser) return;
-
-    const { error } = await apiCall(allRoutes.auth.update_password, 'post', {
-      member_id: teamUser.id,
+  const updatePassword = async () => {
+    const { error } = await apiCall(allRoutes.auth.changePassword, 'post', {
       current_password: formData.currentPassword,
-      new_password: formData.newPassword
+      new_password: formData.newPassword,
+      new_password_confirmation: formData.confirmPassword
     });
-
-    if (error) {
-      throw error;
-    }
-  };
-
-  const updateClientPassword = async () => {
-    if (!user || user.role !== 'client') return;
-
-    // For clients, verify current password and update
-    if (formData.currentPassword !== 'Dots123') {
-      throw new Error('Current password is incorrect');
-    }
-
-    // Update client password in profiles table
-      const { error } = await apiCall(allRoutes.auth.update_password, 'post', { 
-        // Note: In a real implementation, you'd want to hash the password
-        // For now, keeping it simple as per the existing client auth pattern
-        password: formData.newPassword,
-        updated_at: new Date().toISOString()
-      })
 
     if (error) {
       throw error;
@@ -91,20 +58,14 @@ export const PasswordUpdateForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setIsLoading(true);
     try {
-      if (user && user.role === 'client') {
-        await updateClientPassword();
-      } else if (user && user.role === 'admin') {
-        await updateAdminPassword();
-      } else if (teamUser) {
-        await updateTeamMemberPassword();
-      }
+      await updatePassword();
 
       toast.success("Password updated successfully");
 
@@ -115,7 +76,6 @@ export const PasswordUpdateForm = () => {
       });
     } catch (error: any) {
       console.error('Password update error:', error);
-      toast.error(error.message || "Failed to update password");
     } finally {
       setIsLoading(false);
     }

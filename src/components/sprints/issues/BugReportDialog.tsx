@@ -23,6 +23,7 @@ import { toast } from 'react-toastify';
 import { Upload, X, Image } from 'lucide-react';
 import { allRoutes } from '@/services/routes';
 import { useParams } from 'react-router-dom';
+import QuillEditor from '@/components/common/QuillEditor';
 
 interface Story {
   id: string;
@@ -37,7 +38,7 @@ interface BugReportDialogProps {
   onBugReported: () => void;
 }
 
-interface AttachedImage {
+interface AttachedFile {
   file: File;
   preview: string;
   name: string;
@@ -52,7 +53,7 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
 }) => {
   const { projectId } = useParams<{ projectId: string }>();
   const [loading, setLoading] = useState(false);
-  const [attachedImages, setAttachedImages] = useState<AttachedImage[]>([]);
+  const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
   const [bugLabel, setBugLabel] = useState([]);
   const [bugLabelSelected, setBugLabelSelected] = useState('');
   const [customLabelName, setCustomLabelName] = useState('');
@@ -64,66 +65,66 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
     storyId: ''
   });
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    Array.from(files).forEach(file => {
-      // Check file type
-      if (!file.type.startsWith('image/')) {
-        toast.error("Invalid File Type");
-        return;
-      }
+    // Check file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Only JPG, JPEG, PNG, and PDF files are allowed");
+      return;
+    }
 
-      // Check file size (5MB limit)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("File Too Large");
-        return;
-      }
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File Too Large");
+      return;
+    }
 
-      // Create preview URL
-      const preview = URL.createObjectURL(file);
+    // Create preview URL
+    const preview = URL.createObjectURL(file);
 
-      setAttachedImages(prev => [...prev, {
-        file,
-        preview,
-        name: file.name
-      }]);
+    // Remove previous file if exists
+    if (attachedFile) {
+      URL.revokeObjectURL(attachedFile.preview);
+    }
+
+    setAttachedFile({
+      file,
+      preview,
+      name: file.name
     });
 
     // Clear the input
     event.target.value = '';
   };
 
-  const removeImage = (index: number) => {
-    setAttachedImages(prev => {
-      const imageToRemove = prev[index];
-      URL.revokeObjectURL(imageToRemove.preview);
-      return prev.filter((_, i) => i !== index);
-    });
+  const removeFile = () => {
+    if (attachedFile) {
+      URL.revokeObjectURL(attachedFile.preview);
+      setAttachedFile(null);
+    }
   };
 
-  const uploadImages = async (bugId: string) => {
-    if (attachedImages.length === 0) return;
+  const uploadFile = async (bugId: string) => {
+    if (!attachedFile) return;
 
     try {
-      for (const image of attachedImages) {
-        const fileExt = image.file.name.split('.').pop();
-        const fileName = `${bugId}/${Date.now()}.${fileExt}`;
+      const fileExt = attachedFile.file.name.split('.').pop();
+      const fileName = `${bugId}/${Date.now()}.${fileExt}`;
 
-        const { error: uploadError } = await apiCall(allRoutes.sprints.uploadImage(fileName, image.file), 'POST', {
-          file: image.file,
-          fileName: fileName
-        });
+      const { error: uploadError } = await apiCall(allRoutes.sprints.uploadImage(fileName, attachedFile.file), 'POST', {
+        file: attachedFile.file,
+        fileName: fileName
+      });
 
-        if (uploadError) {
-          console.error('❌ Error uploading image:', uploadError);
-          throw uploadError;
-        }
-
+      if (uploadError) {
+        console.error('❌ Error uploading file:', uploadError);
+        throw uploadError;
       }
     } catch (error) {
-      console.error('❌ Error in uploadImages:', error);
+      console.error('❌ Error in uploadFile:', error);
       throw error;
     }
   };
@@ -145,7 +146,9 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
       body.append('title', formData.title.trim());
       body.append('description', formData.description.trim() || '');
       body.append('severity', formData.severity);
-      
+      if (attachedFile) {
+        body.append('file', attachedFile.file);
+      }
       // Add bug label if selected
       if (bugLabelSelected && !isOthersSelected) {
         body.append('label', bugLabelSelected);
@@ -153,7 +156,11 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
         body.append('label', customLabelName.trim());
       }
 
-      const { data: bugData, error } = await apiCall(allRoutes.sprints.createBug, 'post', body);
+      const { data: bugData, error } = await apiCall(allRoutes.sprints.createBug, 'post', body, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
 
       if (error) {
         console.error('❌ Error creating bug:', error);
@@ -170,9 +177,11 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
         storyId: ''
       });
 
-      // Clear attached images
-      attachedImages.forEach(image => URL.revokeObjectURL(image.preview));
-      setAttachedImages([]);
+      // Clear attached file
+      if (attachedFile) {
+        URL.revokeObjectURL(attachedFile.preview);
+        setAttachedFile(null);
+      }
 
       onClose();
       onBugReported();
@@ -191,9 +200,11 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
       storyId: ''
     });
 
-    // Clean up image previews and reset bug label selection
-    attachedImages.forEach(image => URL.revokeObjectURL(image.preview));
-    setAttachedImages([]);
+    // Clean up file preview and reset bug label selection
+    if (attachedFile) {
+      URL.revokeObjectURL(attachedFile.preview);
+      setAttachedFile(null);
+    }
     setBugLabelSelected('');
     setCustomLabelName('');
 
@@ -235,7 +246,7 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {stories.map(story => (
-                  <SelectItem key={story.id} value={story.id.toString()}>
+                  <SelectItem className="w-[620px]" key={story.id} value={story.id.toString()}>
                     {story.title}
                   </SelectItem>
                 ))}
@@ -278,7 +289,7 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
               ))}
 
               {/* "Others" radio option */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 mt-[-0px!important]">
                 <input
                   type="radio"
                   id="label-others"
@@ -337,67 +348,71 @@ export const BugReportDialog: React.FC<BugReportDialogProps> = ({
 
           <div>
             <Label htmlFor="description">Description</Label>
-            <Textarea
+            {/* <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="Detailed description of the bug, steps to reproduce, expected vs actual behavior..."
               rows={4}
+            /> */}
+
+            <QuillEditor
+              text={formData.description}
+              setText={(value) => setFormData(prev => ({ ...prev, description: value }))}
+              limit={1000}
+              placeholder="Detailed description of the bug, steps to reproduce, expected vs actual behavior..."
             />
           </div>
 
-          {/* Image Upload Section */}
+          {/* File Upload Section */}
           <div>
-            <Label htmlFor="images">Attach Images</Label>
+            <Label htmlFor="file">Attach File</Label>
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Input
-                  id="images"
+                  id="file"
                   type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageUpload}
+                  accept=".jpg,.jpeg,.png,.pdf"
+                  onChange={handleFileUpload}
                   className="hidden"
                 />
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => document.getElementById('images')?.click()}
+                  onClick={() => document.getElementById('file')?.click()}
                   className="flex items-center gap-2"
                 >
                   <Upload className="h-4 w-4" />
-                  Add Images
+                  {attachedFile ? 'Replace File' : 'Add File'}
                 </Button>
                 <span className="text-sm text-gray-500">
-                  Max 5MB per image
+                  JPG, JPEG, PNG, PDF only - Max 5MB
                 </span>
               </div>
 
-              {/* Image Previews */}
-              {attachedImages.length > 0 && (
-                <div className="grid grid-cols-2 gap-2">
-                  {attachedImages.map((image, index) => (
-                    <div key={index} className="relative border rounded-lg p-2 bg-gray-50">
-                      <div className="flex items-center gap-2">
-                        <Image className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm truncate flex-1">{image.name}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeImage(index)}
-                          className="h-6 w-6 p-0 hover:bg-red-100"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      <img
-                        src={image.preview}
-                        alt={image.name}
-                        className="mt-2 w-full h-20 object-cover rounded border"
-                      />
-                    </div>
-                  ))}
+              {/* File Preview */}
+              {attachedFile && (
+                <div className="border rounded-lg p-3 bg-gray-50">
+                  <div className="flex items-center gap-2">
+                    <Image className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm truncate flex-1">{attachedFile.name}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={removeFile}
+                      className="h-6 w-6 p-0 hover:bg-red-100"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  {attachedFile.file.type.startsWith('image/') && (
+                    <img
+                      src={attachedFile.preview}
+                      alt={attachedFile.name}
+                      className="mt-2 w-full h-20 object-cover rounded border"
+                    />
+                  )}
                 </div>
               )}
             </div>

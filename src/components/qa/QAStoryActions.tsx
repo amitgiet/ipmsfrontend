@@ -58,7 +58,7 @@ export const QAStoryActions = ({ storyId, currentStatus, onStatusUpdate }: QASto
 
   return (
     <>
-      <Card className="bg-orange-50 border-orange-200">
+      {/* <Card className="bg-orange-50 border-orange-200">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -92,7 +92,7 @@ export const QAStoryActions = ({ storyId, currentStatus, onStatusUpdate }: QASto
             Review the story and either report issues found during testing or approve it as complete.
           </p>
         </CardContent>
-      </Card>
+      </Card> */}
 
       <BugReportDialog
         isOpen={showBugDialog}

@@ -1,13 +1,15 @@
 import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
-import Header from './Header';
+import { Outlet } from 'react-router-dom';
+// import Header from './Header';
+import { UniversalHeader } from '../common/UniversalHeader';
 const AppLayout = () => {
-  const { pathname } = useLocation();
+  // const { pathname } = useLocation();
   return (
     <div className="min-h-screen bg-gray-50">
-      {!pathname.includes('dashboard') && !pathname.includes('client-project') && !pathname.includes('/settings') &&
+      {/* {!pathname.includes('dashboard') && !pathname.includes('client-project') && !pathname.includes('/settings') &&
         <Header />
-      }
+      } */}
+      <UniversalHeader />
 
       <main className="">
         <Outlet />

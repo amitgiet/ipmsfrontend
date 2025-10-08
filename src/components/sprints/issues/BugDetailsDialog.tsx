@@ -38,6 +38,11 @@ interface Bug {
   user_stories?: {
     title: string;
   };
+  bug_files?: {
+    id: number;
+    name: string;
+    url: string;
+  }[];
 }
 
   
@@ -141,6 +146,7 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
     }
   }, [isOpen, bug.id]);
 
+  console.log(bug);
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -174,7 +180,7 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
             {bug.description && (
               <div>
                 <Label className="text-sm font-medium">Description</Label>
-                <p className="text-gray-700 mt-1">{bug.description}</p>
+                <p className="text-gray-700 mt-1" dangerouslySetInnerHTML={{ __html: bug.description }}></p>
               </div>
             )}
 
@@ -202,6 +208,29 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
                 </>
               )}
             </div>
+
+            {bug.bug_files && bug.bug_files.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Attachments</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {bug.bug_files.map((file) => (
+                    <a
+                      key={file.id}
+                      href={file.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block border rounded-md overflow-hidden hover:opacity-90"
+                    >
+                      <img
+                        src={file.url}
+                        alt={file.name}
+                        className="w-full h-40 object-contain bg-gray-50"
+                      />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Comments Section */}
@@ -229,7 +258,7 @@ export const BugDetailsDialog: React.FC<BugDetailsDialogProps> = ({
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-medium text-sm">{comment.user?.name}</span>
                               <Badge variant="outline" className="text-xs">
-                                {comment.user?.role}
+                                {comment.user?.role.replace('_', ' ').toUpperCase()}
                               </Badge>
                               <span className="text-xs text-gray-500 flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />

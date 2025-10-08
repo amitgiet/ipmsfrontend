@@ -20,6 +20,11 @@ interface Bug {
   story_id: string;
   sprint_id: string;
   title: string;
+  bug_files?: {
+    id: number;
+    name: string;
+    url: string;
+  }[];
   description?: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   status: 'open' | 'resolved' | 'reopened';
@@ -88,6 +93,7 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
             story_id: bug.story.id,
             sprint_id: bug.sprint_id,
             title: bug.title,
+            bug_files: bug.bug_files || undefined,
             description: bug.description || undefined,
             severity: bug.severity as "low" | "medium" | "high" | "critical",
             status: bug.status as "open" | "resolved" | "reopened" | "closed",
@@ -135,7 +141,7 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
   const handleReopenBug = async (bugId: string) => {
     try {
 
-      const { error } = await apiCall(allRoutes.sprints.reopenBug(bugId, projectId), 'post');
+      const { error } = await apiCall(allRoutes.sprints.reopenBug(bugId, projectId),  'post', { sprint_id: sprintId }, );
 
       if (error) {
         return;
@@ -257,7 +263,7 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
                               </Badge>
                             </div>
                             {bug.description && (
-                              <p className="text-gray-600 text-sm mb-2">{bug.description}</p>
+                              <p className="text-gray-600 text-sm mb-2" dangerouslySetInnerHTML={{ __html: bug.description }}></p>
                             )}
                             <div className="text-xs text-gray-500">
                               <span>Story: {bug.story_title}</span>
@@ -323,7 +329,7 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
                               </Badge>
                             </div>
                             {bug.description && (
-                              <p className="text-gray-600 text-sm mb-2">{bug.description}</p>
+                              <p className="text-gray-600 text-sm mb-2" dangerouslySetInnerHTML={{ __html: bug.description }}></p>
                             )}
                             <div className="text-xs text-gray-500">
                               <span>Story: {bug.story_title}</span>
@@ -390,7 +396,7 @@ export const SprintIssuesView: React.FC<SprintIssuesViewProps> = ({
                               </Badge>
                             </div>
                             {bug.description && (
-                              <p className="text-gray-600 text-sm mb-2">{bug.description}</p>
+                              <p className="text-gray-600 text-sm mb-2" dangerouslySetInnerHTML={{ __html: bug.description }}></p>
                             )}
                             <div className="text-xs text-gray-500">
                               <span>Story: {bug.story_title}</span>

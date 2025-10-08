@@ -59,51 +59,6 @@ export const SprintClosureDialog: React.FC<SprintClosureDialogProps> = ({
   //     </AlertDialog>
   //   );
   // }
-  if (hasBlockingStories) {
-    return (
-      <AlertDialog open={open} onOpenChange={onClose}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Cannot Close Sprint</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3">
-              <p>This sprint cannot be closed because there are stories that are still in progress or in QA.</p>
-              
-              {inProgressStories.length > 0 && (
-                <div>
-                  <p className="font-semibold text-orange-600 mb-2">Stories in Progress ({inProgressStories.length}):</p>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {inProgressStories.map(story => (
-                      <li key={story.id} className="text-sm">{story.title}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              
-              {qaStories.length > 0 && (
-                <div>
-                  <p className="font-semibold text-blue-600 mb-2">Stories in QA ({qaStories.length}):</p>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {qaStories.map(story => (
-                      <li key={story.id} className="text-sm">{story.title}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              
-              <p className="text-sm text-gray-600 mt-3">
-                Please complete or move these stories before closing the sprint.
-              </p>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={onClose}>
-              Understood
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    );
-  }
 
   if (hasTodoStories) {
     return (

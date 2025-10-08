@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { UnifiedHeader } from '@/components/common/UnifiedHeader';
+// import { UnifiedHeader } from '@/components/common/UnifiedHeader';
 import { PasswordUpdateForm } from '@/components/auth/PasswordUpdateForm';
  
 
 const SettingsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
-      <UnifiedHeader title="Settings" />
+      {/* <UnifiedHeader title="Settings" /> */}
       <div className="container mx-auto py-8">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">

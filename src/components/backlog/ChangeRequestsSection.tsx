@@ -298,8 +298,6 @@ export const ChangeRequestsSection = ({
                     </div>
 
                     <div className="space-y-2">
-                      <p className="text-gray-700 whitespace-pre-wrap">{request.description}</p>
-                      
                       {request.reason_for_change && (
                         <div className="text-sm">
                           <span className="font-medium text-gray-600">Reason: </span>

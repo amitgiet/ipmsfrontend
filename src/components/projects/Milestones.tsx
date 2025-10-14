@@ -6,6 +6,7 @@ import { allRoutes } from '@/services/routes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Milestone {
   id: number;
@@ -18,9 +19,11 @@ interface Milestone {
   status: 'pending' | 'in_progress' | 'completed' | string;
 }
 
-export const Milestones: React.FC = () => {
-  const { isProductOwner } = useUserRole();
-  const { projectId } = useParams<{ projectId: string }>();
+export const Milestones: React.FC<{ projectId: string }> = ({ projectId }) => {
+
+  
+  const { isProductOwner , isAdmin, isSuperAdmin, isClient } = useUserRole();
+
 
   const [loading, setLoading] = useState<boolean>(true);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -36,14 +39,12 @@ export const Milestones: React.FC = () => {
       setLoading(false);
     };
 
-    if (isProductOwner) {
+    if (isProductOwner || isAdmin || isSuperAdmin || isClient) {
       fetchMilestones();
     }
-  }, [projectId, isProductOwner]);
+  }, [projectId, isProductOwner, isAdmin, isSuperAdmin, isClient]);
 
-  if (!isProductOwner) {
-    return null;
-  }
+
 
   return (
     <Card className="w-full">

@@ -4,7 +4,7 @@ import { loginUser, logoutUser } from '../features/auth/authSlice';
 export const useAuth = () => {
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
-
+  
   const login = (credentials) => {
     return dispatch(loginUser(credentials));
   };

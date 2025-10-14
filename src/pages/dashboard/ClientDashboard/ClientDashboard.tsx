@@ -7,6 +7,7 @@ import ClientMindmapView from '@/components/mindmap/ClientMindmapView';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import Milestones from '@/components/projects/Milestones';
 
 interface ClientProject {
   id: string;
@@ -75,6 +76,8 @@ interface ClientProject {
             <ClientMindmapView 
               projectId={projectId} 
             />
+   
+            
           </div>
         ) : (
           <ClientProjectsGrid 

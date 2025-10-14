@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Brain, FileText, Calendar } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import Milestones from '../projects/Milestones';
 
 interface ClientMindmapViewProps {
   projectId: string;
@@ -65,6 +66,8 @@ const ClientMindmapView = ({ projectId }: ClientMindmapViewProps) => {
         
         <TabsContent value="mindmap" className="space-y-4">
           <ProjectMindmap projectId={projectId} readOnly={true} />
+
+          <Milestones projectId={projectId} />
           <MindmapComments projectId={projectId} />
         </TabsContent>
         

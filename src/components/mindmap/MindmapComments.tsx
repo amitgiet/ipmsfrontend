@@ -111,7 +111,7 @@ export const MindmapComments = ({ projectId, nodeId }: MindmapCommentsProps) => 
   }, [projectId]);
 
   return (
-    <Card>
+    <Card className="mt-4">
       <CardHeader>
         <CardTitle className="text-lg">Comments</CardTitle>
         <CardDescription>

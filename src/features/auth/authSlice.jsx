@@ -8,7 +8,7 @@ const getStoredAuth = () => {
     const teamUser = localStorage.getItem('ipms_teamUser');
     const isAuthenticated = localStorage.getItem('ipms_isAuthenticated')
     const userRole = localStorage.getItem('ipms_userRole');
-    
+
     if (token && (user || teamUser) && isAuthenticated === 'true') {
       return {
         token,
@@ -151,6 +151,7 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
+       
         state.isLoading = false;
         storeAuth(action.payload.user, action.payload.teamUser, action.payload.token, action.payload.userRole);
       })

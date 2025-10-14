@@ -83,7 +83,7 @@ export const ProjectTabs = ({ projectId }) => {
         
         <TabsContent value="mindmap" className="space-y-4">
           <ProjectMindmap projectId={projectId} readOnly={!canEditMindmap} />
-          <MindmapComments projectId={projectId} />
+      
         </TabsContent>
         
         <TabsContent value="backlog" className="space-y-4">

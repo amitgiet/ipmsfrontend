@@ -55,6 +55,7 @@ export const AdminProjectsSection = () => {
     per_page: 10,
     total: 0
   });
+  const [hasError, setHasError] = useState(false);
 
 
   // Debounce search terms for better performance
@@ -77,6 +78,7 @@ export const AdminProjectsSection = () => {
   useEffect(() => {
     const loadProjects = async () => {
       setLoading(true);
+      setHasError(false); // Reset error state on new attempt
       try {
         // Prepare API parameters with filters
         const apiParams: any = {
@@ -159,7 +161,17 @@ export const AdminProjectsSection = () => {
             });
           }
         } else {
-          console.error("❌ Failed to fetch projects:", response.message || response.error);
+          console.error("❌ Failed to fetch projects:", response.error);
+          setHasError(true);
+          // Show specific error message based on error type
+          if (response.error?.message?.includes('timeout')) {
+            toast.error("Request timed out. The server is taking too long to respond. Please try again.");
+          } else if (response.error?.message?.includes('Network Error')) {
+            toast.error("Network error. Please check your internet connection and try again.");
+          } else {
+            toast.error("Failed to load projects. Please try again.");
+          }
+          
           // If API fails, show empty state
           setProjects([]);
           setFilteredProjects([]);
@@ -172,6 +184,17 @@ export const AdminProjectsSection = () => {
         }
       } catch (error) {
         console.error("❌ Error fetching projects:", error);
+        setHasError(true);
+        
+        // Show specific error message based on error type
+        if (error.message?.includes('timeout')) {
+          toast.error("Request timed out. The server is taking too long to respond. Please try again.");
+        } else if (error.message?.includes('Network Error')) {
+          toast.error("Network error. Please check your internet connection and try again.");
+        } else {
+          toast.error("An unexpected error occurred while loading projects. Please try again.");
+        }
+        
         // If any error occurs, show empty state
         setProjects([]);
         setFilteredProjects([]);
@@ -710,7 +733,33 @@ export const AdminProjectsSection = () => {
         ) : (
           <div className="text-center py-8 text-gray-500">
             <FolderOpen className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            {projects.length === 0 ? (
+            {hasError ? (
+              <>
+                <p>Failed to load projects.</p>
+                <p className="text-sm mt-2">
+                  There was an error connecting to the server. Please try again.
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setHasError(false);
+                    // Trigger a reload by updating a dependency
+                    setPagination(prev => ({ ...prev, current_page: 1 }));
+                  }} 
+                  className="mt-4"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Retrying...
+                    </>
+                  ) : (
+                    'Retry'
+                  )}
+                </Button>
+              </>
+            ) : projects.length === 0 ? (
               <>
                 <p>No projects found in the database.</p>
                 <p className="text-sm mt-2">

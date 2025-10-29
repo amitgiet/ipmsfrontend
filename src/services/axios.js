@@ -3,7 +3,7 @@ import axios from 'axios';
 // Create axios instance
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'https://ipmsnew.24livehost.com/api/v1',
-  timeout: 10000,
+  timeout: 30000, // Increased from 10s to 30s for better reliability
   headers: {
     'Content-Type': 'application/json',
   },

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useChangeRequests, ChangeRequest } from '@/hooks/useChangeRequests';
 import { ChangeRequestComments } from './ChangeRequestComments';
+import { FileAttachmentsList } from '@/components/common/FileAttachment';
 import { formatDistanceToNow } from 'date-fns';
 import { FileEdit, MessageSquare, Check, X, Clock, ArrowRight, Workflow, Bell } from 'lucide-react';
 import { AddEpicDialog } from '../mindmap/AddEpicDialog';
@@ -284,7 +285,7 @@ export const ChangeRequestsSection = ({
                       <div className="space-y-1">
                         <h4 className="font-medium">{request.description}</h4>
                         <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <span>by {request.user?.name || 'Unknown User'}</span>
+                          <span>by {request.created_by?.name || 'Unknown User'}</span>
                           <span>•</span>
                           <span>{getTimestamp(request.created_at)}</span>
                           <span>•</span>
@@ -304,7 +305,13 @@ export const ChangeRequestsSection = ({
                           <span className="text-gray-700">{request.reason_for_change}</span>
                         </div>
                       )}
-                      
+
+                      {request.type_of_change && (
+                        <div className="text-sm">
+                          <span className="font-medium text-gray-600">Type of Change: </span>
+                          <span className="text-gray-700">{request.type_of_change}</span>
+                        </div>    
+                      )}
                       {request.expected_benefits && (
                         <div className="text-sm">
                           <span className="font-medium text-gray-600">Benefits: </span>
@@ -323,6 +330,12 @@ export const ChangeRequestsSection = ({
                         <div className="text-sm">
                           <span className="font-medium text-gray-600">Timeline: </span>
                           <span className="text-gray-700">{request.preferred_timeline}</span>
+                        </div>
+                      )}
+
+                      {request.files && request.files.length > 0 && (
+                        <div className="pt-2">
+                          <FileAttachmentsList files={request.files} />
                         </div>
                       )}
                     </div>

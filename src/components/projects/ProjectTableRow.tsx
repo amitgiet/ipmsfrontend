@@ -70,21 +70,48 @@ export const ProjectTableRow = ({ project, onViewProject }: ProjectTableRowProps
       {(userRole == 'admin' || userRole == 'product_owner' || userRole == 'super-admin') && (
         <TableCell>
           {project.client?.length > 0 ? (
-            project.client?.map((client: any) => (
-              <div key={client.id} className="text-sm max-w-[120px]">
-                <div className="flex items-center gap-1 mb-1">
-                  <User className="h-3 w-3 text-gray-400 flex-shrink-0" />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="truncate cursor-help">{client.name}</span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{client.name}</p>
-                    </TooltipContent>
-                  </Tooltip>
+            <div className="max-w-[120px]">
+              {/* Show first 3 clients */}
+              {project.client.slice(0, 3).map((client: any) => (
+                <div key={client.id} className="text-sm">
+                  <div className="flex items-center gap-1 mb-1">
+                    <User className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="truncate cursor-help">{client.name}</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{client.name}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+              {/* Show + indicator if there are more than 3 clients */}
+              {project.client.length > 3 && (
+                <div className="text-sm">
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="cursor-help font-medium text-blue-600">
+                          +{project.client.length - 3}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <div className="space-y-1">
+                          {project.client.slice(3).map((client: any, index: number) => (
+                            <p key={client.id} className="font-medium">
+                              {index + 4}. {client.name || 'Client Not Assigned'}
+                            </p>
+                          ))}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <span className="truncate" title="No client assigned">No client assigned</span>
           )}
